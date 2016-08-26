@@ -121,6 +121,8 @@ class Plantilla(BigIntegerPKModel):
     # m2m relationships
     headers = models.ManyToManyField(Header, through='IntermediatePlantillaHeader')
     footers = models.ManyToManyField(Footer, through='IntermediatePlantillaFooter')
+    headscripts = models.ManyToManyField(Scriptelement, through='IntermediateHeadScript', related_name='plantilla_head')
+    bodyscripts = models.ManyToManyField(Scriptelement, through='IntermediateBodyScript', related_name='plantilla_body')
 
     class Meta:
         managed = False
@@ -134,26 +136,6 @@ class Plantillagruposldap(BigIntegerPKModel):
     class Meta:
         managed = False
         db_table = 'plantillagruposldap'
-
-
-class Headscript(BigIntegerPKModel):
-    fkscript = models.ForeignKey('Scriptelement', models.DO_NOTHING, db_column='fkscript', blank=True, null=True)
-    fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'headscript'
-
-
-class Bodyscript(BigIntegerPKModel):
-    fkscript = models.ForeignKey('Scriptelement', models.DO_NOTHING, db_column='fkscript', blank=True, null=True)
-    fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'bodyscript'
 
 
 class Seccion(BigIntegerPKModel):
@@ -397,3 +379,29 @@ class IntermediatePlantillaFooter(BaseIntermediateHeaderOrFooter):
     class Meta:
         managed = False
         db_table = 'plantillafooter'
+
+
+class BaseIntermediateScript(BigIntegerPKModel):
+    """
+    Base (abstract) class for intermediate models to be
+    used in many-to-many relationships between Plantilla
+    and scripts (head and body), as they both have the same fields.
+    """
+    fkscript = models.ForeignKey(Scriptelement, on_delete=models.DO_NOTHING, blank=True, null=True)
+    fkplantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, blank=True, null=True)
+    ordinal = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class IntermediateHeadScript(BaseIntermediateScript):
+    class Meta:
+        managed = False
+        db_table = 'headscript'
+
+
+class IntermediateBodyScript(BaseIntermediateScript):
+    class Meta:
+        managed = False
+        db_table = 'bodyscript'

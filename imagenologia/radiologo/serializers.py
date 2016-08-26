@@ -58,18 +58,6 @@ class PlantillagruposldapSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class HeadscriptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Headscript
-        fields = '__all__'
-
-
-class BodyscriptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Bodyscript
-        fields = '__all__'
-
-
 class SeccionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Seccion

@@ -369,24 +369,6 @@ class PlantillagruposldapViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
 
-class HeadscriptViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Headscript.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.HeadscriptSerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class BodyscriptViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Bodyscript.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.BodyscriptSerializer
-    pagination_class = StandardResultsSetPagination
-
-
 class SeccionViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
     queryset = models.Seccion.objects.all()
