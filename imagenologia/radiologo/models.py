@@ -3,13 +3,23 @@ from __future__ import unicode_literals
 from django.db import models
 
 
+class BigIntegerPKModel(models.Model):
+    """
+    Use big integers as primary key
+    (https://docs.djangoproject.com/es/1.10/ref/models/fields/#bigautofield)
+    """
+    id = models.BigAutoField(primary_key=True)
+
+    class Meta:
+        abstract = True
+
+
 class Configuracion(models.Model):
     key = models.CharField(max_length=20)
     value = models.CharField(max_length=200)
 
 
-class Codesystem(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Codesystem(BigIntegerPKModel):
     name = models.CharField(max_length=16, blank=True, null=True)
     oid = models.CharField(max_length=64, blank=True, null=True)
 
@@ -21,8 +31,7 @@ class Codesystem(models.Model):
         return 'name: %s, oid: %s' % (self.name, self.oid)
 
 
-class Scriptelement(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Scriptelement(BigIntegerPKModel):
     html = models.TextField(blank=True, null=True)
     titulo = models.CharField(max_length=64, blank=True, null=True)
     version = models.IntegerField(blank=True, null=True)
@@ -33,8 +42,7 @@ class Scriptelement(models.Model):
         db_table = 'scriptelement'
 
 
-class Header(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Header(BigIntegerPKModel):
     html = models.TextField(blank=True, null=True)
     titulo = models.CharField(max_length=64, blank=True, null=True)
     version = models.IntegerField(blank=True, null=True)
@@ -45,8 +53,7 @@ class Header(models.Model):
         db_table = 'header'
 
 
-class Footer(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Footer(BigIntegerPKModel):
     html = models.TextField(blank=True, null=True)
     titulo = models.CharField(max_length=64, blank=True, null=True)
     version = models.IntegerField(blank=True, null=True)
@@ -57,8 +64,7 @@ class Footer(models.Model):
         db_table = 'footer'
 
 
-class Articlehtml(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Articlehtml(BigIntegerPKModel):
     titulo = models.CharField(max_length=64, blank=True, null=True)
     descripcion = models.CharField(max_length=256, blank=True, null=True)
     html = models.TextField(blank=True, null=True)
@@ -71,8 +77,7 @@ class Articlehtml(models.Model):
         return 'Titulo: %s, descripcion: %s' % (self.titulo, self.descripcion)
 
 
-class Code(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Code(BigIntegerPKModel):
     fkcodesystem = models.ForeignKey('Codesystem', models.DO_NOTHING, db_column='fkcodesystem', blank=True, null=True)
     code = models.CharField(max_length=16, blank=True, null=True)
     displayname = models.CharField(max_length=255, blank=True, null=True)
@@ -85,8 +90,7 @@ class Code(models.Model):
         return 'code: %s, displayname: %s' % (self.code, self.displayname)
 
 
-class Estudio(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Estudio(BigIntegerPKModel):
     modalidad = models.CharField(max_length=5, blank=True, null=True)
     fkcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
 
@@ -95,8 +99,7 @@ class Estudio(models.Model):
         db_table = 'estudio'
 
 
-class Plantilla(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Plantilla(BigIntegerPKModel):
     fkestudio = models.ForeignKey(Estudio, models.DO_NOTHING, db_column='fkestudio', blank=True, null=True)
     title = models.CharField(max_length=64, blank=True, null=True)
     type = models.CharField(max_length=64, blank=True, null=True)
@@ -116,8 +119,7 @@ class Plantilla(models.Model):
         db_table = 'plantilla'
 
 
-class Plantillagruposldap(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Plantillagruposldap(BigIntegerPKModel):
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     gdn = models.CharField(max_length=255, blank=True, null=True)
 
@@ -126,8 +128,7 @@ class Plantillagruposldap(models.Model):
         db_table = 'plantillagruposldap'
 
 
-class Headscript(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Headscript(BigIntegerPKModel):
     fkscript = models.ForeignKey('Scriptelement', models.DO_NOTHING, db_column='fkscript', blank=True, null=True)
     fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
@@ -137,8 +138,7 @@ class Headscript(models.Model):
         db_table = 'headscript'
 
 
-class Bodyscript(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Bodyscript(BigIntegerPKModel):
     fkscript = models.ForeignKey('Scriptelement', models.DO_NOTHING, db_column='fkscript', blank=True, null=True)
     fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
@@ -148,8 +148,7 @@ class Bodyscript(models.Model):
         db_table = 'bodyscript'
 
 
-class Plantillaheader(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Plantillaheader(BigIntegerPKModel):
     fkheader = models.ForeignKey(Header, models.DO_NOTHING, db_column='fkheader', blank=True, null=True)
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
@@ -159,8 +158,7 @@ class Plantillaheader(models.Model):
         db_table = 'plantillaheader'
 
 
-class Plantillafooter(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Plantillafooter(BigIntegerPKModel):
     fkfooter = models.ForeignKey(Footer, models.DO_NOTHING, db_column='fkfooter', blank=True, null=True)
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
@@ -170,8 +168,7 @@ class Plantillafooter(models.Model):
         db_table = 'plantillafooter'
 
 
-class Seccion(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Seccion(BigIntegerPKModel):
     fksection = models.ForeignKey('self', models.DO_NOTHING, db_column='fksection', blank=True, null=True)
     idseccion = models.CharField(max_length=4, blank=True, null=True)
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
@@ -188,8 +185,7 @@ class Seccion(models.Model):
         db_table = 'seccion'
 
 
-class Selectoption(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Selectoption(BigIntegerPKModel):
     fksection = models.ForeignKey(Seccion, models.DO_NOTHING, db_column='fksection', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
     value = models.CharField(max_length=64, blank=True, null=True)
@@ -201,8 +197,7 @@ class Selectoption(models.Model):
         db_table = 'selectoption'
 
 
-class Entry(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Entry(BigIntegerPKModel):
     element = models.CharField(max_length=16, blank=True, null=True)
     elementclasscode = models.CharField(max_length=8, blank=True, null=True)
     elementmoodcode = models.CharField(max_length=8, blank=True, null=True)
@@ -216,8 +211,7 @@ class Entry(models.Model):
         db_table = 'entry'
 
 
-class Qualifier(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Qualifier(BigIntegerPKModel):
     fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
     fkcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
@@ -228,8 +222,7 @@ class Qualifier(models.Model):
         db_table = 'qualifier'
 
 
-class Value(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Value(BigIntegerPKModel):
     fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
     type = models.CharField(max_length=8, blank=True, null=True)
     fkcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
@@ -242,8 +235,7 @@ class Value(models.Model):
         db_table = 'value'
 
 
-class Autenticado(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Autenticado(BigIntegerPKModel):
     fkautenticado = models.ForeignKey('self', models.DO_NOTHING, db_column='fkautenticado', blank=True, null=True,
                                       related_name="autenticado")
     fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True,
@@ -277,8 +269,7 @@ class Autenticado(models.Model):
         db_table = 'autenticado'
 
 
-class Sec(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Sec(BigIntegerPKModel):
     fkautenticado = models.ForeignKey(Autenticado, models.DO_NOTHING, db_column='fkautenticado', blank=True, null=True,
                                       related_name="secautenticado")
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
@@ -295,8 +286,7 @@ class Sec(models.Model):
         db_table = 'sec'
 
 
-class Susbsec(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Susbsec(BigIntegerPKModel):
     fksec = models.ForeignKey(Sec, models.DO_NOTHING, db_column='fksec', blank=True, null=True)
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
                                    related_name="fkcompcode")
@@ -312,8 +302,7 @@ class Susbsec(models.Model):
         db_table = 'susbsec'
 
 
-class Susbsubsec(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Susbsubsec(BigIntegerPKModel):
     fksubsec = models.ForeignKey(Susbsec, models.DO_NOTHING, db_column='fksubsec', blank=True, null=True,
                                  related_name="subsec")
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
@@ -330,8 +319,7 @@ class Susbsubsec(models.Model):
         db_table = 'susbsubsec'
 
 
-class Firma(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Firma(BigIntegerPKModel):
     fkinforme = models.ForeignKey('Submit', models.DO_NOTHING, db_column='fkinforme', blank=True, null=True)
     md5 = models.CharField(max_length=45, blank=True, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
@@ -347,8 +335,7 @@ class Firma(models.Model):
         db_table = 'firma'
 
 
-class Secentry(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Secentry(BigIntegerPKModel):
     ordinal = models.IntegerField(blank=True, null=True)
     fk = models.ForeignKey(Sec, models.DO_NOTHING, db_column='fk', blank=True, null=True)
     fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
@@ -358,8 +345,7 @@ class Secentry(models.Model):
         db_table = 'secentry'
 
 
-class Submit(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Submit(BigIntegerPKModel):
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     eiud = models.CharField(max_length=64, blank=True, null=True)
     eaccnum = models.CharField(max_length=16, blank=True, null=True)
@@ -373,8 +359,7 @@ class Submit(models.Model):
         db_table = 'submit'
 
 
-class Subsecentry(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Subsecentry(BigIntegerPKModel):
     ordinal = models.IntegerField(blank=True, null=True)
     fk = models.ForeignKey('Susbsec', models.DO_NOTHING, db_column='fk', blank=True, null=True)
     fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
@@ -384,8 +369,7 @@ class Subsecentry(models.Model):
         db_table = 'subsecentry'
 
 
-class Subsubsecentry(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Subsubsecentry(BigIntegerPKModel):
     ordinal = models.IntegerField(blank=True, null=True)
     fk = models.ForeignKey('Susbsubsec', models.DO_NOTHING, db_column='fk', blank=True, null=True)
     fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
