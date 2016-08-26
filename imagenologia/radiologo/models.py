@@ -42,23 +42,27 @@ class Scriptelement(BigIntegerPKModel):
         db_table = 'scriptelement'
 
 
-class Header(BigIntegerPKModel):
+class BaseHeaderOrFooter(BigIntegerPKModel):
+    """
+    Base (abstract) class for headers and footers,
+    as they both have the same fields.
+    """
     html = models.TextField(blank=True, null=True)
     titulo = models.CharField(max_length=64, blank=True, null=True)
     version = models.IntegerField(blank=True, null=True)
-    comentario = models.CharField(max_length=256, blank=True, null=True)
+    comentario = models.CharField(max_length=255, blank=True, null=True)
 
+    class Meta:
+        abstract = True
+
+
+class Header(BaseHeaderOrFooter):
     class Meta:
         managed = False
         db_table = 'header'
 
 
-class Footer(BigIntegerPKModel):
-    html = models.TextField(blank=True, null=True)
-    titulo = models.CharField(max_length=64, blank=True, null=True)
-    version = models.IntegerField(blank=True, null=True)
-    comentario = models.CharField(max_length=256, blank=True, null=True)
-
+class Footer(BaseHeaderOrFooter):
     class Meta:
         managed = False
         db_table = 'footer'
@@ -114,6 +118,10 @@ class Plantilla(BigIntegerPKModel):
     cantidadfirmas = models.IntegerField(blank=True, null=True)
     urlparams = models.TextField(blank=True, null=True)
 
+    # m2m relationships
+    headers = models.ManyToManyField(Header, through='IntermediatePlantillaHeader')
+    footers = models.ManyToManyField(Footer, through='IntermediatePlantillaFooter')
+
     class Meta:
         managed = False
         db_table = 'plantilla'
@@ -146,26 +154,6 @@ class Bodyscript(BigIntegerPKModel):
     class Meta:
         managed = False
         db_table = 'bodyscript'
-
-
-class Plantillaheader(BigIntegerPKModel):
-    fkheader = models.ForeignKey(Header, models.DO_NOTHING, db_column='fkheader', blank=True, null=True)
-    fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'plantillaheader'
-
-
-class Plantillafooter(BigIntegerPKModel):
-    fkfooter = models.ForeignKey(Footer, models.DO_NOTHING, db_column='fkfooter', blank=True, null=True)
-    fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'plantillafooter'
 
 
 class Seccion(BigIntegerPKModel):
@@ -377,3 +365,35 @@ class Subsubsecentry(BigIntegerPKModel):
     class Meta:
         managed = False
         db_table = 'subsubsecentry'
+
+
+################################################################################
+# Intermediate models, to be used by many-to-many relationships
+
+class BaseIntermediateHeaderOrFooter(BigIntegerPKModel):
+    """
+    Base (abstract) class for intermediate models to be
+    used in many-to-many relationships between Plantilla
+    and headers/footers, as they both have the same fields.
+    """
+    ordinal = models.IntegerField(blank=True, null=True)
+    fkplantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class IntermediatePlantillaHeader(BaseIntermediateHeaderOrFooter):
+    fkheader = models.ForeignKey(Header, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'plantillaheader'
+
+
+class IntermediatePlantillaFooter(BaseIntermediateHeaderOrFooter):
+    fkfooter = models.ForeignKey(Footer, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'plantillafooter'

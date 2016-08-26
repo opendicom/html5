@@ -387,24 +387,6 @@ class BodyscriptViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
 
-class PlantillaheaderViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Plantillaheader.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.PlantillaheaderSerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class PlantillafooterViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Plantillafooter.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.PlantillafooterSerializer
-    pagination_class = StandardResultsSetPagination
-
-
 class SeccionViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
     queryset = models.Seccion.objects.all()

@@ -70,18 +70,6 @@ class BodyscriptSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PlantillaheaderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Plantillaheader
-        fields = '__all__'
-
-
-class PlantillafooterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Plantillafooter
-        fields = '__all__'
-
-
 class SeccionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Seccion
