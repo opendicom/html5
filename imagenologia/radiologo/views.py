@@ -466,30 +466,3 @@ class SubmitViewSet(viewsets.ModelViewSet):
     #filter_fields = ()
     serializer_class = serializers.SubmitSerializer
     pagination_class = StandardResultsSetPagination
-
-
-class SecentryViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Secentry.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend)
-    #filter_fields = ()
-    serializer_class = serializers.SecentrySerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class SubsecentryViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Subsecentry.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend)
-    #filter_fields = ()
-    serializer_class = serializers.SubsecentrySerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class SubsubsecentryViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Subsubsecentry.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend)
-    #filter_fields = ()
-    serializer_class = serializers.SubsubsecentrySerializer
-    pagination_class = StandardResultsSetPagination

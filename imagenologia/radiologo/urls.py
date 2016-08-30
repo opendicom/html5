@@ -22,9 +22,6 @@ router.register(r'susbsec', views.SusbsecViewSet)
 router.register(r'susbsubsec', views.SusbsubsecViewSet)
 router.register(r'firma', views.FirmaViewSet)
 router.register(r'submit', views.SubmitViewSet)
-router.register(r'secentry', views.SecentryViewSet)
-router.register(r'subsecentry', views.SubsecentryViewSet)
-router.register(r'subsubsecentry', views.SubsubsecentryViewSet)
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),

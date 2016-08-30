@@ -251,6 +251,8 @@ class Sec(BigIntegerPKModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
+    entries = models.ManyToManyField(Entry, through='IntermediateSecEntry')
+
     class Meta:
         managed = False
         db_table = 'sec'
@@ -266,6 +268,8 @@ class Susbsec(BigIntegerPKModel):
                                      related_name="fksubseccode")
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
+
+    entries = models.ManyToManyField(Entry, through='IntermediateSubSecEntry')
 
     class Meta:
         managed = False
@@ -283,6 +287,8 @@ class Susbsubsec(BigIntegerPKModel):
                                         related_name="subsubseccode")
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
+
+    entries = models.ManyToManyField(Entry, through='IntermediateSubSubSecEntry')
 
     class Meta:
         managed = False
@@ -305,16 +311,6 @@ class Firma(BigIntegerPKModel):
         db_table = 'firma'
 
 
-class Secentry(BigIntegerPKModel):
-    ordinal = models.IntegerField(blank=True, null=True)
-    fk = models.ForeignKey(Sec, models.DO_NOTHING, db_column='fk', blank=True, null=True)
-    fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'secentry'
-
-
 class Submit(BigIntegerPKModel):
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     eiud = models.CharField(max_length=64, blank=True, null=True)
@@ -327,26 +323,6 @@ class Submit(BigIntegerPKModel):
     class Meta:
         managed = False
         db_table = 'submit'
-
-
-class Subsecentry(BigIntegerPKModel):
-    ordinal = models.IntegerField(blank=True, null=True)
-    fk = models.ForeignKey('Susbsec', models.DO_NOTHING, db_column='fk', blank=True, null=True)
-    fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'subsecentry'
-
-
-class Subsubsecentry(BigIntegerPKModel):
-    ordinal = models.IntegerField(blank=True, null=True)
-    fk = models.ForeignKey('Susbsubsec', models.DO_NOTHING, db_column='fk', blank=True, null=True)
-    fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'subsubsecentry'
 
 
 ################################################################################
@@ -405,3 +381,39 @@ class IntermediateBodyScript(BaseIntermediateScript):
     class Meta:
         managed = False
         db_table = 'bodyscript'
+
+
+class BaseIntermediateSectionEntry(BigIntegerPKModel):
+    """
+    Base (abstract) class for intermediate models to be used in many-to-many relationships
+    between sec/subsec/subsubsec and entry, as they all have the same fields.
+    """
+    ordinal = models.IntegerField(blank=True, null=True)
+    fkentry = models.ForeignKey(Entry, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class IntermediateSecEntry(BaseIntermediateSectionEntry):
+    fk = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'secentry'
+
+
+class IntermediateSubSecEntry(BaseIntermediateSectionEntry):
+    fk = models.ForeignKey(Susbsec, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'subsecentry'
+
+
+class IntermediateSubSubSecEntry(BaseIntermediateSectionEntry):
+    fk = models.ForeignKey(Susbsubsec, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'subsubsecentry'

@@ -118,25 +118,7 @@ class FirmaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SecentrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Secentry
-        fields = '__all__'
-
-
 class SubmitSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Submit
-        fields = '__all__'
-
-
-class SubsecentrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Subsecentry
-        fields = '__all__'
-
-
-class SubsubsecentrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Subsubsecentry
         fields = '__all__'
