@@ -259,7 +259,6 @@ class Sec(BigIntegerPKModel):
 
 
 class Susbsec(BigIntegerPKModel):
-    fksec = models.ForeignKey(Sec, models.DO_NOTHING, db_column='fksec', blank=True, null=True)
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
                                    related_name="fkcompcode")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
@@ -269,6 +268,7 @@ class Susbsec(BigIntegerPKModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
+    parent_sec = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, db_column='fksec', blank=True, null=True)
     entries = models.ManyToManyField(Entry, through='IntermediateSubSecEntry')
 
     class Meta:
@@ -277,8 +277,6 @@ class Susbsec(BigIntegerPKModel):
 
 
 class Susbsubsec(BigIntegerPKModel):
-    fksubsec = models.ForeignKey(Susbsec, models.DO_NOTHING, db_column='fksubsec', blank=True, null=True,
-                                 related_name="subsec")
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
                                    related_name="compcode")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
@@ -288,6 +286,7 @@ class Susbsubsec(BigIntegerPKModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
+    parent_subsec = models.ForeignKey(Susbsec, on_delete=models.DO_NOTHING, db_column='fksubsec', blank=True, null=True)
     entries = models.ManyToManyField(Entry, through='IntermediateSubSubSecEntry')
 
     class Meta:
