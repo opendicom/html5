@@ -24,7 +24,6 @@ class Codesystem(BigIntegerPKModel):
     oid = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'codesystem'
 
     def __str__(self):
@@ -38,7 +37,6 @@ class Scriptelement(BigIntegerPKModel):
     comentario = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'scriptelement'
 
 
@@ -58,13 +56,11 @@ class BaseHeaderOrFooter(BigIntegerPKModel):
 
 class Header(BaseHeaderOrFooter):
     class Meta:
-        managed = False
         db_table = 'header'
 
 
 class Footer(BaseHeaderOrFooter):
     class Meta:
-        managed = False
         db_table = 'footer'
 
 
@@ -74,7 +70,6 @@ class Articlehtml(BigIntegerPKModel):
     html = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'articlehtml'
 
     def __str__(self):
@@ -87,7 +82,6 @@ class Code(BigIntegerPKModel):
     displayname = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'code'
 
     def __str__(self):
@@ -99,7 +93,6 @@ class Estudio(BigIntegerPKModel):
     fkcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'estudio'
 
 
@@ -125,7 +118,6 @@ class Plantilla(BigIntegerPKModel):
     bodyscripts = models.ManyToManyField(Scriptelement, through='IntermediateBodyScript', related_name='plantilla_body')
 
     class Meta:
-        managed = False
         db_table = 'plantilla'
 
 
@@ -134,7 +126,6 @@ class Plantillagruposldap(BigIntegerPKModel):
     gdn = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'plantillagruposldap'
 
 
@@ -151,7 +142,6 @@ class Seccion(BigIntegerPKModel):
     fkarticlehtml = models.ForeignKey(Articlehtml, models.DO_NOTHING, db_column='fkarticlehtml', blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'seccion'
 
 
@@ -163,7 +153,6 @@ class Selectoption(BigIntegerPKModel):
     selected = models.CharField(max_length=2, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'selectoption'
 
 
@@ -177,7 +166,6 @@ class Entry(BigIntegerPKModel):
     textreferencevalue = models.CharField(max_length=32, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'entry'
 
 
@@ -188,7 +176,6 @@ class Qualifier(BigIntegerPKModel):
     valueoriginaltext = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'qualifier'
 
 
@@ -201,7 +188,6 @@ class Value(BigIntegerPKModel):
     nullflavor = models.CharField(db_column='nullFlavor', max_length=16, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
         db_table = 'value'
 
 
@@ -235,7 +221,6 @@ class Autenticado(BigIntegerPKModel):
     solicituduid = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'autenticado'
 
 
@@ -254,7 +239,6 @@ class Sec(BigIntegerPKModel):
     entries = models.ManyToManyField(Entry, through='IntermediateSecEntry')
 
     class Meta:
-        managed = False
         db_table = 'sec'
 
 
@@ -272,7 +256,6 @@ class Susbsec(BigIntegerPKModel):
     entries = models.ManyToManyField(Entry, through='IntermediateSubSecEntry')
 
     class Meta:
-        managed = False
         db_table = 'susbsec'
 
 
@@ -290,7 +273,6 @@ class Susbsubsec(BigIntegerPKModel):
     entries = models.ManyToManyField(Entry, through='IntermediateSubSubSecEntry')
 
     class Meta:
-        managed = False
         db_table = 'susbsubsec'
 
 
@@ -306,7 +288,6 @@ class Firma(BigIntegerPKModel):
     ioid = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'firma'
 
 
@@ -320,7 +301,6 @@ class Submit(BigIntegerPKModel):
     listoparaautenticacion = models.CharField(max_length=2, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'submit'
 
 
@@ -344,7 +324,6 @@ class IntermediatePlantillaHeader(BaseIntermediateHeaderOrFooter):
     fkheader = models.ForeignKey(Header, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'plantillaheader'
 
 
@@ -352,7 +331,6 @@ class IntermediatePlantillaFooter(BaseIntermediateHeaderOrFooter):
     fkfooter = models.ForeignKey(Footer, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'plantillafooter'
 
 
@@ -372,13 +350,11 @@ class BaseIntermediateScript(BigIntegerPKModel):
 
 class IntermediateHeadScript(BaseIntermediateScript):
     class Meta:
-        managed = False
         db_table = 'headscript'
 
 
 class IntermediateBodyScript(BaseIntermediateScript):
     class Meta:
-        managed = False
         db_table = 'bodyscript'
 
 
@@ -398,7 +374,6 @@ class IntermediateSecEntry(BaseIntermediateSectionEntry):
     fk = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'secentry'
 
 
@@ -406,7 +381,6 @@ class IntermediateSubSecEntry(BaseIntermediateSectionEntry):
     fk = models.ForeignKey(Susbsec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'subsecentry'
 
 
@@ -414,5 +388,4 @@ class IntermediateSubSubSecEntry(BaseIntermediateSectionEntry):
     fk = models.ForeignKey(Susbsubsec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'subsubsecentry'
