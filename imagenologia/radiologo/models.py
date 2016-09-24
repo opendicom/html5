@@ -242,11 +242,11 @@ class Sec(BigIntegerPKModel):
         db_table = 'sec'
 
 
-class Susbsec(BigIntegerPKModel):
+class Subsec(BigIntegerPKModel):
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
                                    related_name="fkcompcode")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
-    idsusbsec = models.CharField(max_length=4, blank=True, null=True)
+    idsubsec = models.CharField(max_length=4, blank=True, null=True)  # (?)
     fksubseccode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fksubseccode', blank=True, null=True,
                                      related_name="fksubseccode")
     title = models.CharField(max_length=255, blank=True, null=True)
@@ -256,24 +256,24 @@ class Susbsec(BigIntegerPKModel):
     entries = models.ManyToManyField(Entry, through='IntermediateSubSecEntry')
 
     class Meta:
-        db_table = 'susbsec'
+        db_table = 'subsec'
 
 
-class Susbsubsec(BigIntegerPKModel):
+class Subsubsec(BigIntegerPKModel):
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
                                    related_name="compcode")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
-    idsusbsubsec = models.CharField(max_length=4, blank=True, null=True)
+    idsubsubsec = models.CharField(max_length=4, blank=True, null=True)  # (?)
     fksubsubseccode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fksubsubseccode', blank=True, null=True,
                                         related_name="subsubseccode")
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
-    parent_subsec = models.ForeignKey(Susbsec, on_delete=models.DO_NOTHING, db_column='fksubsec', blank=True, null=True)
+    parent_subsec = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, db_column='fksubsec', blank=True, null=True)
     entries = models.ManyToManyField(Entry, through='IntermediateSubSubSecEntry')
 
     class Meta:
-        db_table = 'susbsubsec'
+        db_table = 'subsubsec'
 
 
 class Firma(BigIntegerPKModel):
@@ -378,14 +378,14 @@ class IntermediateSecEntry(BaseIntermediateSectionEntry):
 
 
 class IntermediateSubSecEntry(BaseIntermediateSectionEntry):
-    fk = models.ForeignKey(Susbsec, on_delete=models.DO_NOTHING, blank=True, null=True)
+    fk = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'subsecentry'
 
 
 class IntermediateSubSubSecEntry(BaseIntermediateSectionEntry):
-    fk = models.ForeignKey(Susbsubsec, on_delete=models.DO_NOTHING, blank=True, null=True)
+    fk = models.ForeignKey(Subsubsec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'subsubsecentry'

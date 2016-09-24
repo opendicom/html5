@@ -432,21 +432,21 @@ class SecViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
 
-class SusbsecViewSet(viewsets.ModelViewSet):
+class SubsecViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
-    queryset = models.Susbsec.objects.all()
+    queryset = models.Subsec.objects.all()
     #filter_backends = (filters.DjangoFilterBackend)
     #filter_fields = ()
-    serializer_class = serializers.SusbsecSerializer
+    serializer_class = serializers.SubsecSerializer
     pagination_class = StandardResultsSetPagination
 
 
-class SusbsubsecViewSet(viewsets.ModelViewSet):
+class SubsubsecViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
-    queryset = models.Susbsubsec.objects.all()
+    queryset = models.Subsubsec.objects.all()
     #filter_backends = (filters.DjangoFilterBackend)
     #filter_fields = ()
-    serializer_class = serializers.SusbsubsecSerializer
+    serializer_class = serializers.SubsubsecSerializer
     pagination_class = StandardResultsSetPagination
 
 

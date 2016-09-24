@@ -100,15 +100,15 @@ class SecSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SusbsecSerializer(serializers.ModelSerializer):
+class SubsecSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Susbsec
+        model = models.Subsec
         fields = '__all__'
 
 
-class SusbsubsecSerializer(serializers.ModelSerializer):
+class SubsubsecSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Susbsubsec
+        model = models.Subsubsec
         fields = '__all__'
 
 
