@@ -1,0 +1,81 @@
+{% load staticfiles %}
+<br>
+<hr/>
+<div class="container">
+    <ul class="nav nav-tabs" id="options-tabs">
+    </ul>
+    <div class="tab-content">
+    </div>
+</div>
+<script>
+    addTab = function (institution, role, service){
+        $("#options-tabs").empty();
+        $(".tab-content").empty();
+        var nextTab = $('#options-tabs li').size()+1;
+        var divStartTabPane = '<div class="tab-pane" id="tab'+nextTab+'">';
+        var divEndTabPane = '</div>';
+        var ContentTabPane = `<br/><div class="container">
+            <form class="navbar-form navbar-left">
+                <div class="form-group">
+                    <input class="form-control" type="search" id="search_id" placeholder="Documento" name="search_id"/>
+                </div>
+                <div class="form-group">
+                    <input class="form-control" type="search" id="search_name" placeholder="Nombre" name="search_name" value=""/>
+                </div>
+                <div class="form-group">
+                    <input class="form-control" type="date" id="search_start" name="search_start" placeholder="dd-mm-aaaa" />
+                </div>
+                <div class="form-group">
+                    <input class="form-control" type="date" id="search_end" name="search_end" placeholder="dd-mm-aaaa" />
+                </div>
+                <div class="form-group">
+                    <select class="form-control" id="modality" name="modality">
+                        <option value="CR">CR</option>
+                        <option value="CT">CT</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select class="form-control" id="search_status" name="search_status">
+  				        <option value="all">Todos los Estudios</option>
+  				        <option value="informed">Solo estudios informados</option>
+  				        <option value="authenticate">Estudios por autenticar</option>
+  				        <option value="unauthenticated">Estudios no informados</option>
+		            </select>
+                </div>
+                <button type="button" class="btn btn-default">Buscar</button>
+            </form>
+	</div>
+    <table id="table_study" class="table table-striped table-bordered cellspacing="0" width="100%"">
+        <thead>
+            <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+			    <th>Documento</th>
+                <th>Nombre</th>
+                <th>Informador</th>
+                <th>Modalidad</th>
+                <th>Estudio</th>
+                <th>Fecha Estudio</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>`;
+  	    $('<li><a href="#tab'+nextTab+'" data-toggle="tab">'+ role +' - '+ institution +'</a></li>').appendTo('#options-tabs');
+  	    $(divStartTabPane + ContentTabPane  + divEndTabPane ).appendTo('.tab-content');
+  	    $('#options-tabs a:last').tab('show');
+  	    $('#table_study').DataTable({
+                'bFilter'       : false,
+                'paging'        : true,
+                'bLengthChange' : false,
+                'pageLength'    : 8,
+                'processing'    : true,
+                'bInfo'         : false,
+                'language'      : {
+                    'url': "{% static 'html5dicom/datatables/i18n/Spanish.json' %}"
+                }
+
+            });
+    }
+</script>

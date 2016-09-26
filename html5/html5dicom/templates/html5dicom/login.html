@@ -1,0 +1,26 @@
+{% extends "html5dicom/base.html" %}
+{% block title %} Inicio de sesion {% endblock %}
+{% block content %}
+    <div class="row top10">
+        <div class="col-md-4 col-md-offset-4">
+            <center>
+                <form role="form" method="post" action="/html5dicom/login">
+                    <legend>Inicio de sesion</legend>
+                    {% csrf_token %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}" />
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="username">Usuario</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Usuario">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                </form>
+            </center>
+        </div>
+    </div>
+{% endblock %}

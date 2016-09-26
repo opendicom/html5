@@ -1,0 +1,13 @@
+{% extends "html5dicom/base.html" %}
+{% block title %} Main Menu {% endblock %}
+{% block navbar %}
+    {% include "html5dicom/navbar.html" %}
+{% endblock %}
+{% block content %}
+    {% include "html5dicom/tab.html" %}
+{% endblock %}
+{% block scripts %}
+    {% load staticfiles %}
+    <link href='{% static "html5dicom/datatables/datatables.min.css" %}' rel="stylesheet">
+    <script type="text/javascript" src='{% static "html5dicom/datatables/datatables.min.js" %}'></script>
+{% endblock %}
