@@ -2,6 +2,12 @@ from django.contrib import admin
 from html5dicom import models
 
 
+class OrganizationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'short_name', 'oid')
+
+admin.site.register(models.Organization, OrganizationAdmin)
+
+
 class InstitutionAdmin(admin.ModelAdmin):
     list_display = ['name', 'short_name', 'oid', 'create_date', 'last_update']
 
@@ -24,3 +30,9 @@ class AlternateAdmin(admin.ModelAdmin):
     list_display = ['user', 'role']
 
 admin.site.register(models.Alternate, AlternateAdmin)
+
+
+class SettingAdmin(admin.ModelAdmin):
+    list_display = ('key', 'value')
+
+admin.site.register(models.Setting, SettingAdmin)

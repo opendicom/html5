@@ -1,7 +1,8 @@
 {% load staticfiles %}
 <br>
 <hr/>
-<div class="container">
+
+<div class="container-fluid">
     <ul class="nav nav-pills nav-justified" id="options-tabs">
     </ul>
     <div class="tab-content">
@@ -19,7 +20,7 @@
         for(var i = 0; i < service_arr.length; i++){
             service_options += '<option value="service_arr[i]">service_arr[i]</option>';
         }
-        var ContentTabPane = `{% include "html5dicom/tab_medico.html" %}`;
+        var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
 
   	    $('<li><a href="#tab'+nextTab+'" data-toggle="tab">'+ role +' - '+ institution +'</a></li>').appendTo('#options-tabs');
   	    $(divStartTabPane + ContentTabPane  + divEndTabPane ).appendTo('.tab-content');
@@ -38,16 +39,29 @@
   	        ],
             'bFilter'       : true,
             'paging'        : true,
-            'bLengthChange' : false,
-            'pageLength'    : 10,
             'processing'    : true,
             'bInfo'         : true,
             'autoWidth'     : false,
             'language'      : {
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish.json' %}"
             },
-           });
-        // Apply the search
+            'oLanguage': {
+                'sSearch': 'Accession number : '
+            },
+            'dom': '<"toolbar">frtip'
+        });
+        var select_pcs = `
+            <label class="control-label" for="pcs">Custodio :</label>
+                <select class="form-control" id="pcs" disabled>
+                    <option value="default">Default</option>
+                </select>
+            <label class="control-label" for="ae">AET :</label>
+                <select class="form-control" id="ae" disabled>
+                    <option value="default">Default</option>
+                </select>
+                `;
+        $("div.toolbar").html(select_pcs);
+
         table.columns().eq( 0 ).each( function ( colIdx ) {
             $( 'input', table.column( colIdx ).header() ).on( 'keyup change', function () {
                 table
