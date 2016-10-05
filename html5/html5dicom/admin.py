@@ -21,7 +21,9 @@ admin.site.register(models.Service, ServiceAdmin)
 
 
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ['name', 'user', 'institution', 'service', 'create_date', 'last_update']
+    list_display = ['name', 'user', 'institution', 'service', 'default']
+    list_filter = ('name',)
+    search_fields = ['user__username']
 
 admin.site.register(models.Role, RoleAdmin)
 

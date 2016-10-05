@@ -1,7 +1,7 @@
-<nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
+<nav class="navbar navbar-ligth" role="navigation">
+    <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed " data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
@@ -10,23 +10,22 @@
             <a class="navbar-brand" href="{% url 'main' %}"><span class="glyphicon glyphicon-home"></span> Opciones Disponibles</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-                {% for institution, role in roles.items %}
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-list-alt"></span> {{institution}}<span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                        {% for rol, service in role.items %}
-                            <li><a href="#" onclick="addTab('{{institution}}', '{{rol}}', '{{ service|join:','}}')">{{rol}}</a></li>
+            <ul class="nav navbar-nav navbar-form">
+                    <select class="selectpicker" data-header="Seleccione Organizacion" id="org_select" data-width="fit">
+                        {% for key, value in organization.items %}
+                            <option value="{{ key }}">{{ key }}</option>
                         {% endfor %}
-                        </ul>
-                    </li>
-                {% endfor %}
+                    </select>
+                    <select class="selectpicker" data-header="Seleccione Institucion" id="inst_select"> <!--data-width="fit">-->
+                    </select>
+                    <select class="selectpicker" data-header="Seleccione Rol" id="rol_select"> <!-- data-width="fit">-->
+                    </select>
             </ul>
             <ul class="nav navbar-nav navbar-right">
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user"></span> {{ user.get_full_name }}</a>
                 <ul class="dropdown-menu">
-                  <li><a href="{% url 'logout' %}">Salir</a></li>
+                  <li><a href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-out"></span> Salir</a></li>
                 </ul>
               </li>
             </ul>

@@ -3,6 +3,8 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from html5dicom import models
+import requests
+import json
 
 
 def user_login(request, *args, **kwargs):
@@ -30,20 +32,81 @@ def user_logout(request, *args, **kwargs):
 @login_required(login_url='/html5dicom/login')
 def main(request, *args, **kwargs):
     if request.user.is_authenticated:
-        institution_role_service = {}
-        for role in models.Role.objects.filter(user=request.user.id):
-            if role.institution is None:
-                if role.service.institution in institution_role_service:
-                    if role.get_name_display() in institution_role_service[role.service.institution]:
-                        institution_role_service[role.service.institution][role.get_name_display()].append(role.service.name)
+        url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
+        organization = {}
+        for role in models.Role.objects.filter(user=request.user.id).order_by('default'):
+            if role.institution:
+                if role.institution.organization.short_name in organization:
+                    if role.institution.short_name in organization[role.institution.organization.short_name]['institution']:
+                        organization[role.institution.organization.short_name]['institution'][role.institution.short_name].update(
+                            {role.get_name_display(): {"service": []}}
+                        )
                     else:
-                        institution_role_service[role.service.institution].update({role.get_name_display(): [role.service.name]})
+                        url_httpdicom_req = url_httpdicom + '/orgts/' + role.institution.organization.short_name
+                        url_httpdicom_req += '/aets/' + role.institution.short_name
+                        oid_inst = requests.get(url_httpdicom_req)
+                        organization[role.institution.organization.short_name]['institution'].update(
+                            {role.institution.short_name: {'aet': role.institution.short_name, 'oid':
+                                oid_inst.json()[0], role.get_name_display(): {"service": []}}}
+                        )
                 else:
-                    institution_role_service.update({role.service.institution: {role.get_name_display(): [role.service.name]}})
+                    url_httpdicom_req = url_httpdicom + '/orgts/' + role.institution.organization.short_name
+                    oid_org = requests.get(url_httpdicom_req)
+                    url_httpdicom_req += '/aets/' + role.institution.short_name
+                    oid_inst = requests.get(url_httpdicom_req)
+                    organization.update({
+                        role.institution.organization.short_name:
+                            {
+                                "oid": oid_org.json()[0],
+                                "name": role.institution.organization.short_name,
+                                "institution": {
+                                    role.institution.short_name: {
+                                        'aet': role.institution.short_name,
+                                        'oid': oid_inst.json()[0],
+                                        role.get_name_display(): {
+                                            "service": []
+                                        }
+                                    }
+                                }
+                            }
+                    })
             else:
-                if role.institution in institution_role_service:
-                    institution_role_service[role.institution].append({role.get_name_display(): []})
+                if role.service.institution.organization.short_name in organization:
+                    if role.service.institution.short_name in organization[role.service.institution.organization.short_name]['institution']:
+                        if role.get_name_display() in organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name]:
+                            if role.service.name not in organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['service']:
+                                organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['service'].append(role.service.name)
+
+                        else:
+                            organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name].update({role.get_name_display(): {"service": [role.service.name]}})
+                    else:
+                        url_httpdicom_req = url_httpdicom + '/orgts/' + role.service.institution.organization.short_name
+                        url_httpdicom_req += '/aets/' + role.service.institution.short_name
+                        oid_inst = requests.get(url_httpdicom_req)
+                        organization[role.service.institution.organization.short_name]['institution'].update(
+                            {role.service.institution.short_name: {'aet': role.service.institution.short_name, 'oid':
+                                oid_inst.json()[0], role.get_name_display(): {"service": []}}}
+                        )
                 else:
-                    institution_role_service.update({role.institution: {role.get_name_display(): []}})
-        context_user = {'roles': institution_role_service}
+                    url_httpdicom_req = url_httpdicom + '/orgts/' + role.service.institution.organization.short_name
+                    oid_org = requests.get(url_httpdicom_req)
+                    url_httpdicom_req += '/aets/' + role.service.institution.short_name
+                    oid_inst = requests.get(url_httpdicom_req)
+                    organization.update({
+                        role.service.institution.organization.short_name:
+                            {
+                                "oid": oid_org.json()[0],
+                                "name": role.service.institution.organization.short_name,
+                                "institution": {
+                                    role.service.institution.short_name: {
+                                        'aet': role.service.institution.short_name,
+                                        'oid': oid_inst.json()[0],
+                                        role.get_name_display(): {
+                                            "service": [role.service.name]
+                                        }
+                                    }
+                                }
+                            }
+                    })
+        context_user = {'organization': organization}
         return render(request, template_name='html5dicom/main.html', context=context_user)

@@ -1,75 +1,79 @@
 {% load staticfiles %}
-<br>
-<hr/>
-
-<div class="container-fluid">
-    <ul class="nav nav-pills nav-justified" id="options-tabs">
-    </ul>
-    <div class="tab-content">
-    </div>
+<div class="container-fluid" id="table-container">
 </div>
 <script>
-    addTab = function (institution, role, service){
-        $("#options-tabs").empty();
-        $(".tab-content").empty();
-        var nextTab = $('#options-tabs li').size()+1;
-        var divStartTabPane = '<div class="tab-pane fade in active" id="tab'+nextTab+'">';
-        var divEndTabPane = '</div>';
+    addTableStudy = function (org, inst, role, service){
+        $("#table-container").empty();
         var service_arr = service.split(',');
-        var service_options = '';
+        var service_options = '<select class="control-label" id="modalities"><option value="'+ service +'">Todos</option>';
         for(var i = 0; i < service_arr.length; i++){
-            service_options += '<option value="service_arr[i]">service_arr[i]</option>';
+            service_options += '<option value="' + service_arr[i]+ '">' + service_arr[i] + '</option>';
         }
+        service_options += '</select>';
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
-
-  	    $('<li><a href="#tab'+nextTab+'" data-toggle="tab">'+ role +' - '+ institution +'</a></li>').appendTo('#options-tabs');
-  	    $(divStartTabPane + ContentTabPane  + divEndTabPane ).appendTo('.tab-content');
-  	    $('#options-tabs a:last').tab('show');
-
+  	    $(ContentTabPane).appendTo('#table-container');
         $('#table_study thead th').each( function () {
             var title = $('#table_study tfoot th').eq( $(this).index() ).text();
             if (title != '') {
-                $(this).html('<input type="text" placeholder="'+title+'"/>');
+                if (title == 'Modalidades'){
+                    $(this).html(service_options);
+                }else if(title == 'Fecha'){
+                    $(this).html('<input type="date" value="'+ new Date().toISOString().slice(0, 10) +'"/>');
+                }else{
+                    $(this).html('<input type="text" placeholder="'+title+'"/>');
+                }
             }
         });
-
   	    var table = $('#table_study').DataTable({
-  	        'columnDefs'    : [
-  	            {'width': '5%'}
-  	        ],
-            'bFilter'       : true,
-            'paging'        : true,
-            'processing'    : true,
-            'bInfo'         : true,
-            'autoWidth'     : false,
+  	        "columnDefs": [{
+                "targets": 2,
+                "render": function ( data, type, full, meta ) {
+                    return '<button class="btn btn-default btn-xs" type="button"><span class="glyphicon glyphicon-search"></span> '+ data +'</button>';
+                }
+            },
+            {
+                "targets": 5,
+                "render": function ( data, type, full, meta ) {
+                    var modalities = data.split(',');
+                    var row_str = '';
+                    for(modality in modalities){
+                        if(modalities[modality] == 'OT'){
+                            row_str += '<a href="#"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
+                        }else if(modalities[modality] == 'DOC'){
+                            row_str += '<a href="#"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
+                        }else{
+                            row_str += modalities[modality];
+                        }
+                    }
+                    return row_str;
+                }
+            }
+
+            ],
+  	        'pageLength'    : 10,
+  	        'order'         : false,
             'language'      : {
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish.json' %}"
             },
-            'oLanguage': {
-                'sSearch': 'Accession number : '
-            },
-            'dom': '<"toolbar">frtip'
+            "dom": '<"toolbar">frtip',
+            initComplete: function(){
+                $("div.toolbar")
+                    .html('<button class="btn btn-primary" type="button"><span class="glyphicon glyphicon-search"></span> Buscar</button>');
+                }
         });
-        var select_pcs = `
-            <label class="control-label" for="pcs">Custodio :</label>
-                <select class="form-control" id="pcs" disabled>
-                    <option value="default">Default</option>
-                </select>
-            <label class="control-label" for="ae">AET :</label>
-                <select class="form-control" id="ae" disabled>
-                    <option value="default">Default</option>
-                </select>
-                `;
-        $("div.toolbar").html(select_pcs);
-
         table.columns().eq( 0 ).each( function ( colIdx ) {
-            $( 'input', table.column( colIdx ).header() ).on( 'keyup change', function () {
+            $('input', table.column( colIdx ).header() ).on( 'keyup change', function () {
+                table
+                    .column( colIdx )
+                    .search( this.value )
+                    .draw();
+                } );
+            $('select', table.column( colIdx ).header() ).on( 'keyup change', function () {
                 table
                     .column( colIdx )
                     .search( this.value )
                     .draw();
                 } );
         } );
-
     }
 </script>

@@ -14,7 +14,43 @@
     <script type="text/javascript" src='{% static "html5dicom/datatables/dataTables.responsive.min.js" %}'></script>
     <style>
         .toolbar {
-            float: left;
+            float:left;
         }
     </style>
+    <script>
+        var organization = {{organization|safe}};
+        $( document ).ready(function() {
+            load_inst();
+            load_rol();
+        });
+        $('#org_select').on('change', function() {
+           load_inst();
+        });
+        $('#inst_select').on('change', function() {
+           load_rol();
+        });
+        $('#rol_select').on('change', function() {
+           var service = organization[$('#org_select').val()].institution[$('#inst_select').val()][$('#rol_select').val()].service;
+           addTableStudy($('#org_select').val(), $('#inst_select').val(), $('#rol_select').val(), service.toString());
+        });
+        function load_inst(){
+            var options = '';
+            for(var key in organization[$('#org_select').val()].institution) {
+                $('#inst_select').empty();
+                options += '<option value="' + key + '">' + key + '</option>';
+                $('#inst_select').html(options);
+            }
+        }
+        function load_rol(){
+            var options = '';
+            for(var key in organization[$('#org_select').val()].institution[$('#inst_select').val()]) {
+                $('#rol_select').empty();
+                if(key != 'aet' && key != 'oid'){
+                    options += '<option value="' + key + '">' + key + '</option>';
+                }
+                $('#rol_select').html(options);
+            }
+            $('#rol_select').trigger("change");
+        }
+    </script>
 {% endblock %}
