@@ -58,30 +58,6 @@ class PlantillagruposldapSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class HeadscriptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Headscript
-        fields = '__all__'
-
-
-class BodyscriptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Bodyscript
-        fields = '__all__'
-
-
-class PlantillaheaderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Plantillaheader
-        fields = '__all__'
-
-
-class PlantillafooterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Plantillafooter
-        fields = '__all__'
-
-
 class SeccionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Seccion
@@ -124,15 +100,15 @@ class SecSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SusbsecSerializer(serializers.ModelSerializer):
+class SubsecSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Susbsec
+        model = models.Subsec
         fields = '__all__'
 
 
-class SusbsubsecSerializer(serializers.ModelSerializer):
+class SubsubsecSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Susbsubsec
+        model = models.Subsubsec
         fields = '__all__'
 
 
@@ -142,25 +118,7 @@ class FirmaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SecentrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Secentry
-        fields = '__all__'
-
-
 class SubmitSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Submit
-        fields = '__all__'
-
-
-class SubsecentrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Subsecentry
-        fields = '__all__'
-
-
-class SubsubsecentrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Subsubsecentry
         fields = '__all__'

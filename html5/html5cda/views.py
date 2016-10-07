@@ -369,42 +369,6 @@ class PlantillagruposldapViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
 
-class HeadscriptViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Headscript.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.HeadscriptSerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class BodyscriptViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Bodyscript.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.BodyscriptSerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class PlantillaheaderViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Plantillaheader.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.PlantillaheaderSerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class PlantillafooterViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Plantillafooter.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend,)
-    #filter_fields = (,)
-    serializer_class = serializers.PlantillafooterSerializer
-    pagination_class = StandardResultsSetPagination
-
-
 class SeccionViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
     queryset = models.Seccion.objects.all()
@@ -468,21 +432,21 @@ class SecViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
 
-class SusbsecViewSet(viewsets.ModelViewSet):
+class SubsecViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
-    queryset = models.Susbsec.objects.all()
+    queryset = models.Subsec.objects.all()
     #filter_backends = (filters.DjangoFilterBackend)
     #filter_fields = ()
-    serializer_class = serializers.SusbsecSerializer
+    serializer_class = serializers.SubsecSerializer
     pagination_class = StandardResultsSetPagination
 
 
-class SusbsubsecViewSet(viewsets.ModelViewSet):
+class SubsubsecViewSet(viewsets.ModelViewSet):
     lookup_field = 'id'
-    queryset = models.Susbsubsec.objects.all()
+    queryset = models.Subsubsec.objects.all()
     #filter_backends = (filters.DjangoFilterBackend)
     #filter_fields = ()
-    serializer_class = serializers.SusbsubsecSerializer
+    serializer_class = serializers.SubsubsecSerializer
     pagination_class = StandardResultsSetPagination
 
 
@@ -501,31 +465,4 @@ class SubmitViewSet(viewsets.ModelViewSet):
     #filter_backends = (filters.DjangoFilterBackend)
     #filter_fields = ()
     serializer_class = serializers.SubmitSerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class SecentryViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Secentry.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend)
-    #filter_fields = ()
-    serializer_class = serializers.SecentrySerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class SubsecentryViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Subsecentry.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend)
-    #filter_fields = ()
-    serializer_class = serializers.SubsecentrySerializer
-    pagination_class = StandardResultsSetPagination
-
-
-class SubsubsecentryViewSet(viewsets.ModelViewSet):
-    lookup_field = 'id'
-    queryset = models.Subsubsecentry.objects.all()
-    #filter_backends = (filters.DjangoFilterBackend)
-    #filter_fields = ()
-    serializer_class = serializers.SubsubsecentrySerializer
     pagination_class = StandardResultsSetPagination

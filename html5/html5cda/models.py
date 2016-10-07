@@ -3,100 +3,100 @@ from __future__ import unicode_literals
 from django.db import models
 
 
+class BigIntegerPKModel(models.Model):
+    """
+    Use big integers as primary key
+    (https://docs.djangoproject.com/es/1.10/ref/models/fields/#bigautofield)
+    """
+    id = models.BigAutoField(primary_key=True)
+
+    class Meta:
+        abstract = True
+
+
 class Configuracion(models.Model):
     key = models.CharField(max_length=20)
     value = models.CharField(max_length=200)
 
 
-class Codesystem(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Codesystem(BigIntegerPKModel):
     name = models.CharField(max_length=16, blank=True, null=True)
     oid = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'codesystem'
 
     def __str__(self):
         return 'name: %s, oid: %s' % (self.name, self.oid)
 
 
-class Scriptelement(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Scriptelement(BigIntegerPKModel):
     html = models.TextField(blank=True, null=True)
     titulo = models.CharField(max_length=64, blank=True, null=True)
     version = models.IntegerField(blank=True, null=True)
     comentario = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'scriptelement'
 
 
-class Header(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class BaseHeaderOrFooter(BigIntegerPKModel):
+    """
+    Base (abstract) class for headers and footers,
+    as they both have the same fields.
+    """
     html = models.TextField(blank=True, null=True)
     titulo = models.CharField(max_length=64, blank=True, null=True)
     version = models.IntegerField(blank=True, null=True)
-    comentario = models.CharField(max_length=256, blank=True, null=True)
+    comentario = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
+        abstract = True
+
+
+class Header(BaseHeaderOrFooter):
+    class Meta:
         db_table = 'header'
 
 
-class Footer(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    html = models.TextField(blank=True, null=True)
-    titulo = models.CharField(max_length=64, blank=True, null=True)
-    version = models.IntegerField(blank=True, null=True)
-    comentario = models.CharField(max_length=256, blank=True, null=True)
-
+class Footer(BaseHeaderOrFooter):
     class Meta:
-        managed = False
         db_table = 'footer'
 
 
-class Articlehtml(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Articlehtml(BigIntegerPKModel):
     titulo = models.CharField(max_length=64, blank=True, null=True)
     descripcion = models.CharField(max_length=256, blank=True, null=True)
     html = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'articlehtml'
 
     def __str__(self):
         return 'Titulo: %s, descripcion: %s' % (self.titulo, self.descripcion)
 
 
-class Code(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Code(BigIntegerPKModel):
     fkcodesystem = models.ForeignKey('Codesystem', models.DO_NOTHING, db_column='fkcodesystem', blank=True, null=True)
     code = models.CharField(max_length=16, blank=True, null=True)
     displayname = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'code'
 
     def __str__(self):
         return 'code: %s, displayname: %s' % (self.code, self.displayname)
 
 
-class Estudio(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Estudio(BigIntegerPKModel):
     modalidad = models.CharField(max_length=5, blank=True, null=True)
     fkcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'estudio'
 
 
-class Plantilla(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Plantilla(BigIntegerPKModel):
     fkestudio = models.ForeignKey(Estudio, models.DO_NOTHING, db_column='fkestudio', blank=True, null=True)
     title = models.CharField(max_length=64, blank=True, null=True)
     type = models.CharField(max_length=64, blank=True, null=True)
@@ -111,67 +111,25 @@ class Plantilla(models.Model):
     cantidadfirmas = models.IntegerField(blank=True, null=True)
     urlparams = models.TextField(blank=True, null=True)
 
+    # m2m relationships
+    headers = models.ManyToManyField(Header, through='IntermediatePlantillaHeader')
+    footers = models.ManyToManyField(Footer, through='IntermediatePlantillaFooter')
+    headscripts = models.ManyToManyField(Scriptelement, through='IntermediateHeadScript', related_name='plantilla_head')
+    bodyscripts = models.ManyToManyField(Scriptelement, through='IntermediateBodyScript', related_name='plantilla_body')
+
     class Meta:
-        managed = False
         db_table = 'plantilla'
 
 
-class Plantillagruposldap(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Plantillagruposldap(BigIntegerPKModel):
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     gdn = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'plantillagruposldap'
 
 
-class Headscript(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    fkscript = models.ForeignKey('Scriptelement', models.DO_NOTHING, db_column='fkscript', blank=True, null=True)
-    fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'headscript'
-
-
-class Bodyscript(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    fkscript = models.ForeignKey('Scriptelement', models.DO_NOTHING, db_column='fkscript', blank=True, null=True)
-    fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'bodyscript'
-
-
-class Plantillaheader(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    fkheader = models.ForeignKey(Header, models.DO_NOTHING, db_column='fkheader', blank=True, null=True)
-    fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'plantillaheader'
-
-
-class Plantillafooter(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    fkfooter = models.ForeignKey(Footer, models.DO_NOTHING, db_column='fkfooter', blank=True, null=True)
-    fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'plantillafooter'
-
-
-class Seccion(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Seccion(BigIntegerPKModel):
     fksection = models.ForeignKey('self', models.DO_NOTHING, db_column='fksection', blank=True, null=True)
     idseccion = models.CharField(max_length=4, blank=True, null=True)
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
@@ -184,12 +142,10 @@ class Seccion(models.Model):
     fkarticlehtml = models.ForeignKey(Articlehtml, models.DO_NOTHING, db_column='fkarticlehtml', blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'seccion'
 
 
-class Selectoption(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Selectoption(BigIntegerPKModel):
     fksection = models.ForeignKey(Seccion, models.DO_NOTHING, db_column='fksection', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
     value = models.CharField(max_length=64, blank=True, null=True)
@@ -197,12 +153,10 @@ class Selectoption(models.Model):
     selected = models.CharField(max_length=2, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'selectoption'
 
 
-class Entry(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Entry(BigIntegerPKModel):
     element = models.CharField(max_length=16, blank=True, null=True)
     elementclasscode = models.CharField(max_length=8, blank=True, null=True)
     elementmoodcode = models.CharField(max_length=8, blank=True, null=True)
@@ -212,24 +166,20 @@ class Entry(models.Model):
     textreferencevalue = models.CharField(max_length=32, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'entry'
 
 
-class Qualifier(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Qualifier(BigIntegerPKModel):
     fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
     fkcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
     valueoriginaltext = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'qualifier'
 
 
-class Value(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Value(BigIntegerPKModel):
     fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
     type = models.CharField(max_length=8, blank=True, null=True)
     fkcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
@@ -238,12 +188,10 @@ class Value(models.Model):
     nullflavor = models.CharField(db_column='nullFlavor', max_length=16, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
         db_table = 'value'
 
 
-class Autenticado(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Autenticado(BigIntegerPKModel):
     fkautenticado = models.ForeignKey('self', models.DO_NOTHING, db_column='fkautenticado', blank=True, null=True,
                                       related_name="autenticado")
     fkplantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True,
@@ -273,12 +221,10 @@ class Autenticado(models.Model):
     solicituduid = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'autenticado'
 
 
-class Sec(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Sec(BigIntegerPKModel):
     fkautenticado = models.ForeignKey(Autenticado, models.DO_NOTHING, db_column='fkautenticado', blank=True, null=True,
                                       related_name="secautenticado")
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
@@ -290,48 +236,47 @@ class Sec(models.Model):
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
+    entries = models.ManyToManyField(Entry, through='IntermediateSecEntry')
+
     class Meta:
-        managed = False
         db_table = 'sec'
 
 
-class Susbsec(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    fksec = models.ForeignKey(Sec, models.DO_NOTHING, db_column='fksec', blank=True, null=True)
+class Subsec(BigIntegerPKModel):
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
                                    related_name="fkcompcode")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
-    idsusbsec = models.CharField(max_length=4, blank=True, null=True)
+    idsubsec = models.CharField(max_length=4, blank=True, null=True)  # (?)
     fksubseccode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fksubseccode', blank=True, null=True,
                                      related_name="fksubseccode")
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
+    parent_sec = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, db_column='fksec', blank=True, null=True)
+    entries = models.ManyToManyField(Entry, through='IntermediateSubSecEntry')
+
     class Meta:
-        managed = False
-        db_table = 'susbsec'
+        db_table = 'subsec'
 
 
-class Susbsubsec(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    fksubsec = models.ForeignKey(Susbsec, models.DO_NOTHING, db_column='fksubsec', blank=True, null=True,
-                                 related_name="subsec")
+class Subsubsec(BigIntegerPKModel):
     fkcompcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
                                    related_name="compcode")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
-    idsusbsubsec = models.CharField(max_length=4, blank=True, null=True)
+    idsubsubsec = models.CharField(max_length=4, blank=True, null=True)  # (?)
     fksubsubseccode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fksubsubseccode', blank=True, null=True,
                                         related_name="subsubseccode")
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
+    parent_subsec = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, db_column='fksubsec', blank=True, null=True)
+    entries = models.ManyToManyField(Entry, through='IntermediateSubSubSecEntry')
+
     class Meta:
-        managed = False
-        db_table = 'susbsubsec'
+        db_table = 'subsubsec'
 
 
-class Firma(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Firma(BigIntegerPKModel):
     fkinforme = models.ForeignKey('Submit', models.DO_NOTHING, db_column='fkinforme', blank=True, null=True)
     md5 = models.CharField(max_length=45, blank=True, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
@@ -343,23 +288,10 @@ class Firma(models.Model):
     ioid = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'firma'
 
 
-class Secentry(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-    fk = models.ForeignKey(Sec, models.DO_NOTHING, db_column='fk', blank=True, null=True)
-    fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'secentry'
-
-
-class Submit(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Submit(BigIntegerPKModel):
     fkplantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
     eiud = models.CharField(max_length=64, blank=True, null=True)
     eaccnum = models.CharField(max_length=16, blank=True, null=True)
@@ -369,27 +301,91 @@ class Submit(models.Model):
     listoparaautenticacion = models.CharField(max_length=2, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'submit'
 
 
-class Subsecentry(models.Model):
-    id = models.BigAutoField(primary_key=True)
+################################################################################
+# Intermediate models, to be used by many-to-many relationships
+
+class BaseIntermediateHeaderOrFooter(BigIntegerPKModel):
+    """
+    Base (abstract) class for intermediate models to be
+    used in many-to-many relationships between Plantilla
+    and headers/footers, as they both have the same fields.
+    """
     ordinal = models.IntegerField(blank=True, null=True)
-    fk = models.ForeignKey('Susbsec', models.DO_NOTHING, db_column='fk', blank=True, null=True)
-    fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
+    fkplantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = False
+        abstract = True
+
+
+class IntermediatePlantillaHeader(BaseIntermediateHeaderOrFooter):
+    fkheader = models.ForeignKey(Header, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        db_table = 'plantillaheader'
+
+
+class IntermediatePlantillaFooter(BaseIntermediateHeaderOrFooter):
+    fkfooter = models.ForeignKey(Footer, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        db_table = 'plantillafooter'
+
+
+class BaseIntermediateScript(BigIntegerPKModel):
+    """
+    Base (abstract) class for intermediate models to be
+    used in many-to-many relationships between Plantilla
+    and scripts (head and body), as they both have the same fields.
+    """
+    fkscript = models.ForeignKey(Scriptelement, on_delete=models.DO_NOTHING, blank=True, null=True)
+    fkplantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, blank=True, null=True)
+    ordinal = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class IntermediateHeadScript(BaseIntermediateScript):
+    class Meta:
+        db_table = 'headscript'
+
+
+class IntermediateBodyScript(BaseIntermediateScript):
+    class Meta:
+        db_table = 'bodyscript'
+
+
+class BaseIntermediateSectionEntry(BigIntegerPKModel):
+    """
+    Base (abstract) class for intermediate models to be used in many-to-many relationships
+    between sec/subsec/subsubsec and entry, as they all have the same fields.
+    """
+    ordinal = models.IntegerField(blank=True, null=True)
+    fkentry = models.ForeignKey(Entry, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class IntermediateSecEntry(BaseIntermediateSectionEntry):
+    fk = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        db_table = 'secentry'
+
+
+class IntermediateSubSecEntry(BaseIntermediateSectionEntry):
+    fk = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
         db_table = 'subsecentry'
 
 
-class Subsubsecentry(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    ordinal = models.IntegerField(blank=True, null=True)
-    fk = models.ForeignKey('Susbsubsec', models.DO_NOTHING, db_column='fk', blank=True, null=True)
-    fkentry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
+class IntermediateSubSubSecEntry(BaseIntermediateSectionEntry):
+    fk = models.ForeignKey(Subsubsec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = 'subsubsecentry'
