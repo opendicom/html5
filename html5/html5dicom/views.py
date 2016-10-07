@@ -108,5 +108,5 @@ def main(request, *args, **kwargs):
                                 }
                             }
                     })
-        context_user = {'organization': organization}
+        context_user = {'organization': organization, 'httpdicom': url_httpdicom}
         return render(request, template_name='html5dicom/main.html', context=context_user)
