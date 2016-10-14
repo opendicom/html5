@@ -39,15 +39,28 @@ def main(request, *args, **kwargs):
                 if role.institution.organization.short_name in organization:
                     if role.institution.short_name in organization[role.institution.organization.short_name]['institution']:
                         organization[role.institution.organization.short_name]['institution'][role.institution.short_name].update(
-                            {role.get_name_display(): {"service": []}}
+                            {
+                                role.get_name_display(): {
+                                    'max_rows': role.max_rows,
+                                    "service": []
+                                }
+                            }
                         )
                     else:
                         url_httpdicom_req = url_httpdicom + '/orgts/' + role.institution.organization.short_name
                         url_httpdicom_req += '/aets/' + role.institution.short_name
                         oid_inst = requests.get(url_httpdicom_req)
                         organization[role.institution.organization.short_name]['institution'].update(
-                            {role.institution.short_name: {'aet': role.institution.short_name, 'oid':
-                                oid_inst.json()[0], role.get_name_display(): {"service": []}}}
+                            {
+                                role.institution.short_name: {
+                                    'aet': role.institution.short_name,
+                                    'oid': oid_inst.json()[0],
+                                    role.get_name_display(): {
+                                        'max_rows': role.max_rows,
+                                        "service": []
+                                    }
+                                }
+                            }
                         )
                 else:
                     url_httpdicom_req = url_httpdicom + '/orgts/' + role.institution.organization.short_name
@@ -64,6 +77,7 @@ def main(request, *args, **kwargs):
                                         'aet': role.institution.short_name,
                                         'oid': oid_inst.json()[0],
                                         role.get_name_display(): {
+                                            'max_rows': role.max_rows,
                                             "service": []
                                         }
                                     }
@@ -76,16 +90,29 @@ def main(request, *args, **kwargs):
                         if role.get_name_display() in organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name]:
                             if role.service.name not in organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['service']:
                                 organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['service'].append(role.service.name)
-
                         else:
-                            organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name].update({role.get_name_display(): {"service": [role.service.name]}})
+                            organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name].update(
+                                {
+                                    role.get_name_display(): {
+                                        'max_rows': role.max_rows,
+                                        "service": [role.service.name]
+                                    }
+                                })
                     else:
                         url_httpdicom_req = url_httpdicom + '/orgts/' + role.service.institution.organization.short_name
                         url_httpdicom_req += '/aets/' + role.service.institution.short_name
                         oid_inst = requests.get(url_httpdicom_req)
                         organization[role.service.institution.organization.short_name]['institution'].update(
-                            {role.service.institution.short_name: {'aet': role.service.institution.short_name, 'oid':
-                                oid_inst.json()[0], role.get_name_display(): {"service": []}}}
+                            {
+                                role.service.institution.short_name: {
+                                    'aet': role.service.institution.short_name,
+                                    'oid': oid_inst.json()[0],
+                                    role.get_name_display(): {
+                                        'max_rows': role.max_rows,
+                                        "service": [role.service.name]
+                                    }
+                                }
+                            }
                         )
                 else:
                     url_httpdicom_req = url_httpdicom + '/orgts/' + role.service.institution.organization.short_name
@@ -102,6 +129,7 @@ def main(request, *args, **kwargs):
                                         'aet': role.service.institution.short_name,
                                         'oid': oid_inst.json()[0],
                                         role.get_name_display(): {
+                                            'max_rows': role.max_rows,
                                             "service": [role.service.name]
                                         }
                                     }

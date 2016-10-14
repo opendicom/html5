@@ -67,6 +67,7 @@ class Role(BaseModel):
     institution = models.ForeignKey(Institution, on_delete=models.DO_NOTHING, blank=True, null=True)
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, blank=True, null=True)
     default = models.BooleanField(default=False)
+    max_rows = models.IntegerField(default=100, blank=False, null=False)
 
     def __str__(self):
         return '(%s) - (%s) - (%s) - (%s)' % (self.name, self.user, self.institution, self.service)

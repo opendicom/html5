@@ -2,23 +2,26 @@
 <div class="container-fluid" id="table-container">
 </div>
 <script>
-    addTableStudy = function (org, inst, role, service){
+    addTableStudy = function (org, inst, role, service, max_rows){
         $("#table-container").empty();
         var service_arr = service.split(',');
-        var service_options = '<select class="control-label" id="modalities"><option value="'+ service +'">Todos</option>';
+        //var service_options = '<select class="control-label" id="modalities"><option value="'+ service +'">Todos</option>';
+        var service_options = '<select class="control-label" id="modalities"><option value="*">Todos</option>';
         for(var i = 0; i < service_arr.length; i++){
             service_options += '<option value="' + service_arr[i]+ '">' + service_arr[i] + '</option>';
         }
         service_options += '</select>';
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
   	    $(ContentTabPane).appendTo('#table-container');
+  	    $('<input id="new" value="true" type="hidden"/>').appendTo('#table-container');
         $('#table_study thead th').each( function () {
             var title = $('#table_study tfoot th').eq( $(this).index() ).text();
             if (title != '') {
                 if (title == 'Modalidades'){
                     $(this).html(service_options);
                 }else if(title == 'Fecha'){
-                    $(this).html('<input type="date" value="'+ new Date().toISOString().slice(0, 10) +'"/>');
+                    $(this).html('<input type="text" id="date_study" value="" placeholder="yyyymmdd-yyyymmdd"/>');
+                    <!-- $(this).html('<input type="text" id="date_study" value="'+ new Date().toISOString().slice(0, 10).replace(/-/g,"") +'-'+ new Date().toISOString().slice(0, 10).replace(/-/g,"") +'"/>'); -->
                 }else{
                     $(this).html('<input type="text" placeholder="'+title+'"/>');
                 }
@@ -26,87 +29,105 @@
         });
   	    var table = $('#table_study').DataTable({
   	        "columnDefs": [
-            {
-                "targets": 1,
-                "render": function ( data, type, full, meta ) {
-                    return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
-                }
-            },
-            {
-                "targets": 2,
-                "render": function ( data, type, full, meta ) {
-                    if(data != '*' && role == 'Radiologo'){
-                        return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
-                    }else{
-                        return '';
+  	            {
+  	                "targets": 0,
+  	                "orderable": false
+  	            },
+                {
+                    "targets": 1,
+                    "orderable": false,
+                    "render": function ( data, type, full, meta ) {
+                        var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
+                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
-                }
-            },
-  	        {
-                "targets": 3,
-                "render": function ( data, type, full, meta ) {
-                    var patient_id = data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&IssuerOfPatientID"));
-                    return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{ httpdicom }}/'+ data +'\')"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
-                }
-            },
-            {
-                "targets": 4,
-                "render": function ( data, type, full, meta ) {
-                    var  nom = data.replace(/\^NULL/g, '')
-                    return nom;
-                }
-            },
-            {
-                "targets": 5,
-                "render": function ( data, type, full, meta ) {
-                    if(data.length == 8){
-                        return data.substring(6,8) + '-' + data.substring(4,6) + '-' + data.substring(0,4);
-                    }else{
-                        return data;
-                    }
-                }
-            },
-            {
-                "targets": 6,
-                "render": function ( data, type, full, meta ) {
-                    var modalities = data.split('\\');
-                    var ot_ico = '';
-                    var doc_ico = '';
-                    var mod_str = '';
-                    for(modality in modalities){
-                        if(modalities[modality] == 'OT'){
-                            ot_ico += '<a href="{{ httpdicom }}/applicable/OT/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
-                        }else if(modalities[modality] == 'DOC'){
-                            doc_ico += '<a href="{{ httpdicom }}/applicable/DOC/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
+                },
+                {
+                    "targets": 2,
+                    "orderable": false,
+                    "render": function ( data, type, full, meta ) {
+                        if(data != '*' && role == 'Radiologo'){
+                            return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
                         }else{
-                            mod_str += modalities[modality];
+                            return '';
                         }
                     }
-                    return ot_ico + ' ' + doc_ico + ' ' + mod_str;
+                },
+  	            {
+                    "targets": 3,
+                    "render": function ( data, type, full, meta ) {
+                        var patient_id = data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&IssuerOfPatientID"));
+                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{ httpdicom }}/'+ data +'\')"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
+                    }
+                },
+                {
+                    "targets": 4,
+                    "render": function ( data, type, full, meta ) {
+                        return data;
+                    }
+                },
+                {
+                    "targets": 5,
+                    "render": function ( data, type, full, meta ) {
+                        if(data.length == 8){
+                            return data.substring(0,4) + '-' + data.substring(4,6) + '-' + data.substring(6,8);
+                        }else{
+                            return data;
+                        }
+                    }
+                },
+                {
+                    "targets": 6,
+                    "render": function ( data, type, full, meta ) {
+                        var modalities = data.split('\\');
+                        var ot_ico = '';
+                        var doc_ico = '';
+                        var mod_str = '';
+                        for(modality in modalities){
+                            if(modalities[modality] == 'OT'){
+                                ot_ico += '<a href="{{ httpdicom }}/applicable/OT/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
+                            }else if(modalities[modality] == 'DOC'){
+                                doc_ico += '<a href="{{ httpdicom }}/applicable/DOC/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
+                            }else{
+                                mod_str += modalities[modality];
+                            }
+                        }
+                        return ot_ico + ' ' + doc_ico + ' ' + mod_str;
+                    }
                 }
-            }
             ],
   	        'pageLength'    : 10,
-  	        'order'         : false,
+  	        'order'         : [],
             'language'      : {
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish.json' %}"
             },
-            "dom": '<"toolbar">frtip',
-            initComplete: function(){
-                $("div.toolbar")
-                    .html('<button class="btn btn-primary" type="button"><span class="glyphicon glyphicon-search"></span> Buscar</button>');
-                },
+            "dom": '<"toolbar">frtlip',
             'processing'    : true,
             'serverSide'    : true,
             'ajax': {
-                    "type"   : "GET",
-                    "url" : '{{ httpdicom }}/datatables/studies?session={{ request.session.session_key}}',
-                    "dataType": "jsonp",
-                    "dataSrc": "data",
-                    "data"   : function( d ) {
-                        d.max = 20;
-                    }
+                "type"   : "GET",
+                "url" : '{{ httpdicom }}/datatables/studies?session={{ request.session.session_key}}',
+                "dataType": "jsonp",
+                "dataSrc": "data",
+                "data"   : function( d ) {
+                        d.max = max_rows;
+                        d.new = $('#new').val();
                 }
+            },
+            initComplete: function(){
+                var options_toolbar = '<button class="btn btn-primary" type="button" id="reload_study" ><span class="glyphicon glyphicon-search"></span> Buscar</button>';
+                $("div.toolbar").append(options_toolbar);
+                $('#max_select').selectpicker('show');
+                $("#date_study").mask("99999999-99999999",{placeholder:"yyyymmdd-yyyymmdd"});
+                $('#new').val('false');
+                $('#reload_study').click(function() {
+                    $('#reload_study').trigger('blur');
+                    $('#new').val('true');
+                    var table = $('#table_study').DataTable();
+                    table.ajax.reload();
+                    $('#new').val('false');
+                });
+
+            }
         });
         table.columns().eq( 0 ).each( function ( colIdx ) {
             $('input', table.column( colIdx ).header() ).on( 'keyup change', function () {
@@ -121,12 +142,18 @@
                     .search( this.value )
                     .draw();
                 } );
-        } );
 
+            $('input', table.column(colIdx).header()).on('click', function(e) {
+                e.stopPropagation();
+            });
+            $('select', table.column(colIdx).header()).on('click', function(e) {
+                e.stopPropagation();
+            });
+        });
         $('#dialog-series').dialog({
             autoOpen: false,
-            height: 500,
-            width: 750,
+            height: $(window).height(),
+            width: $(window).width(),
             modal: true,
             buttons: {
                 Ok: function() {
@@ -138,11 +165,10 @@
                 table_series.destroy();
             }
         });
-
         $('#dialog-patient').dialog({
             autoOpen: false,
-            height: 500,
-            width: 750,
+            height: $(window).height(),
+            width: $(window).width(),
             modal: true,
             buttons: {
                 Ok: function() {
@@ -155,41 +181,67 @@
             }
         });
     }
-    showTableSeries = function(url){
-        $('#dialog-series').dialog('option', 'title', 'Series');
+    showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description){
+        $('#dialog-series').dialog('option', 'title', 'Paciente (' + pat_id +') '+ name_id +'. Detalle del estudio '+ study_description);
         $('#dialog-series').dialog( "open" );
-        var table_series = $('#table_series').DataTable({
-            'bFilter'       : false,
-            'paging'        : true,
-            'bLengthChange' : false,
-            'pageLength'    : 5,
-            'processing'    : true,
-            'serverSide'    : true,
-            'bInfo'         : false,
-            'bSort'         : false,
-            'ajax': {
-                "type"   : 'GET',
-                "url"    : url,
-                "dataType": "jsonp",
-                "dataSrc": "data"
-            },
-            'language'      : {
-                'url': "{% static 'html5dicom/datatables/i18n/Spanish.json' %}"
+        $('#table_series thead th').each( function () {
+            var title = $('#table_series tfoot th').eq( $(this).index() ).text();
+            if (title != '') {
+                if(title == 'Fecha'){
+                    $(this).html('<input type="text" id="date_series" value="" placeholder="yyyy-mm-dd"/>');
+                }else{
+                    $(this).html('<input type="text" placeholder="'+title+'"/>');
+                }
             }
         });
-    }
-    showTablePatient = function(url){
-        $('#dialog-patient').dialog('option', 'title', 'Paciente');
-        $('#dialog-patient').dialog( "open" );
-        var table_patient = $('#table_patient').DataTable({
-            'bFilter'       : false,
+        var table_series = $('#table_series').DataTable({
+            "columnDefs": [
+  	            {
+  	                "targets": 0,
+  	                "orderable": false
+  	            },
+  	            {
+                    "targets": 1,
+                    "orderable": false,
+                    'className': 'select-checkbox',
+                    "render": function ( data, type, full, meta ) {
+                        return '';
+                    }
+                },
+                {
+                    "targets": 4,
+                    "render": function ( data, type, full, meta ) {
+                        if(data.length == 8){
+                            return data.substring(0,4) + '-' + data.substring(4,6) + '-' + data.substring(6,8);
+                        }else{
+                            return data;
+                        }
+                    }
+                },
+                {
+                    "targets": 5,
+                    "render": function ( data, type, full, meta ) {
+                        if(data.length >= 6){
+                            return data.substring(0,2) + ':' + data.substring(2,4) + '-' + data.substring(4,6);
+                        }else{
+                            return data;
+                        }
+                    }
+                }
+            ],
+            'bFilter'       : true,
             'paging'        : true,
             'bLengthChange' : false,
-            'pageLength'    : 5,
+            'pageLength'    : 10,
             'processing'    : true,
-            'serverSide'    : true,
-            'bInfo'         : false,
-            'bSort'         : false,
+            'serverSide'    : false,
+            'bInfo'         : true,
+            'bSort'         : true,
+            'dom'           : '<"toolbarseries">frtlip',
+            'select'        : {
+                'style'     :    'multi',
+                'selector'  : 'tr>td:nth-child(2)'
+            },
             'ajax': {
                 "type"   : 'GET',
                 "url"    : url,
@@ -197,8 +249,160 @@
                 "dataSrc": "data"
             },
             'language'      : {
-                'url': "{% static 'html5dicom/datatables/i18n/Spanish.json' %}"
+                'url': "{% static 'html5dicom/datatables/i18n/Spanish2.json' %}"
+            },
+            initComplete: function(){
+                var options_toolbar = '<button class="btn btn-default" type="button" id="osirix" ><span class="glyphicon glyphicon-eye-open"></span> Osirix</button> ';
+                options_toolbar += '<button class="btn btn-default" type="button" id="weasis" ><span class="glyphicon glyphicon-eye-open"></span> Weasis</button> ';
+                options_toolbar += '<button class="btn btn-default" type="button" id="html5" ><span class="glyphicon glyphicon-eye-open"></span> HTML5</button>';
+                $("div.toolbarseries").append(options_toolbar);
+                $("#date_series").mask("9999-99-99",{placeholder:"yyyy-mm-dd"});
+                table_series.rows().select();
+                $('#osirix').click(function() {
+                    table_series.rows({ selected: true }).every(function(index){
+                        alert(this.data()[1]);
+                    });
+                });
+                $('#weasis').click(function() {
+                    table_series.rows({ selected: true }).every(function(index){
+                        alert(this.data()[1]);
+                        //window.open('http://www.example.com?ReportID=1', '_blank');
+                    });
+                });
+                $('#html5').click(function() {
+                    table_series.rows({ selected: true }).every(function(index){
+                        alert(this.data()[1]);
+                    });
+                });
             }
+        });
+        table_series.columns().eq( 0 ).each( function ( colIdx ) {
+            $('input', table_series.column( colIdx ).header() ).on( 'keyup change', function () {
+                table_series
+                    .column( colIdx )
+                    .search( this.value )
+                    .draw();
+                } );
+            $('input', table_series.column(colIdx).header()).on('click', function(e) {
+                e.stopPropagation();
+            });
+        } );
+    }
+    showTablePatient = function(url){
+        $('button').trigger('blur');
+        $('#dialog-patient').dialog('option', 'title', 'Estudios de un paciente');
+        $('#dialog-patient').dialog( "open" );
+        $('#table_patient thead th').each( function () {
+            var title = $('#table_patient tfoot th').eq( $(this).index() ).text();
+            if (title != '' && title != 'Documento' && title != 'Nombre') {
+                if(title == 'Fecha'){
+                    $(this).html('<input type="text" id="date_patient" value="" placeholder="yyyy-mm-dd"/>');
+                }else{
+                    $(this).html('<input type="text" placeholder="'+title+'"/>');
+                }
+            }
+        });
+        var table_patient = $('#table_patient').DataTable({
+            "columnDefs": [
+  	            {
+  	                "targets": 0,
+  	                "orderable": false
+  	            },
+  	            {
+                    "targets": 1,
+                    "orderable": false,
+                    "render": function ( data, type, full, meta ) {
+                        var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
+                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                    }
+                },
+                {
+                    "targets": 2,
+                    "orderable": false,
+                    "render": function ( data, type, full, meta ) {
+                        if(data != '*' && $('#rol_select').val() == 'Radiologo'){
+                            return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
+                        }else{
+                            return '';
+                        }
+                    }
+                },
+                {
+                    "targets": 3,
+                    "orderable": false,
+                    "render": function ( data, type, full, meta ) {
+                        return data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&IssuerOfPatientID"));
+                    }
+                },
+                {
+                    "targets": 4,
+                    "orderable": false,
+                    "render": function ( data, type, full, meta ) {
+                        return data;
+                    }
+                },
+                {
+                    "targets": 5,
+                    "render": function ( data, type, full, meta ) {
+                        if(data.length == 8){
+                            return data.substring(0,4) + '-' + data.substring(4,6) + '-' + data.substring(6,8);
+                        }else{
+                            return data;
+                        }
+                    }
+                },
+                {
+                    "targets": 6,
+                    "render": function ( data, type, full, meta ) {
+                        var modalities = data.split('\\');
+                        var ot_ico = '';
+                        var doc_ico = '';
+                        var mod_str = '';
+                        for(modality in modalities){
+                            if(modalities[modality] == 'OT'){
+                                ot_ico += '<a href="{{ httpdicom }}/applicable/OT/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
+                            }else if(modalities[modality] == 'DOC'){
+                                doc_ico += '<a href="{{ httpdicom }}/applicable/DOC/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
+                            }else{
+                                mod_str += modalities[modality];
+                            }
+                        }
+                        return ot_ico + ' ' + doc_ico + ' ' + mod_str;
+                    }
+                }
+            ],
+            'bFilter'       : true,
+            'paging'        : true,
+            'bLengthChange' : false,
+            'pageLength'    : 10,
+            'processing'    : true,
+            'serverSide'    : false,
+            'bInfo'         : true,
+            'bSort'         : true,
+            'ajax': {
+                "type"   : 'GET',
+                "url"    : url,
+                "dataType": "jsonp",
+                "dataSrc": "data"
+            },
+            'language'      : {
+                'url': "{% static 'html5dicom/datatables/i18n/Spanish2.json' %}"
+            },
+            initComplete: function(){
+                $("#date_patient").mask("9999-99-99",{placeholder:"yyyy-mm-dd"});
+            }
+        });
+        table_patient.columns().eq( 0 ).each( function ( colIdx ) {
+            $('input', table_patient.column( colIdx ).header() ).on( 'keyup change', function () {
+                table_patient
+                    .column( colIdx )
+                    .search( this.value )
+                    .draw();
+            } );
+
+            $('input', table_patient.column(colIdx).header()).on('click', function(e) {
+                e.stopPropagation();
+            });
         });
     }
 </script>
