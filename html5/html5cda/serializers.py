@@ -33,17 +33,17 @@ class ArticlehtmlSerializer(serializers.ModelSerializer):
 
 
 class CodeSerializer(serializers.ModelSerializer):
-    codesystem = CodesystemSerializer(source='fkcodesystem', many=False, read_only=True)
+    codesystem = CodesystemSerializer(source='codesystem', many=False, read_only=True)
     class Meta:
         model = models.Code
-        fields = ('id', 'code', 'displayname', 'fkcodesystem', 'codesystem')
+        fields = ('id', 'code', 'displayname', 'codesystem', 'codesystem')
 
 
 class EstudioSerializer(serializers.ModelSerializer):
-    code = CodeSerializer(source="fkcode", many=False, read_only=True)
+    code = CodeSerializer(source="code", many=False, read_only=True)
     class Meta:
         model = models.Estudio
-        fields = ('id', 'modalidad', 'fkcode', 'code')
+        fields = ('id', 'modalidad', 'code', 'code')
 
 
 class PlantillaSerializer(serializers.ModelSerializer):
