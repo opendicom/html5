@@ -10,6 +10,53 @@
     {% load staticfiles %}
     <link href='{% static "html5dicom/datatables/datatables.min.css" %}' rel="stylesheet">
     <link href='{% static "html5dicom/datatables/responsive.dataTables.min.css" %}' rel="stylesheet">
+    <link href='{% static "html5dicom/datatables/select.dataTables.min.css" %}' rel="stylesheet">
     <script type="text/javascript" src='{% static "html5dicom/datatables/datatables.min.js" %}'></script>
     <script type="text/javascript" src='{% static "html5dicom/datatables/dataTables.responsive.min.js" %}'></script>
+    <script type="text/javascript" src='{% static "html5dicom/datatables/dataTables.select.min.js" %}'></script>
+    <style>
+        .toolbar {
+            float:left;
+        }
+        .toolbarseries {
+            float:left;
+        }
+    </style>
+    <script>
+        var organization = {{organization|safe}};
+        $(document).ready(function() {
+            load_inst();
+            load_rol();
+        });
+        $('#org_select').on('change', function() {
+           load_inst();
+        });
+        $('#inst_select').on('change', function() {
+           load_rol();
+        });
+        $('#rol_select').on('change', function() {
+           var service = organization[$('#org_select').val()].institution[$('#inst_select').val()][$('#rol_select').val()].service;
+           var max_rows = organization[$('#org_select').val()].institution[$('#inst_select').val()][$('#rol_select').val()]['max_rows'];
+           addTableStudy($('#org_select').val(), $('#inst_select').val(), $('#rol_select').val(), service.toString(), max_rows);
+        });
+        function load_inst(){
+            var options = '';
+            for(var key in organization[$('#org_select').val()].institution) {
+                $('#inst_select').empty();
+                options += '<option value="' + key + '">' + key + '</option>';
+                $('#inst_select').html(options);
+            }
+        }
+        function load_rol(){
+            var options = '';
+            for(var key in organization[$('#org_select').val()].institution[$('#inst_select').val()]) {
+                $('#rol_select').empty();
+                if(key != 'aet' && key != 'oid'){
+                    options += '<option value="' + key + '">' + key + '</option>';
+                }
+                $('#rol_select').html(options);
+            }
+            $('#rol_select').trigger("change");
+        }
+    </script>
 {% endblock %}
