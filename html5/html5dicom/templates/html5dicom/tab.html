@@ -38,7 +38,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
@@ -105,10 +105,16 @@
             'serverSide'    : true,
             'ajax': {
                 "type"   : "GET",
-                "url" : '{{ httpdicom }}/datatables/studies?session={{ request.session.session_key}}',
+                "url" : '{{ httpdicom }}/datatables/studies',
                 "dataType": "jsonp",
                 "dataSrc": "data",
                 "data"   : function( d ) {
+                        d.username = '';
+                        d.useroid = '';
+                        d.session = '{{ request.session.session_key}}';
+                        d.org = '';
+                        d.institution = '';
+                        d.role = '';
                         d.max = max_rows;
                         d.new = $('#new').val();
                 }
@@ -181,8 +187,8 @@
             }
         });
     }
-    showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description){
-        $('#dialog-series').dialog('option', 'title', 'Paciente (' + pat_id +') '+ name_id +'. Detalle del estudio '+ study_description);
+    showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description, accession_number, study_uid){
+        $('#dialog-series').dialog('option', 'title', 'Paciente (' + pat_id +') '+ name_id +'. Detalle del estudio (' + accession_number + ') '+ study_description);
         $('#dialog-series').dialog( "open" );
         $('#table_series thead th').each( function () {
             var title = $('#table_series tfoot th').eq( $(this).index() ).text();
@@ -203,9 +209,12 @@
   	            {
                     "targets": 1,
                     "orderable": false,
-                    'className': 'select-checkbox',
                     "render": function ( data, type, full, meta ) {
-                        return '';
+                        var options_download = '<a class="btn btn-success btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=SERIES&accession_no='+ accession_number +'&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirixmd' %}?requestType=SERIES&accession_no='+ accession_number +'&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=SERIES&study_uid=' + study_uid +'&series_uid='+ data +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-default btn-xs" onclick="open_cornerstone(\'SERIES\',\'' + accession_number + '\',\'' + study_uid + '\',\''+ data +'\')"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        return options_download;
                     }
                 },
                 {
@@ -238,10 +247,6 @@
             'bInfo'         : true,
             'bSort'         : true,
             'dom'           : '<"toolbarseries">frtlip',
-            'select'        : {
-                'style'     :    'multi',
-                'selector'  : 'tr>td:nth-child(2)'
-            },
             'ajax': {
                 "type"   : 'GET',
                 "url"    : url,
@@ -252,28 +257,41 @@
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish2.json' %}"
             },
             initComplete: function(){
-                var options_toolbar = '<button class="btn btn-default" type="button" id="osirix" ><span class="glyphicon glyphicon-eye-open"></span> Osirix</button> ';
-                options_toolbar += '<button class="btn btn-default" type="button" id="weasis" ><span class="glyphicon glyphicon-eye-open"></span> Weasis</button> ';
-                options_toolbar += '<button class="btn btn-default" type="button" id="html5" ><span class="glyphicon glyphicon-eye-open"></span> HTML5</button>';
+                var options_toolbar = '<a class="btn btn-success" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&accession_no='+ accession_number +'&study_uid=' + study_uid + '&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX 5.9</a>';
+                options_toolbar += '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirixmd' %}?requestType=STUDY&accession_no='+ accession_number +'&study_uid=' + study_uid + '&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX MD</a>';
+                options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
+                options_toolbar += '<a class="btn btn-default" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
                 $("div.toolbarseries").append(options_toolbar);
                 $("#date_series").mask("9999-99-99",{placeholder:"yyyy-mm-dd"});
-                table_series.rows().select();
-                $('#osirix').click(function() {
-                    table_series.rows({ selected: true }).every(function(index){
-                        alert(this.data()[1]);
-                    });
-                });
-                $('#weasis').click(function() {
-                    table_series.rows({ selected: true }).every(function(index){
-                        alert(this.data()[1]);
-                        //window.open('http://www.example.com?ReportID=1', '_blank');
-                    });
-                });
-                $('#html5').click(function() {
-                    table_series.rows({ selected: true }).every(function(index){
-                        alert(this.data()[1]);
-                    });
-                });
+                open_cornerstone = function(requestType, accession_number, study_uid, series_uid){
+                    var url_ajax = '';
+                    if(requestType == 'STUDY'){
+                        $.ajax({
+                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid,
+                            type: "GET",
+                            success: function(data, textStatus, jqXHR){
+                                sessionStorage.setItem('json_estudio', JSON.stringify(data));
+                                window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                            },
+                            error: function (jqXHR, textStatus, errorThrown){
+                                console.log('Error ' + jqXHR);
+                            }
+                        });
+                    }else if(requestType == 'SERIES'){
+                        $.ajax({
+                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + '&series_uid=' + series_uid,
+                            type: "GET",
+                            success: function(data, textStatus, jqXHR){
+                                sessionStorage.setItem('json_estudio', JSON.stringify(data));
+                                window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                            },
+                            error: function (jqXHR, textStatus, errorThrown){
+                                console.log('Error ' + jqXHR);
+                            }
+                        });
+                    }
+
+                }
             }
         });
         table_series.columns().eq( 0 ).each( function ( colIdx ) {
@@ -313,7 +331,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
