@@ -217,7 +217,7 @@ def cornerstone(request, *args, **kwargs):
     else:
         url_manifiest = ''
     manifiest = requests.get(url_manifiest)
-    return HttpResponse(manifiest.json, content_type=manifiest.headers.get('content-type'))
+    return HttpResponse(manifiest.text, content_type=manifiest.headers.get('content-type'))
 
 
 def wado(request, *args, **kwargs):

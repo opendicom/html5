@@ -279,7 +279,7 @@
                         });
                     }else if(requestType == 'SERIES'){
                         $.ajax({
-                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + '&series_uid=' + series_uid,
+                            url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid,
                             type: "GET",
                             success: function(data, textStatus, jqXHR){
                                 sessionStorage.setItem('json_estudio', JSON.stringify(data));
