@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'html5dicom',
-    'html5cda',
 ]
 
 MIDDLEWARE = [

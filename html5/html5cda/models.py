@@ -14,11 +14,6 @@ class BigIntegerPKModel(models.Model):
         abstract = True
 
 
-class Configuracion(models.Model):
-    key = models.CharField(max_length=20)
-    value = models.CharField(max_length=200)
-
-
 class Codesystem(BigIntegerPKModel):
     name = models.CharField(max_length=16, blank=True, null=True)
     oid = models.CharField(max_length=64, blank=True, null=True)

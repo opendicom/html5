@@ -24,14 +24,5 @@ router.register(r'firma', views.FirmaViewSet)
 router.register(r'submit', views.SubmitViewSet)
 
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
-    url(r'^report_editor/(?P<study_iuid>[^/]+)$', views.report_editor, name='report_editor'),
-    url(r'^xml/(?P<studyUID>[^/]+)/(?P<seriesUID>[^/]+)/(?P<objectUID>[^/]+)$', views.wado_xml, name='xml'),
-    url(r'^rest/studies$', views.studies, name='studies'),
-    url(r'^rest/studies/(?P<study_iuid>[^/]+)/series$', views.study_series, name='series'),
-    url(r'^rest/studies/(?P<study_iuid>[^/]+)/series_description/(?P<series_description>[^/]+)$',
-        views.instances_by_series_description, name='series_description'),
-    url(r'^ajax_table_study$', views.ajax_table_study, name='ajax_table_study'),
-    url(r'^ajax_table_series$', views.ajax_table_series, name='ajax_table_series'),
     url(r'^', include(router.urls)),
 ]

@@ -2,13 +2,6 @@ from django.contrib import admin
 from html5cda import models
 
 
-class ConfiguracionAdmin(admin.ModelAdmin):
-    list_display = ['key', 'value']
-    search_fields = ['key']
-
-admin.site.register(models.Configuracion, ConfiguracionAdmin)
-
-
 class EstudioAdmin(admin.ModelAdmin):
     list_display = ['id', 'modalidad', 'code']
     search_fields = ['modalidad']
