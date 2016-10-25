@@ -16,12 +16,9 @@
   	    $('<input id="new" value="true" type="hidden"/>').appendTo('#table-container');
         $('#table_study thead th').each( function () {
             var title = $('#table_study tfoot th').eq( $(this).index() ).text();
-            if (title != '') {
+            if (title != '' && title != 'Fecha') {
                 if (title == 'Modalidades'){
                     $(this).html(service_options);
-                }else if(title == 'Fecha'){
-                    $(this).html('<input type="text" id="date_study" value="" placeholder="yyyymmdd-yyyymmdd"/>');
-                    <!-- $(this).html('<input type="text" id="date_study" value="'+ new Date().toISOString().slice(0, 10).replace(/-/g,"") +'-'+ new Date().toISOString().slice(0, 10).replace(/-/g,"") +'"/>'); -->
                 }else{
                     $(this).html('<input type="text" placeholder="'+title+'"/>');
                 }
@@ -109,21 +106,24 @@
                 "dataType": "jsonp",
                 "dataSrc": "data",
                 "data"   : function( d ) {
-                        d.username = '';
+                        d.username = '{{ user.username }}';
                         d.useroid = '';
                         d.session = '{{ request.session.session_key}}';
-                        d.org = '';
-                        d.institution = '';
-                        d.role = '';
+                        d.org =  $('#org_select').val();
+                        d.institution = $('#inst_select').val();
+                        d.role = $('#rol_select').val();
                         d.max = max_rows;
                         d.new = $('#new').val();
                 }
             },
             initComplete: function(){
-                var options_toolbar = '<button class="btn btn-primary" type="button" id="reload_study" ><span class="glyphicon glyphicon-search"></span> Buscar</button>';
+                var currenDate = new Date();
+                var initDate = new Date();
+                initDate.setDate(currenDate.getDate() - 7);
+                var options_toolbar = '<button class="btn btn-primary" type="button" id="reload_study" ><span class="glyphicon glyphicon-search"></span> Buscar</button> ';
+                options_toolbar += '<label for="date_start">Fecha Inicio : </label> <input type="date" class="form-control input-sm" id="date_start" value="'+ initDate.toISOString().slice(0, 10) +'"/> ';
+                options_toolbar += '<label for="date_end"> Fecha Fin : </label> <input type="date" class="form-control input-sm" id="date_end" value="'+ currenDate.toISOString().slice(0, 10) +'"/>';
                 $("div.toolbar").append(options_toolbar);
-                $('#max_select').selectpicker('show');
-                $("#date_study").mask("99999999-99999999",{placeholder:"yyyymmdd-yyyymmdd"});
                 $('#new').val('false');
                 $('#reload_study').click(function() {
                     $('#reload_study').trigger('blur');
@@ -132,7 +132,24 @@
                     table.ajax.reload();
                     $('#new').val('false');
                 });
+                if (!Modernizr.inputtypes.date) {
+                    $('input[type=date]').datepicker({
+                        dateFormat: 'yy-mm-dd'
+                    });
+                }
 
+            },
+            "fnServerParams": function ( aoData, fnCallback ) {
+                if($('#date_start').val() === undefined){
+                    var currenDate = new Date();
+                    var initDate = new Date();
+                    initDate.setDate(currenDate.getDate() - 7);
+                    aoData.date_start = initDate.toISOString().slice(0, 10).replace(/-/g,"");
+                    aoData.date_end = currenDate.toISOString().slice(0, 10).replace(/-/g,"");
+                }else{
+                    aoData.date_start = $('#date_start').val().replace(/-/g,"");
+                    aoData.date_end = $('#date_end').val().replace(/-/g,"");
+                }
             }
         });
         table.columns().eq( 0 ).each( function ( colIdx ) {
@@ -192,12 +209,8 @@
         $('#dialog-series').dialog( "open" );
         $('#table_series thead th').each( function () {
             var title = $('#table_series tfoot th').eq( $(this).index() ).text();
-            if (title != '') {
-                if(title == 'Fecha'){
-                    $(this).html('<input type="text" id="date_series" value="" placeholder="yyyy-mm-dd"/>');
-                }else{
-                    $(this).html('<input type="text" placeholder="'+title+'"/>');
-                }
+            if (title != '' && title != 'Fecha' && title != 'Hora') {
+                $(this).html('<input type="text" placeholder="'+title+'"/>');
             }
         });
         var table_series = $('#table_series').DataTable({
@@ -262,7 +275,6 @@
                 options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
                 options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
                 $("div.toolbarseries").append(options_toolbar);
-                $("#date_series").mask("9999-99-99",{placeholder:"yyyy-mm-dd"});
                 open_cornerstone = function(requestType, accession_number, study_uid, series_uid){
                     var url_ajax = '';
                     if(requestType == 'STUDY'){
@@ -312,12 +324,8 @@
         $('#dialog-patient').dialog( "open" );
         $('#table_patient thead th').each( function () {
             var title = $('#table_patient tfoot th').eq( $(this).index() ).text();
-            if (title != '' && title != 'Documento' && title != 'Nombre') {
-                if(title == 'Fecha'){
-                    $(this).html('<input type="text" id="date_patient" value="" placeholder="yyyy-mm-dd"/>');
-                }else{
-                    $(this).html('<input type="text" placeholder="'+title+'"/>');
-                }
+            if (title != '' && title != 'Documento' && title != 'Nombre' && title != 'Fecha') {
+                $(this).html('<input type="text" placeholder="'+title+'"/>');
             }
         });
         var table_patient = $('#table_patient').DataTable({
@@ -407,7 +415,6 @@
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish2.json' %}"
             },
             initComplete: function(){
-                $("#date_patient").mask("9999-99-99",{placeholder:"yyyy-mm-dd"});
             }
         });
         table_patient.columns().eq( 0 ).each( function ( colIdx ) {
