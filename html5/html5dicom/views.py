@@ -192,13 +192,13 @@ def osirixmd(request, *args, **kwargs):
             url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
             if request.GET['requestType'] == 'STUDY':
                 if request.GET['accession_no'] == '':
-                    url_zip = url_httpdicom + '/zip/studies?StudyInstanceUID=' + request.GET['study_uid']
+                    url_zip = url_httpdicom + '/zip?StudyInstanceUID=' + request.GET['study_uid']
                 else:
-                    url_zip = url_httpdicom + '/zip/studies?AccessionNumber=' + request.GET['accession_no']
+                    url_zip = url_httpdicom + '/zip?AccessionNumber=' + request.GET['accession_no']
                 r = requests.get(url_zip)
                 return HttpResponse(r.content, content_type=r.headers.get('content-type'))
             elif request.GET['requestType'] == 'SERIES':
-                url_zip = url_httpdicom + '/zip/series?SeriesInstanceUID=' + request.GET['series_uid']
+                url_zip = url_httpdicom + '/zip?SeriesInstanceUID=' + request.GET['series_uid']
                 r = requests.get(url_zip)
                 return HttpResponse(r.content, content_type=r.headers.get('content-type'))
         except (Session.DoesNotExist, KeyError):
