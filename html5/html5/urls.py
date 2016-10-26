@@ -19,6 +19,4 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^html5dicom/', include('html5dicom.urls')),
-    url(r'^html5cda/', include('html5cda.urls')),
-    url(r'^html5voc/', include('html5voc.urls')),
 ]
