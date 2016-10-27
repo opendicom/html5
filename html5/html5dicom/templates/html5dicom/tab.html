@@ -120,7 +120,7 @@
                 var currenDate = new Date();
                 var initDate = new Date();
                 initDate.setDate(currenDate.getDate() - 7);
-                var options_toolbar = '<button class="btn btn-primary" type="button" id="reload_study" ><span class="glyphicon glyphicon-search"></span> Buscar</button> ';
+                var options_toolbar = '<button class="btn btn-primary" type="button" id="reload_study" ><span class="glyphicon glyphicon-search"></span> Nueva búsqueda</button> ';
                 options_toolbar += '<label for="date_start">Fecha Inicio : </label> <input type="date" class="form-control input-sm" id="date_start" value="'+ initDate.toISOString().slice(0, 10) +'"/> ';
                 options_toolbar += '<label for="date_end"> Fecha Fin : </label> <input type="date" class="form-control input-sm" id="date_end" value="'+ currenDate.toISOString().slice(0, 10) +'"/>';
                 $("div.toolbar").append(options_toolbar);
