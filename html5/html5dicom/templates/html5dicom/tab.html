@@ -223,8 +223,7 @@
                     "targets": 1,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        var options_download = '<a class="btn btn-success btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=SERIES&accession_no='+ accession_number +'&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
-                        options_download += '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirixmd' %}?requestType=SERIES&accession_no='+ accession_number +'&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        var options_download = '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=SERIES&accession_no='+ accession_number +'&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         options_download += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=SERIES&study_uid=' + study_uid +'&series_uid='+ data +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         options_download += '<a class="btn btn-default btn-xs" href="#" onclick="open_cornerstone(\'SERIES\',\'' + accession_number + '\',\'' + study_uid + '\',\''+ data +'\')"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         return options_download;
@@ -270,8 +269,7 @@
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish2.json' %}"
             },
             initComplete: function(){
-                var options_toolbar = '<a class="btn btn-success" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&accession_no='+ accession_number +'&study_uid=' + study_uid + '&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX 5.9</a>';
-                options_toolbar += '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirixmd' %}?requestType=STUDY&accession_no='+ accession_number +'&study_uid=' + study_uid + '&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX MD</a>';
+                var options_toolbar = '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&accession_no='+ accession_number +'&study_uid=' + study_uid + '&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX</a>';
                 options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
                 options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
                 $("div.toolbarseries").append(options_toolbar);

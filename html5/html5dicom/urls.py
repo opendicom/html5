@@ -9,6 +9,5 @@ urlpatterns = [
     url(r'^weasis$', views.weasis, name='weasis'),
     url(r'^wado$', views.wado, name='wado'),
     url(r'^osirix$', views.osirix, name='osirix'),
-    url(r'^osirixmd$', views.osirixmd, name='osirixmd'),
     url(r'^cornerstone$', views.cornerstone, name='cornerstone'),
 ]
