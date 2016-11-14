@@ -35,7 +35,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', oid)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', " + oid + ")"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
@@ -53,7 +53,7 @@
                     "targets": 3,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&IssuerOfPatientID"));
-                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{ httpdicom }}/'+ data +'\', oid)"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
+                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{ httpdicom }}/'+ data +'\', " + oid + ")"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
                     }
                 },
                 {
@@ -227,8 +227,8 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var options_download = '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=SERIES&accession_no='+ accession_number +'&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
-                        options_download += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=SERIES&study_uid=' + study_uid +'&series_uid='+ data +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
-                        options_download += '<a class="btn btn-default btn-xs" href="#" onclick="open_cornerstone(\'SERIES\',\'' + accession_number + '\',\'' + study_uid + '\',\''+ data +'\')"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=SERIES&study_uid=' + study_uid +'&series_uid='+ data +'&custodianUID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-default btn-xs" href="#" onclick="open_cornerstone(\'SERIES\',\'' + accession_number + '\',\'' + study_uid + '\',\''+ data +'\','+ oid +')"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         return options_download;
                     }
                 },
@@ -278,7 +278,7 @@
             initComplete: function(){
                 var options_toolbar = '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&accession_no='+ accession_number +'&study_uid=' + study_uid + '&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX</a>';
                 options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'&custodianUID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
-                options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\', oid)"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
+                options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',' + oid + ')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
                 $("div.toolbarseries").append(options_toolbar);
                 open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
                     var url_ajax = '';
