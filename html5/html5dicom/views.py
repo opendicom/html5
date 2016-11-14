@@ -37,6 +37,7 @@ def user_logout(request, *args, **kwargs):
 def main(request, *args, **kwargs):
     if request.user.is_authenticated:
         url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
+        url_httpdicom_ext = models.Setting.objects.get(key='url_httpdicom_ext').value
         organization = {}
         for role in models.Role.objects.filter(user=request.user.id).order_by('default'):
             if role.institution:
@@ -140,7 +141,7 @@ def main(request, *args, **kwargs):
                                 }
                             }
                     })
-        context_user = {'organization': organization, 'httpdicom': url_httpdicom}
+        context_user = {'organization': organization, 'httpdicom': url_httpdicom_ext}
         return render(request, template_name='html5dicom/main.html', context=context_user)
 
 
