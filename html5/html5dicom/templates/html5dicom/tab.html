@@ -109,8 +109,8 @@
                         d.username = '{{ user.username }}';
                         d.useroid = '';
                         d.session = '{{ request.session.session_key}}';
-                        d.org =  $('#org_select').val();
-                        d.institution = $('#inst_select').val();
+                        d.custodian =  $('#org_select').val();
+                        d.aet = $('#inst_select').val();
                         d.role = $('#rol_select').val();
                         d.max = max_rows;
                         d.new = $('#new').val();
@@ -266,7 +266,11 @@
                 "type"   : 'GET',
                 "url"    : url,
                 "dataType": "jsonp",
-                "dataSrc": "data"
+                "dataSrc": "data",
+                "data"   : function( d ) {
+                        d.custodian =  $('#org_select').val();
+                        d.aet = $('#inst_select').val();
+                }
             },
             'language'      : {
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish2.json' %}"
@@ -410,7 +414,11 @@
                 "type"   : 'GET',
                 "url"    : url,
                 "dataType": "jsonp",
-                "dataSrc": "data"
+                "dataSrc": "data",
+                "data"   : function( d ) {
+                        d.custodian =  $('#org_select').val();
+                        d.aet = $('#inst_select').val();
+                }
             },
             'language'      : {
                 'url': "{% static 'html5dicom/datatables/i18n/Spanish2.json' %}"
