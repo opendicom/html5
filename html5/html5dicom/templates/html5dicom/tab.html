@@ -137,6 +137,9 @@
                         dateFormat: 'yy-mm-dd'
                     });
                 }
+                $('#date_start, #date_end').change( function() {
+                    table.draw();
+                });
 
             },
             "fnServerParams": function ( aoData, fnCallback ) {
