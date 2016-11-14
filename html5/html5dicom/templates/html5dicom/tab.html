@@ -109,7 +109,7 @@
                         d.username = '{{ user.username }}';
                         d.useroid = '';
                         d.session = '{{ request.session.session_key}}';
-                        d.custodian =  $('#org_select').val();
+                        d.custodiantitle =  $('#org_select').val();
                         d.aet = $('#inst_select').val();
                         d.role = $('#rol_select').val();
                         d.max = max_rows;
@@ -268,7 +268,7 @@
                 "dataType": "jsonp",
                 "dataSrc": "data",
                 "data"   : function( d ) {
-                        d.custodian =  $('#org_select').val();
+                        d.custodiantitle =  $('#org_select').val();
                         d.aet = $('#inst_select').val();
                 }
             },
@@ -416,7 +416,7 @@
                 "dataType": "jsonp",
                 "dataSrc": "data",
                 "data"   : function( d ) {
-                        d.custodian =  $('#org_select').val();
+                        d.custodiantitle =  $('#org_select').val();
                         d.aet = $('#inst_select').val();
                 }
             },
