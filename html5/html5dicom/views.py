@@ -51,7 +51,7 @@ def main(request, *args, **kwargs):
                             }
                         )
                     else:
-                        url_httpdicom_req = url_httpdicom + '/orgts/' + role.institution.organization.short_name
+                        url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.institution.organization.short_name
                         url_httpdicom_req += '/aets/' + role.institution.short_name
                         oid_inst = requests.get(url_httpdicom_req)
                         organization[role.institution.organization.short_name]['institution'].update(
@@ -67,7 +67,7 @@ def main(request, *args, **kwargs):
                             }
                         )
                 else:
-                    url_httpdicom_req = url_httpdicom + '/orgts/' + role.institution.organization.short_name
+                    url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.institution.organization.short_name
                     oid_org = requests.get(url_httpdicom_req)
                     url_httpdicom_req += '/aets/' + role.institution.short_name
                     oid_inst = requests.get(url_httpdicom_req)
@@ -103,7 +103,7 @@ def main(request, *args, **kwargs):
                                     }
                                 })
                     else:
-                        url_httpdicom_req = url_httpdicom + '/orgts/' + role.service.institution.organization.short_name
+                        url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.service.institution.organization.short_name
                         url_httpdicom_req += '/aets/' + role.service.institution.short_name
                         oid_inst = requests.get(url_httpdicom_req)
                         organization[role.service.institution.organization.short_name]['institution'].update(
@@ -119,7 +119,7 @@ def main(request, *args, **kwargs):
                             }
                         )
                 else:
-                    url_httpdicom_req = url_httpdicom + '/orgts/' + role.service.institution.organization.short_name
+                    url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.service.institution.organization.short_name
                     oid_org = requests.get(url_httpdicom_req)
                     url_httpdicom_req += '/aets/' + role.service.institution.short_name
                     oid_inst = requests.get(url_httpdicom_req)
