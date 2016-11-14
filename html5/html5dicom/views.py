@@ -153,10 +153,10 @@ def weasis(request, *args, **kwargs):
     jnlp_file.close()
     base_url = request.META['wsgi.url_scheme']+'://'+request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
-        manifiest = requests.get(url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianUID=1.2&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
+        manifiest = requests.get(url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianUID=' + request.GET['custodianUID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
         jnlp_text = jnlp_text.replace('%@', manifiest.text)
     elif request.GET['requestType'] == 'SERIES':
-        manifiest = requests.get(url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianUID=1.2&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
+        manifiest = requests.get(url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianUID=' + request.GET['custodianUID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
         jnlp_text = jnlp_text.replace('%@', manifiest.text)
     jnlp_text = jnlp_text.replace('{IIDURL}', base_url +'/static/html5dicom')
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
@@ -189,9 +189,9 @@ def cornerstone(request, *args, **kwargs):
     url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
     base_url = request.META['wsgi.url_scheme']+'://'+request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
-        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianUID=1.2&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
+        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianUID=' + request.GET['custodianUID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
     elif request.GET['requestType'] == 'SERIES':
-        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianUID=1.2&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
+        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianUID=' + request.GET['custodianUID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
     else:
         url_manifiest = ''
     manifiest = requests.get(url_manifiest)
