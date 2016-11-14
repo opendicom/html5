@@ -227,7 +227,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var options_download = '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=SERIES&accession_no='+ accession_number +'&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
-                        options_download += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=SERIES&study_uid=' + study_uid +'&series_uid='+ data +'&custodianUID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=SERIES&study_uid=' + study_uid +'&series_uid='+ data +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         options_download += '<a class="btn btn-default btn-xs" href="#" onclick="open_cornerstone(\'SERIES\',\'' + accession_number + '\',\'' + study_uid + '\',\''+ data +'\',\''+ oid +'\')"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         return options_download;
                     }
@@ -277,14 +277,14 @@
             },
             initComplete: function(){
                 var options_toolbar = '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&accession_no='+ accession_number +'&study_uid=' + study_uid + '&session={{ request.session.session_key}}\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX</a>';
-                options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'&custodianUID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
+                options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
                 options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
                 $("div.toolbarseries").append(options_toolbar);
                 open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
                     var url_ajax = '';
                     if(requestType == 'STUDY'){
                         $.ajax({
-                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianUID=" + oid,
+                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
                             type: "GET",
                             success: function(data, textStatus, jqXHR){
                                 sessionStorage.setItem('json_estudio', JSON.stringify(data));
@@ -296,7 +296,7 @@
                         });
                     }else if(requestType == 'SERIES'){
                         $.ajax({
-                            url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianUID=" + oid,
+                            url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,
                             type: "GET",
                             success: function(data, textStatus, jqXHR){
                                 sessionStorage.setItem('json_estudio', JSON.stringify(data));
