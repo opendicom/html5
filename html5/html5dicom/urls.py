@@ -8,6 +8,6 @@ urlpatterns = [
     url(r'^main', views.main, name='main'),
     url(r'^weasis$', views.weasis, name='weasis'),
     url(r'^wado$', views.wado, name='wado'),
-    url(r'^osirix$', views.osirix, name='osirix'),
+    url(r'^dcm.zip$', views.osirix, name='osirix'),
     url(r'^cornerstone$', views.cornerstone, name='cornerstone'),
 ]
