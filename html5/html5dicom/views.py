@@ -169,14 +169,18 @@ def osirix(request, *args, **kwargs):
             session.get_decoded()[SESSION_KEY]
             url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
             if request.GET['requestType'] == 'STUDY':
-                if request.GET['accession_no'] == '':
-                    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
-                else:
-                    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
+                url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + \
+                          request.GET['study_uid']
+                # Valida accession number
+                #if request.GET['accession_no'] == '':
+                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
+                #else:
+                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
                 r = requests.get(url_zip)
                 return HttpResponse(r.content, content_type=r.headers.get('content-type'))
             elif request.GET['requestType'] == 'SERIES':
-                url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + request.GET['series_uid']
+                url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
+                          request.GET['series_uid']
                 r = requests.get(url_zip)
                 return HttpResponse(r.content, content_type=r.headers.get('content-type'))
         except (Session.DoesNotExist, KeyError):
