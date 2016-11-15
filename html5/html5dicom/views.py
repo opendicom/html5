@@ -20,6 +20,11 @@ def user_login(request, *args, **kwargs):
             if user.is_active:
                 login(request, user)
                 return HttpResponseRedirect('/html5dicom/main')
+            else:
+                return render(request, template_name='html5dicom/login.html')
+        else:
+            return render(request, template_name='html5dicom/login.html')
+                
     else:
         if request.user.is_authenticated:
             return HttpResponseRedirect('/html5dicom/main')
