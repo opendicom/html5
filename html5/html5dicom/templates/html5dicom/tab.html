@@ -81,9 +81,9 @@
                         var mod_str = '';
                         for(modality in modalities){
                             if(modalities[modality] == 'OT'){
-                                ot_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/applicable/OT/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
+                                ot_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/pacs/' + oid + '/ot?StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
                             }else if(modalities[modality] == 'DOC'){
-                                doc_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/applicable/DOC/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
+                                doc_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/pacs/' + oid + '/doc?StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
                             }else{
                                 mod_str += modalities[modality] + ',';
                             }
@@ -391,9 +391,9 @@
                         var mod_str = '';
                         for(modality in modalities){
                             if(modalities[modality] == 'OT'){
-                                ot_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/applicable/OT/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
+                                ot_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/pacs/'+ oid +'/ot?StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a>';
                             }else if(modalities[modality] == 'DOC'){
-                                doc_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/applicable/DOC/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
+                                doc_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/pacs/'+ oid +'/doc?StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
                             }else{
                                 mod_str += modalities[modality] + ',';
                             }
