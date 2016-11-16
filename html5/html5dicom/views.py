@@ -24,7 +24,7 @@ def user_login(request, *args, **kwargs):
                 return render(request, template_name='html5dicom/login.html')
         else:
             return render(request, template_name='html5dicom/login.html')
-                
+
     else:
         if request.user.is_authenticated:
             return HttpResponseRedirect('/html5dicom/main')
@@ -196,7 +196,7 @@ def osirix(request, *args, **kwargs):
 
 def cornerstone(request, *args, **kwargs):
     url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
-    base_url = request.META['wsgi.url_scheme']+'://'+request.META['HTTP_HOST']
+    base_url = request.META['wsgi.url_scheme']+ '://' + request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
         url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
     elif request.GET['requestType'] == 'SERIES':

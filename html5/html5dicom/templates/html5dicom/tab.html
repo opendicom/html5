@@ -85,10 +85,10 @@
                             }else if(modalities[modality] == 'DOC'){
                                 doc_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/applicable/DOC/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
                             }else{
-                                mod_str += modalities[modality];
+                                mod_str += modalities[modality] + ',';
                             }
                         }
-                        return ot_ico + ' ' + doc_ico + ' ' + mod_str;
+                        return ot_ico + ' ' + doc_ico + ' ' + mod_str.substring(0,mod_str.length -1);
                     }
                 }
             ],
@@ -395,10 +395,10 @@
                             }else if(modalities[modality] == 'DOC'){
                                 doc_ico += '<a href="{{request.scheme}}://{{ httpdicom }}/applicable/DOC/EncapsulatedDocument?AccessionNumber='+ full[13] +'" target="_blank"><span class="glyphicon glyphicon-check" title="Informe"></span></a>';
                             }else{
-                                mod_str += modalities[modality];
+                                mod_str += modalities[modality] + ',';
                             }
                         }
-                        return ot_ico + ' ' + doc_ico + ' ' + mod_str;
+                        return ot_ico + ' ' + doc_ico + ' ' + mod_str.substring(0,mod_str.length -1);
                     }
                 }
             ],
