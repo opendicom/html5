@@ -6,9 +6,14 @@
         $("#table-container").empty();
         var service_arr = service.split(',');
         //var service_options = '<select class="control-label" id="modalities"><option value="'+ service +'">Todos</option>';
-        var service_options = '<select class="control-label" id="modalities"><option value="*">Todos</option>';
+        //var service_options = '<select class="control-label" id="modalities"><option value="*">Todos</option>';
+        var service_options = '<select class="control-label" id="modalities">';
         for(var i = 0; i < service_arr.length; i++){
-            service_options += '<option value="' + service_arr[i]+ '">' + service_arr[i] + '</option>';
+            if (i == 0){
+                service_options += '<option value="' + service_arr[i]+ '" selected>' + service_arr[i] + '</option>';
+            }else{
+                service_options += '<option value="' + service_arr[i]+ '">' + service_arr[i] + '</option>';
+            }
         }
         service_options += '</select>';
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
@@ -143,6 +148,7 @@
 
             },
             "fnServerParams": function ( aoData, fnCallback ) {
+                aoData.columns[6].search.value = $('#modalities').val();
                 if($('#date_start').val() === undefined){
                     var currenDate = new Date();
                     var initDate = new Date();
