@@ -11,13 +11,13 @@
         for(var i = 0; i < service_arr.length; i++){
             if (i == 0){
                 if (service_arr[i] == 'Todos') {
-                    service_options += '<option value="%%" selected>' + service_arr[i] + '</option>';
+                    service_options += '<option value="ALL" selected>' + service_arr[i] + '</option>';
                 }else{
                     service_options += '<option value="' + service_arr[i]+ '" selected>' + service_arr[i] + '</option>';
                 }
             }else{
                 if (service_arr[i] == 'Todos') {
-                    service_options += '<option value="%%">' + service_arr[i] + '</option>';
+                    service_options += '<option value="ALL">' + service_arr[i] + '</option>';
                 }else{
                     service_options += '<option value="' + service_arr[i]+ '">' + service_arr[i] + '</option>';
                 }
