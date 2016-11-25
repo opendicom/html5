@@ -78,7 +78,7 @@ class Articlehtml(BigIntegerPKModel):
 
 
 class Code(BigIntegerPKModel):
-    codesystem = models.ForeignKey('Codesystem', models.DO_NOTHING, db_column='fkcodesystem', blank=True, null=True)
+    codesystem = models.ForeignKey('Codesystem', models.DO_NOTHING, blank=True, null=True)
     code = models.CharField(max_length=16, blank=True, null=True)
     displayname = models.CharField(max_length=255, blank=True, null=True)
 
@@ -91,14 +91,14 @@ class Code(BigIntegerPKModel):
 
 class Estudio(BigIntegerPKModel):
     modalidad = models.CharField(max_length=5, blank=True, null=True)
-    code = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
+    code = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'estudio'
 
 
 class Plantilla(BigIntegerPKModel):
-    estudio = models.ForeignKey(Estudio, models.DO_NOTHING, db_column='fkestudio', blank=True, null=True)
+    estudio = models.ForeignKey(Estudio, models.DO_NOTHING, blank=True, null=True)
     title = models.CharField(max_length=64, blank=True, null=True)
     type = models.CharField(max_length=64, blank=True, null=True)
     publisher = models.CharField(max_length=64, blank=True, null=True)
@@ -126,7 +126,7 @@ class Plantilla(BigIntegerPKModel):
 
 
 class Plantillagruposldap(BigIntegerPKModel):
-    plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
+    plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, blank=True, null=True)
     gdn = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
@@ -134,23 +134,23 @@ class Plantillagruposldap(BigIntegerPKModel):
 
 
 class Seccion(BigIntegerPKModel):
-    section = models.ForeignKey('self', models.DO_NOTHING, db_column='fksection', blank=True, null=True)
+    section = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
     idseccion = models.CharField(max_length=4, blank=True, null=True)
-    plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
+    plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
     templateuidroot = models.CharField(max_length=64, blank=True, null=True)
     selectcolor = models.CharField(max_length=16, blank=True, null=True)
     selecttitle = models.CharField(max_length=255, blank=True, null=True)
     inputchecked = models.CharField(max_length=2, blank=True, null=True)
-    code = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
-    articlehtml = models.ForeignKey(Articlehtml, models.DO_NOTHING, db_column='fkarticlehtml', blank=True, null=True)
+    code = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
+    articlehtml = models.ForeignKey(Articlehtml, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'seccion'
 
 
 class Selectoption(BigIntegerPKModel):
-    section = models.ForeignKey(Seccion, models.DO_NOTHING, db_column='fksection', blank=True, null=True)
+    section = models.ForeignKey(Seccion, models.DO_NOTHING, blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
     value = models.CharField(max_length=64, blank=True, null=True)
     text = models.CharField(max_length=64, blank=True, null=True)
@@ -166,7 +166,7 @@ class Entry(BigIntegerPKModel):
     elementmoodcode = models.CharField(max_length=8, blank=True, null=True)
     templateuid = models.CharField(max_length=64, blank=True, null=True)
     identry = models.CharField(max_length=64, blank=True, null=True)
-    code = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
+    code = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
     textreferencevalue = models.CharField(max_length=32, blank=True, null=True)
 
     class Meta:
@@ -174,9 +174,9 @@ class Entry(BigIntegerPKModel):
 
 
 class Qualifier(BigIntegerPKModel):
-    entry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
+    entry = models.ForeignKey(Entry, models.DO_NOTHING, blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
-    code = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
+    code = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
     valueoriginaltext = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
@@ -184,21 +184,21 @@ class Qualifier(BigIntegerPKModel):
 
 
 class Value(BigIntegerPKModel):
-    entry = models.ForeignKey(Entry, models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
+    entry = models.ForeignKey(Entry, models.DO_NOTHING, blank=True, null=True)
     type = models.CharField(max_length=8, blank=True, null=True)
-    code = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcode', blank=True, null=True)
+    code = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
     unit = models.CharField(max_length=16, blank=True, null=True)
     value = models.CharField(max_length=64, blank=True, null=True)
-    nullflavor = models.CharField(db_column='nullFlavor', max_length=16, blank=True, null=True)  # Field name made lowercase.
+    nullflavor = models.CharField(max_length=16, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         db_table = 'value'
 
 
 class Autenticado(BigIntegerPKModel):
-    autenticado = models.ForeignKey('self', models.DO_NOTHING, db_column='fkautenticado', blank=True, null=True,
+    autenticado = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True,
                                       related_name="autenticado_set")
-    plantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True,
+    plantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, blank=True, null=True,
                                     related_name="plantilla")
     eiud = models.CharField(max_length=64, blank=True, null=True)
     eaccnum = models.CharField(max_length=16, blank=True, null=True)
@@ -217,7 +217,7 @@ class Autenticado(BigIntegerPKModel):
     efecha = models.DateTimeField(blank=True, null=True)
     eid = models.CharField(max_length=16, blank=True, null=True)
     erealizadoroid = models.CharField(max_length=64, blank=True, null=True)
-    estudio = models.ForeignKey('Estudio', models.DO_NOTHING, db_column='fkestudio', blank=True, null=True)
+    estudio = models.ForeignKey('Estudio', models.DO_NOTHING, blank=True, null=True)
     informetitulo = models.CharField(max_length=255, blank=True, null=True)
     informeuid = models.CharField(max_length=64, blank=True, null=True)
     custodianoid = models.CharField(max_length=64, blank=True, null=True)
@@ -229,14 +229,11 @@ class Autenticado(BigIntegerPKModel):
 
 
 class Sec(BigIntegerPKModel):
-    autenticado = models.ForeignKey(Autenticado, models.DO_NOTHING, db_column='fkautenticado', blank=True, null=True,
-                                      related_name="secautenticado")
-    compcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
-                                   related_name="seccompcode")
+    autenticado = models.ForeignKey(Autenticado, models.DO_NOTHING, blank=True, null=True)
+    compcode = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True, related_name="sec_compcode_set")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
     idsec = models.CharField(max_length=4, blank=True, null=True)
-    seccode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkseccode', blank=True, null=True,
-                                  related_name="seccode")
+    seccode = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
@@ -247,16 +244,14 @@ class Sec(BigIntegerPKModel):
 
 
 class Subsec(BigIntegerPKModel):
-    compcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
-                                   related_name="fkcompcode")
+    compcode = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True, related_name="subsec_compcode_set")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
     idsubsec = models.CharField(max_length=4, blank=True, null=True)  # (?)
-    subseccode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fksubseccode', blank=True, null=True,
-                                     related_name="fksubseccode")
+    subseccode = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
-    parent_sec = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, db_column='fksec', blank=True, null=True)
+    parent_sec = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, blank=True, null=True)
     entries = models.ManyToManyField(Entry, through='IntermediateSubSecEntry')
 
     class Meta:
@@ -264,16 +259,14 @@ class Subsec(BigIntegerPKModel):
 
 
 class Subsubsec(BigIntegerPKModel):
-    compcode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fkcompcode', blank=True, null=True,
-                                   related_name="compcode")
+    compcode = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True, related_name="subsubsec_compcode_set")
     templateuid = models.CharField(max_length=64, blank=True, null=True)
     idsubsubsec = models.CharField(max_length=4, blank=True, null=True)  # (?)
-    subsubseccode = models.ForeignKey(Code, models.DO_NOTHING, db_column='fksubsubseccode', blank=True, null=True,
-                                        related_name="subsubseccode")
+    subsubseccode = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
 
-    parent_subsec = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, db_column='fksubsec', blank=True, null=True)
+    parent_subsec = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, blank=True, null=True)
     entries = models.ManyToManyField(Entry, through='IntermediateSubSubSecEntry')
 
     class Meta:
@@ -281,7 +274,7 @@ class Subsubsec(BigIntegerPKModel):
 
 
 class Firma(BigIntegerPKModel):
-    informe = models.ForeignKey('Submit', models.DO_NOTHING, db_column='fkinforme', blank=True, null=True)
+    informe = models.ForeignKey('Submit', models.DO_NOTHING, blank=True, null=True)
     md5 = models.CharField(max_length=45, blank=True, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
     udn = models.CharField(max_length=64, blank=True, null=True)
@@ -296,7 +289,7 @@ class Firma(BigIntegerPKModel):
 
 
 class Submit(BigIntegerPKModel):
-    plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
+    plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, blank=True, null=True)
     eiud = models.CharField(max_length=64, blank=True, null=True)
     eaccnum = models.CharField(max_length=16, blank=True, null=True)
     eaccoid = models.CharField(max_length=64, blank=True, null=True)
@@ -318,21 +311,21 @@ class BaseIntermediateHeaderOrFooter(BigIntegerPKModel):
     and headers/footers, as they both have the same fields.
     """
     ordinal = models.IntegerField(blank=True, null=True)
-    plantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
+    plantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         abstract = True
 
 
 class IntermediatePlantillaHeader(BaseIntermediateHeaderOrFooter):
-    header = models.ForeignKey(Header, on_delete=models.DO_NOTHING, db_column='fkheader', blank=True, null=True)
+    header = models.ForeignKey(Header, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'plantillaheader'
 
 
 class IntermediatePlantillaFooter(BaseIntermediateHeaderOrFooter):
-    footer = models.ForeignKey(Footer, on_delete=models.DO_NOTHING, db_column='fkfooter', blank=True, null=True)
+    footer = models.ForeignKey(Footer, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'plantillafooter'
@@ -344,8 +337,8 @@ class BaseIntermediateScript(BigIntegerPKModel):
     used in many-to-many relationships between Plantilla
     and scripts (head and body), as they both have the same fields.
     """
-    script = models.ForeignKey(Scriptelement, on_delete=models.DO_NOTHING, db_column='fkscript', blank=True, null=True)
-    plantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, db_column='fkplantilla', blank=True, null=True)
+    script = models.ForeignKey(Scriptelement, on_delete=models.DO_NOTHING, blank=True, null=True)
+    plantilla = models.ForeignKey(Plantilla, on_delete=models.DO_NOTHING, blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -370,28 +363,28 @@ class BaseIntermediateSectionEntry(BigIntegerPKModel):
     between sec/subsec/subsubsec and entry, as they all have the same fields.
     """
     ordinal = models.IntegerField(blank=True, null=True)
-    entry = models.ForeignKey(Entry, on_delete=models.DO_NOTHING, db_column='fkentry', blank=True, null=True)
+    entry = models.ForeignKey(Entry, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         abstract = True
 
 
 class IntermediateSecEntry(BaseIntermediateSectionEntry):
-    sec = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, db_column='fk', blank=True, null=True)
+    sec = models.ForeignKey(Sec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'secentry'
 
 
 class IntermediateSubSecEntry(BaseIntermediateSectionEntry):
-    subsec = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, db_column='fk', blank=True, null=True)
+    subsec = models.ForeignKey(Subsec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'subsecentry'
 
 
 class IntermediateSubSubSecEntry(BaseIntermediateSectionEntry):
-    subsubsec = models.ForeignKey(Subsubsec, on_delete=models.DO_NOTHING, db_column='fk', blank=True, null=True)
+    subsubsec = models.ForeignKey(Subsubsec, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'subsubsecentry'
