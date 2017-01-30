@@ -116,6 +116,14 @@ function setupButtons(studyViewer) {
         });
     });
 
+    // Exit
+    $(buttons[13]).on('click touchstart', function() {
+        disableAllTools();
+        $(".thumbnails a").removeClass("active");
+        $('.viewer').addClass('hidden');
+        //$('.editor').removeClass("hidden");
+    });
+
     // Tooltips
     $(buttons[0]).tooltip();
     $(buttons[1]).tooltip();
@@ -130,5 +138,6 @@ function setupButtons(studyViewer) {
     $(buttons[10]).tooltip();
     $(buttons[11]).tooltip();
     $(buttons[12]).tooltip();
+    $(buttons[13]).tooltip();
 
 };

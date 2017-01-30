@@ -3,8 +3,10 @@ from html5cda import views
 
 urlpatterns = [
     url(r'^editor', views.editor, name='editor'),
-    url(r'^templates/help', views.help, name='help'),
-    url(r'^templates/about', views.about, name='about'),
     url(r'^templates/viewport', views.viewport, name='viewport'),
-    url(r'^templates/studyViewer', views.studyViewer, name='studyViewer'),
+    url(r'^ajax/studies_list', views.studies_list, name='studies_list'),
+    url(r'^ajax/template_list', views.template_list, name='template_list'),
+    url(r'^ajax/get_template', views.get_template, name='get_template'),
+    url(r'^save_template', views.save_template, name='save_template'),
+    #url(r'^templates/studyViewer', views.studyViewer, name='studyViewer'),
 ]

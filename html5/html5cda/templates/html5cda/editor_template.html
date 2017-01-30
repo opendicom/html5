@@ -1,0 +1,48 @@
+{% for headscript in context.headscripts %}
+    {{ headscript.script.html|safe }}
+{% endfor %}
+{% for seccion in context.secciones %}
+    <section id="{{ seccion.idseccion }}"
+             data-code="{{ seccion.code.code }}"
+             data-displayname="{{ seccion.code.displayname }}"
+             data-codesystem="{{ seccion.code.codesystem.oid }}"
+             data-codesystemname="{{ seccion.code.codesystem.name }}">
+        <select class="{{ seccion.selectcolor }}"
+                name="{{ seccion.idseccion }}select"
+                title="{{ seccion.selecttitle }}"
+                onchange="invisibility(this)">
+            <option value="visible">{{ seccion.selecttitle }}</option>
+            <option value="none">{{ seccion.selecttitle }} (escondido)</option>
+        </select>
+        <input class="displayNone"
+               id="{{ seccion.idseccion }}select"
+               type="checkbox"
+               name="{{ seccion.idseccion }}invisible"
+               value="invisible"/>
+        {% if seccion.articlehtml.html is None %}
+            <article data-code="{{ seccion.code.code }}"
+                     data-displayname="{{ seccion.code.displayname }}"
+                     data-codesystem="{{ seccion.code.codesystem.oid }}"
+                     data-codesystemname="{{ seccion.code.codesystem.name }}">
+                {% for subseccion in seccion.get_all_sub_seccion %}
+                    <div class="subsection">
+                        <section id="{{subseccion.0.idseccion}}">
+                            <select class="{{subseccion.0.selectcolor}}"
+                                    name="{{subseccion.0.idseccion}}select"
+                                    onchange="invisibility(this)">
+                                <option value="none">{{subseccion.0.selecttitle}}</option>
+                            </select>
+                            <input class="displayNone" id="{{subseccion.0.idseccion}}select" type="checkbox" name="{{subseccion.0.idseccion}}invisible" value="invisible" checked="checked"/>
+                            {{ subseccion.0.articlehtml.html|safe }}
+                        </section>
+                    </div>
+                {% endfor %}
+            </article>
+        {% else %}
+            {{ seccion.articlehtml.html|safe }}
+        {% endif %}
+    </section>
+{% endfor %}
+{% for bodyscript in context.bodyscripts %}
+    {{ bodyscript.script.html|safe }}
+{% endfor %}

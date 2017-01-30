@@ -56,7 +56,21 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         if(data != '*' && role == 'Radiologo'){
-                            return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
+                            var data_editor = '';
+                            data_editor += 'PatientID=' + full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
+                            data_editor += '&PatientIDIssuer=' + full[10]
+                            data_editor += '&PatientName=' + full[4]
+                            data_editor += '&PatientSex=' + full[12]
+                            data_editor += '&PatientBirthDate=' + full[11]
+                            data_editor += '&AccessionNumber=' + full[13]
+                            data_editor += '&accessionNumberOID=' + full[14]
+                            data_editor += '&StudyDate=' + full[5]
+                            data_editor += '&StudyDescription=' + full[7]
+                            data_editor += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','')
+                            data_editor += '&StudyIUID=' + full[16]
+                            data_editor += '&custodianOID=' + oid
+
+                            return '<a href={% url 'editor' %}?'+ encodeURI(data_editor) +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
                         }else{
                             return '';
                         }
@@ -297,17 +311,7 @@
                 open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
                     var url_ajax = '';
                     if(requestType == 'STUDY'){
-                        $.ajax({
-                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
-                            type: "GET",
-                            success: function(data, textStatus, jqXHR){
-                                sessionStorage.setItem('json_estudio', JSON.stringify(data));
-                                window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
-                            },
-                            error: function (jqXHR, textStatus, errorThrown){
-                                console.log('Error ' + jqXHR);
-                            }
-                        });
+                        rad
                     }else if(requestType == 'SERIES'){
                         $.ajax({
                             url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,

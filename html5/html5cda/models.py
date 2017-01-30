@@ -22,7 +22,7 @@ class Codesystem(BigIntegerPKModel):
         db_table = 'codesystem'
 
     def __str__(self):
-        return 'name: %s, oid: %s' % (self.name, self.oid)
+        return self.name
 
 
 class Scriptelement(BigIntegerPKModel):
@@ -74,19 +74,19 @@ class Articlehtml(BigIntegerPKModel):
         db_table = 'articlehtml'
 
     def __str__(self):
-        return 'Titulo: %s, descripcion: %s' % (self.titulo, self.descripcion)
+        return self.titulo
 
 
 class Code(BigIntegerPKModel):
     codesystem = models.ForeignKey('Codesystem', models.DO_NOTHING, blank=True, null=True)
-    code = models.CharField(max_length=16, blank=True, null=True)
+    code = models.CharField(max_length=30, blank=True, null=True)
     displayname = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = 'code'
 
     def __str__(self):
-        return 'code: %s, displayname: %s' % (self.code, self.displayname)
+        return '{} ({})'.format(self.displayname, self.codesystem)
 
 
 class Estudio(BigIntegerPKModel):
@@ -95,6 +95,9 @@ class Estudio(BigIntegerPKModel):
 
     class Meta:
         db_table = 'estudio'
+
+    def __str__(self):
+        return '{} ({})'.format(self.code, self.modalidad)
 
 
 class Plantilla(BigIntegerPKModel):
@@ -147,6 +150,21 @@ class Seccion(BigIntegerPKModel):
 
     class Meta:
         db_table = 'seccion'
+
+    def __str__(self):
+        return '{} ({})'.format(self.idseccion, self.plantilla)
+
+    # Permite obtener todas las subsecciones
+    # http://stackoverflow.com/questions/4725343/django-self-recursive-foreignkey-filter-query-for-all-childs
+    def get_all_sub_seccion(self,include_self=False):
+        r = []
+        if include_self:
+            r.append(self)
+        for item in Seccion.objects.filter(section=self):
+            _r = item.get_all_sub_seccion(include_self=True)
+            if 0 < len(_r):
+                r.append(_r)
+        return r
 
 
 class Selectoption(BigIntegerPKModel):

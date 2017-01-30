@@ -29,15 +29,16 @@ admin.site.register(models.Code, CodeAdmin)
 
 
 class ArticlehtmlAdmin(admin.ModelAdmin):
-    list_display = ['id', 'titulo', 'descripcion', 'html']
+    list_display = ['id', 'titulo', 'descripcion']
     search_fields = ['titulo', 'descripcion']
 
 admin.site.register(models.Articlehtml, ArticlehtmlAdmin)
 
 
 class SeccionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'templateuidroot', 'ordinal']
-    search_fields = ['ordinal']
+    list_display = ['idseccion', 'ordinal','plantilla']
+    search_fields = ['idseccion', 'plantilla']
+    list_filter = ('plantilla',)
 
 admin.site.register(models.Seccion, SeccionAdmin)
 

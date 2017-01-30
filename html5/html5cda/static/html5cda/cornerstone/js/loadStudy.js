@@ -7,7 +7,7 @@ function loadStudy(studyViewer, viewportModel, studyId) {
     var data = jQuery.parseJSON(sessionStorage.getItem('json_estudio'));
 
         var imageViewer = new ImageViewer(studyViewer, viewportModel);
-        imageViewer.setLayout('1x1'); // default layout
+        //imageViewer.setLayout('1x1'); // default layout
 
         function initViewports() {
             imageViewer.forEachElement(function(el) {
@@ -145,9 +145,9 @@ function loadStudy(studyViewer, viewportModel, studyId) {
             // Have cornerstone load the thumbnail image
             cornerstone.loadAndCacheImage(imageViewer.stacks[stack.seriesIndex].imageIds[0]).then(function(image) {
                 // Make the first thumbnail active
-                if (stack.seriesIndex === 0) {
+                /*if (stack.seriesIndex === 0) {
                     $(seriesElement).addClass('active');
-                }
+                }*/
                 // Display the image
                 cornerstone.displayImage(thumbnail, image);
                 $(seriesElement).draggable({helper: "clone"});
@@ -155,7 +155,12 @@ function loadStudy(studyViewer, viewportModel, studyId) {
 
             // Handle thumbnail click
             $(seriesElement).on('click touchstart', function() {
-              useItemStack(0, stackIndex);
+                //$('.editor').addClass('hidden');
+                $('.viewer').removeClass('hidden');
+                imageViewer.setLayout('1x1');
+                initViewports();
+                resizeStudyViewer();
+                useItemStack(0, stackIndex);
             }).data('stack', stackIndex);
         });
 
@@ -183,7 +188,8 @@ function loadStudy(studyViewer, viewportModel, studyId) {
         function resizeStudyViewer() {
             var studyRow = $(studyViewer).find('.studyContainer')[0];
             var height = $(studyRow).height();
-            var width = $(studyRow).width();console.log($(studyRow).innerWidth(),$(studyRow).outerWidth(),$(studyRow).width());
+            var width = $(studyRow).width();
+            console.log($(studyRow).innerWidth(),$(studyRow).outerWidth(),$(studyRow).width());
             $(seriesList).height("100%");
             $(parentDiv).width(width - $(studyViewer).find('.thumbnailSelector:eq(0)').width());
             $(parentDiv).css({height : '100%'});
@@ -206,7 +212,7 @@ function loadStudy(studyViewer, viewportModel, studyId) {
         $(window).resize(function() {
             resizeStudyViewer();
         });
-        resizeStudyViewer();
+        //resizeStudyViewer();
         if (imageViewer.isSingle())
             useItemStack(0, 0);
 

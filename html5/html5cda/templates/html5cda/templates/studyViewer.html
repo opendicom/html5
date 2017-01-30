@@ -8,9 +8,8 @@
                 <div class="thumbnails list-group">
                 </div>
             </div>
-
             <!-- Viewer -->
-            <div class="viewer">
+            <div class="viewer hidden">
                 <!-- Toolbar -->
                 <div class="text-center" >
                     <div class="btn-group">
@@ -44,7 +43,8 @@
                             <li><a href="#">2x1</a></li>
                             <li><a href="#">1x2</a></li>
                             <li><a href="#">2x2</a></li>
-                        </ul>                      
+                        </ul>
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Exit"><span class="fa fa-close"></span></button>
                     </div>
                 </div>
 
@@ -52,6 +52,91 @@
                 <div class="imageViewer">
 
                 </div>
+            </div>
+            <!-- Editor -->
+            <link class="editor">
+                {% block extraheadscript %}
+                    <link href="#">
+                    {% for headscript in context.headscripts %}
+                        {{ headscript.script.html|safe }}
+                    {% endfor %}
+                {% endblock %}
+                </head>
+                <form>
+                    <header>
+                        <input type="hidden" name="PatientIDIssuer" value="1.2.3"/>
+                        <table>
+                            <tr>
+                                <td class="td1">
+                                    PACIENTE id:
+                                    <input class="headerId" name="PatientID" type="text" disabled="disabled" value="50637300"/>
+                                    <button name="PatientInfo" type="submit" title="más información demográfica sobre el paciente"> más info </button>
+                                    nacido:
+                                    <input class="headerDate" name="PatientBirthDate" type="text" disabled="disabled" value="19650123"/>
+                                    sexo:
+                                    <input class="headerMod" name="PatientSex" type="text" disabled="disabled" value="M"/>
+                                    apellidos^n.:
+                                </td>
+                                <td class="td2">
+                                    <input class="headerName" name="PatientName" type="text" disabled="disabled" value="Fauquex^Jacques"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </header>
+                    <header>
+                        <input type="hidden" name="StudyIUID" value="1.2.3"/>
+                        <input type="hidden" name="accessionNumberOID" value="1.2.3"/>
+                        <table>
+                            <tr>
+                                <td class="td1">
+                                    ESTUDIO an:
+                                    <input class="headerId" name="AccessionNumber" type="text" disabled="disabled" value="50637300"/>
+                                    <button name="StudyInfo" type="submit" title="más información sobre el estudio">más info</button>
+                                    fecha :
+                                    <input class="headerDate" name="StudyDate" type="text" disabled="disabled" value="20160715" title="fecha estudio"/>
+                                    mod.:
+                                    <input class="headerMod" name="Modality" type="text" disabled="disabled" value="CT"/>
+                                    descripción:
+                                </td>
+                                <td class="td2">
+                                    <input class="headerName" name="StudyDescription" type="text" value="displayNameDelProcedimiento"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </header>
+                    <header>
+                        <input type="hidden" name="templateID" value="1.2.3"/>
+                        <table>
+                            <tr>
+                                <td class="td1">
+                                    PLANTILLA:
+                                    <select name="modalidad">
+                                        <option value="CR">CR</option>
+                                        <option value="CT">CT</option>
+                                    </select>
+                                    <select name="estudio">
+                                        <option value="code^codeSystem^codeSystemName">displayNameProcedimiento</option>
+                                        <option value="code^codeSystem^codeSystemName">displayNameProcedimiento</option>
+                                    </select>
+                                    <!--copiar displayNameProcedimiento seleccionado en descripción-->
+                                </td>
+                                <td class="td2">
+                                    <select name="plantilla">
+                                        <option value="plantillaID" title="plantillaDescription">plantillaNombre</option>
+                                        <option value="plantillaID" title="plantillaDescription">plantillaNombre</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </header>
+                    {% for seccion in context.secciones %}
+                        {{ seccion.articlehtml.html|safe }}
+                    {% endfor %}
+                    {% for bodyscript in context.bodyscripts %}
+                        <p>asa</p>
+                        {{ bodyscript.script.html|safe }}
+                    {% endfor %}
+                </form>
             </div>
         </div>
         <div style="clear:both;"></div>
