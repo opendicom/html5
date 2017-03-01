@@ -8,5 +8,5 @@ urlpatterns = [
     url(r'^ajax/template_list', views.template_list, name='template_list'),
     url(r'^ajax/get_template', views.get_template, name='get_template'),
     url(r'^save_template', views.save_template, name='save_template'),
-    #url(r'^templates/studyViewer', views.studyViewer, name='studyViewer'),
+    url(r'^get_save_template', views.get_save_template, name='get_save_template'),
 ]

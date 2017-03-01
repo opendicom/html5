@@ -65,16 +65,16 @@
                             <tr>
                                 <td class="td1">
                                     PACIENTE id:
-                                    <input class="headerId" name="PatientID" type="text" disabled="disabled" value=""/>
+                                    <input class="headerId" name="PatientID" type="text" readonly value=""/>
                                     <button name="PatientInfo" type="submit" title="más información demográfica sobre el paciente"> más info </button>
                                     nacido:
-                                    <input class="headerDate" name="PatientBirthDate" type="text" disabled="disabled" value=""/>
+                                    <input class="headerDate" name="PatientBirthDate" type="text" readonly value=""/>
                                     sexo:
-                                    <input class="headerMod" name="PatientSex" type="text" disabled="disabled" value=""/>
+                                    <input class="headerMod" name="PatientSex" type="text" readonly value=""/>
                                     apellidos^n.:
                                 </td>
                                 <td class="td2">
-                                    <input class="headerName" name="PatientName" type="text" disabled="disabled" value=""/>
+                                    <input class="headerName" name="PatientName" type="text" readonly value=""/>
                                 </td>
                             </tr>
                         </table>
@@ -82,16 +82,17 @@
                     <header>
                         <input type="hidden" name="StudyIUID" value=""/>
                         <input type="hidden" name="accessionNumberOID" value=""/>
+                        <input type="hidden" name="custodianOID" value=""/>
                         <table>
                             <tr>
                                 <td class="td1">
                                     ESTUDIO an:
-                                    <input class="headerId" name="AccessionNumber" type="text" disabled="disabled" value=""/>
+                                    <input class="headerId" name="AccessionNumber" type="text" readonly/>
                                     <button name="StudyInfo" type="submit" title="más información sobre el estudio">más info</button>
                                     fecha :
-                                    <input class="headerDate" name="StudyDate" type="text" disabled="disabled" value="" title="fecha estudio"/>
+                                    <input class="headerDate" name="StudyDate" type="text" readonly title="fecha estudio"/>
                                     mod.:
-                                    <input class="headerMod" name="Modality" type="text" disabled="disabled" value=""/>
+                                    <input class="headerMod" name="Modality" type="text" readonly/>
                                     descripción:
                                 </td>
                                 <td class="td2">
@@ -109,18 +110,30 @@
                                     <select name="modalidad" id="modalidad">
                                         {% for modalidad in context.modalidades %}
                                             <option value="{{modalidad.modalidad}}"
-                                                {% if request.GET.study_modality == modalidad.modalidad %} selected
+                                                {% if request.GET.Modality == modalidad.modalidad %} selected
                                                 {% endif %}
                                             >{{modalidad.modalidad}}</option>
                                         {% endfor %}
                                     </select>
                                     <select name="estudio" id="estudio">
+                                        {% for study in context.studies_list %}
+                                            <option value="{{study.id}}"
+                                                {% if request.GET.StudyDescription == study.description %} selected
+                                                {% endif %}
+                                            >{{study.description}}</option>
+                                        {% endfor %}
                                         <!-- <option value="code^codeSystem^codeSystemName">displayNameProcedimiento</option> -->
                                     </select>
                                     <!--copiar displayNameProcedimiento seleccionado en descripción-->
                                 </td>
                                 <td class="td2">
                                     <select name="plantilla" id="plantilla">
+                                        {% for template in context.template_list %}
+                                            <option value="{{template.id}}"
+                                                {% if request.GET.StudyDescription == template.description %} selected
+                                                {% endif %}
+                                            >{{template.description}}</option>
+                                        {% endfor %}
                                     </select>
                                 </td>
                                 <script type="text/javascript">
@@ -134,7 +147,7 @@
                                                 $('#estudio').empty();
                                                 for(var item in data.studies_list){
                                                     var options = '';
-                                                    if(data.studies_list[item].description == '{{ request.GET.study_description }}'){
+                                                    if(data.studies_list[item].description == '{{ request.GET.StudyDescription }}'){
                                                         options = '<option value="' + data.studies_list[item].id + '" selected="selected">' + data.studies_list[item].description + '</option>';
                                                     }else{
                                                         options = '<option value="' + data.studies_list[item].id + '">' + data.studies_list[item].description + '</option>';
@@ -182,85 +195,32 @@
                                             }
                                         });
                                     })
-                                    $("#modalidad").trigger('change');
+                                    //$("#modalidad").trigger('change');
                                 </script>
                             </tr>
                         </table>
                     </header>
                     <div id="editor_template">
-
+                        {{context.html_plantilla|safe}}
                     </div>
-                    <footer>
-                <input class="displayNone" type="radio" name="firma1" value="notToBeSigned"></input>
-                <input class="displayNone" type="radio" name="firma1" value="toBeSigned"></input>
-                <input class="displayNone" type="radio" name="firma1" value="signed" checked="checked"></input>
-                <article class="firma">
-                    <input
-                        type="hidden"
-                        name="fkfirma1"
-                        value=""
-                        ></input>
-                    <button name="guardar" type="submit" title="sin firmar">guardar</button>
-                    <label>radiólogo: <input name="usuario1" type="text" class="footer"></input></label>
-                    <label>clave: <input name="clave1" type="password" class="footer"></input></label>
-                    <button name="firmar" type="submit" class="sign" title="firmar sin autenticar">firmar</button>
-                    <button name="firmarAutenticar" type="submit" class="sign" title="firmar y autenticar">autenticar</button>
-                    <button name="borrarPlantilla" type="submit">borrar plantilla</button>
-                    <button name="crearPlantilla" type="submit">crear plantilla</button>
-                 </article>
-            </footer>
-            <footer>
-                <input class="displayNone" type="radio" name="firma2" value="notToBeSigned"></input>
-                <input class="displayNone" type="radio" name="firma2" value="toBeSigned" checked="checked"></input>
-                <input class="displayNone" type="radio" name="firma2" value="signed"></input>
-                <article>
-                    <input
-                        type="hidden"
-                        name="fkfirma2"
-                        value=""
-                        ></input>
-                    <button name="guardar" type="submit" title="sin firmar">guardar</button>
-                    <label>radiólogo: <input name="usuario2" type="text" class="footer"></input></label>
-                    <label>clave: <input name="clave2" type="password" class="footer"></input></label>
-                    <button name="firmar" type="submit" class="sign" title="firmar sin autenticar">firmar</button>
-                    <button name="firmarAutenticar" type="submit" class="sign" title="firmar y autenticar">autenticar</button>
-                    <button name="borrarPlantilla" type="submit">borrar plantilla</button>
-                    <button name="crearPlantilla" type="submit">crear plantilla</button>
-                </article>
-            </footer>
-            <footer>
-                <input class="displayNone" type="radio" name="firma3" value="notToBeSigned" checked="checked"></input>
-                <input class="displayNone" type="radio" name="firma3" value="toBeSigned"></input>
-                <input class="displayNone" type="radio" name="firma3" value="signed"></input>
-                <article>
-                    <input
-                        type="hidden"
-                        name="fkfirma3"
-                        value=""
-                        ></input>
-                    <button name="guardar" type="submit" title="sin firmar">guardar</button>
-                    <label>radiólogo: <input name="usuario3" type="text" class="footer"></input></label>
-                    <label>clave: <input name="clave3" type="password" class="footer"></input></label>
-                    <button name="firmar" type="submit" class="sign" title="firmar sin autenticar">firmar</button>
-                    <button name="firmarAutenticar" type="submit" class="sign" title="firmar y autenticar">autenticar</button>
-                    <button name="borrarPlantilla" type="submit">borrar plantilla</button>
-                    <button name="crearPlantilla" type="submit">crear plantilla</button>
-                </article>
-            </footer>
-            <footer>
-                <select id="evaluar" name="evaluar" class="gris" title="esta evaluación no forma parte del documento clínico y no está comunicada al paciente">
-                    <option value="sin evaluación" selected="selected">por favor, evalue el caso ...</option>
-                    <option value="normal">normal</option>
-                    <option value="patológico con relación al dato clinico">patológico con relación al dato clinico</option>
-                    <option value="patológico sin relación con el dato clínico">patológico sin relación al dato clinico</option>
-                    <option value="dudoso">dudoso</option>
-                </select>
-                <!-- "TIPOHALLAZGO" queda exclusivamente registrado en el atributo (0040,E008) "Document Class Code Sequence" del contenedor DICOM del CDA.
-                (0040,E008) contiene "Additional classifications of the document, beyond the title represented in Concept Name Code Sequence."
-                Es equivalente a HL7 v2.x TXA-2.
-                -->
-            </footer>
             </form>
+                <script type="text/javascript">
+                    var params = location.search.substr(1).split("&");
+                    for (var i=0; i<params.length; i++)
+                    {
+                        duo = params[i].split("=");
+                        if ((duo.length == 2) && (duo[0].length > 0) && (duo[1].length > 0))
+                        {
+                            o=document.getElementsByName(duo[0])[0];
+                            o.value = decodeURIComponent(duo[1]);
+                            /* checkbox with id is linked with input hidden with name*/
+                            if ((o.type == "hidden") && (duo[1]==="true"))
+                            {
+                                document.getElementById(duo[0]).checked = true;
+                            }
+                        }
+                    }
+                </script>
             </div>
         </div>
         <!-- <div style="clear:both;"></div>-->

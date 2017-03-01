@@ -1,6 +1,9 @@
 {% for headscript in context.headscripts %}
     {{ headscript.script.html|safe }}
 {% endfor %}
+{% for header in context.headers %}
+    {{ header.header.html|safe }}
+{% endfor %}
 {% for seccion in context.secciones %}
     <section id="{{ seccion.idseccion }}"
              data-code="{{ seccion.code.code }}"
@@ -42,6 +45,9 @@
             {{ seccion.articlehtml.html|safe }}
         {% endif %}
     </section>
+{% endfor %}
+{% for footer in context.footers %}
+    {{ footer.footer.html|safe }}
 {% endfor %}
 {% for bodyscript in context.bodyscripts %}
     {{ bodyscript.script.html|safe }}

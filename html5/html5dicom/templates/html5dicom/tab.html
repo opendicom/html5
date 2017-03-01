@@ -57,20 +57,34 @@
                     "render": function ( data, type, full, meta ) {
                         if(data != '*' && role == 'Radiologo'){
                             var data_editor = '';
-                            data_editor += 'PatientID=' + full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                            data_editor += '&PatientIDIssuer=' + full[10]
-                            data_editor += '&PatientName=' + full[4]
-                            data_editor += '&PatientSex=' + full[12]
-                            data_editor += '&PatientBirthDate=' + full[11]
-                            data_editor += '&AccessionNumber=' + full[13]
-                            data_editor += '&accessionNumberOID=' + full[14]
-                            data_editor += '&StudyDate=' + full[5]
-                            data_editor += '&StudyDescription=' + full[7]
-                            data_editor += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','')
-                            data_editor += '&StudyIUID=' + full[16]
-                            data_editor += '&custodianOID=' + oid
-
-                            return '<a href={% url 'editor' %}?'+ encodeURI(data_editor) +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
+                            $.ajax({
+                                url: "{% url 'get_save_template' %}?study_uid=" + full[16] ,
+                                type: "GET",
+                                async: false,
+                                success: function(data, textStatus, jqXHR){
+                                    if(data != ''){
+                                        data_editor = data
+                                    }else{
+                                        data_editor += 'PatientID=' + full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
+                                        data_editor += '&PatientIDIssuer=' + full[10]
+                                        data_editor += '&PatientName=' + full[4]
+                                        data_editor += '&PatientSex=' + full[12]
+                                        data_editor += '&PatientBirthDate=' + full[11]
+                                        data_editor += '&AccessionNumber=' + full[13]
+                                        data_editor += '&accessionNumberOID=' + full[14]
+                                        data_editor += '&StudyDate=' + full[5]
+                                        data_editor += '&StudyDescription=' + full[7]
+                                        data_editor += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','')
+                                        data_editor += '&StudyIUID=' + full[16]
+                                        data_editor += '&custodianOID=' + oid
+                                        data_editor = encodeURI(data_editor)
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown){
+                                    console.log('Error ' + jqXHR);
+                                }
+                            });
+                            return '<a href={% url 'editor' %}?'+ data_editor +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
                         }else{
                             return '';
                         }
@@ -167,7 +181,6 @@
                 $('#date_start, #date_end').change( function() {
                     table.draw();
                 });
-
             },
             "fnServerParams": function ( aoData, fnCallback ) {
                 aoData.columns[6].search.value = $('#modalities').val();
