@@ -2,6 +2,11 @@
 <div class="container-fluid" id="table-container">
 </div>
 <script>
+    refreshTableStudy = function(){
+        var table = $('#table_study').DataTable()
+        table.draw()
+    }
+
     addTableStudy = function (org, inst, oid, role, service, max_rows){
         $("#table-container").empty();
         var service_arr = service.split(',');

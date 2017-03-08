@@ -124,6 +124,7 @@ def get_save_template(request, *args, **kwargs):
 
 def save_template(request, *args, **kwargs):
     post_param = request.POST.dict()
+    response_save = dict()
     if 'csrfmiddlewaretoken' in post_param: del post_param['csrfmiddlewaretoken']
     if 'usuario1' in post_param: del post_param['usuario1']
     if 'clave1' in post_param: del post_param['clave1']
@@ -138,6 +139,7 @@ def save_template(request, *args, **kwargs):
         )
         submit.urlparamsenviado = urlencode(post_param, quote_via=quote)
         submit.save()
+        response_save = {'message': 'Guardado Correctamente'}
     elif request.POST.get("firmar"):
         submit, submit_created = models.Submit.objects.update_or_create(
             plantilla=models.Plantilla.objects.get(id=request.POST.get('plantilla')),
@@ -161,5 +163,6 @@ def save_template(request, *args, **kwargs):
         print('borrarPlantilla')
     elif request.POST.get("crearPlantilla"):
         print('crearPlantilla')
-    return HttpResponse('ok')
-
+    return JsonResponse(response_save)
+    #return JsonResponse({'error': 'prueba de error'})
+    #return JsonResponse({'message': 'guardado correctamente'})

@@ -1,5 +1,32 @@
 {% extends 'html5cda/base.html' %}
 {% block content%}
+    <script>
+        $(function() {
+            $( "button" ).click(function() {
+                for ( instance in CKEDITOR.instances )
+                    CKEDITOR.instances[instance].updateElement();
+
+                var actionurl = '{% url 'save_template' %}';
+                var form_data = $("#editor").serialize();
+                form_data = form_data + '&'+ this.name +'=' +this.name
+                $.ajax({
+                    url: actionurl,
+                    type: 'post',
+                    data: form_data,
+                    success: function(data) {
+                        if (data.error){
+                            alert(data.error)
+                            self.close()
+                        }else{
+                            alert(data.message)
+                            window.opener.refreshTableStudy()
+                            self.close()
+                        }
+                    }
+                });
+            });
+        });
+    </script>
     <div id="studyViewerTemplate" class="tab-pane active" style="height:100%">
 
     <div class="studyContainer" style="height:100%;">
@@ -57,7 +84,7 @@
             </div>
             <!-- Editor -->
             <div class="editor">
-                <form method="post" action="{% url 'save_template' %}">
+                <form id='editor' >
                     {% csrf_token %}
                     <header>
                         <input type="hidden" name="PatientIDIssuer" value=""/>
@@ -223,7 +250,6 @@
                 </script>
             </div>
         </div>
-        <!-- <div style="clear:both;"></div>-->
     </div>
 </div>
 {% endblock %}
