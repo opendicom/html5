@@ -67,8 +67,11 @@
                                 type: "GET",
                                 async: false,
                                 success: function(data, textStatus, jqXHR){
-                                    if(data != ''){
-                                        data_editor = data
+                                    if(!data.error){
+                                        data_editor = '<a href='+ data.url_editor +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
+                                        if (data.url_autentication != ''){
+                                            data_editor += '<a href='+ data.url_autentication +' target="_blank"><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>';
+                                        }
                                     }else{
                                         data_editor += 'PatientID=' + full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
                                         data_editor += '&PatientIDIssuer=' + full[10]
@@ -82,14 +85,14 @@
                                         data_editor += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','')
                                         data_editor += '&StudyIUID=' + full[16]
                                         data_editor += '&custodianOID=' + oid
-                                        data_editor = encodeURI(data_editor)
+                                        data_editor = '<a href={% url 'editor' %}?'+ encodeURI(data_editor) +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
                                     }
                                 },
                                 error: function (jqXHR, textStatus, errorThrown){
                                     console.log('Error ' + jqXHR);
                                 }
                             });
-                            return '<a href={% url 'editor' %}?'+ data_editor +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
+                            return  data_editor;
                         }else{
                             return '';
                         }
@@ -329,7 +332,17 @@
                 open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
                     var url_ajax = '';
                     if(requestType == 'STUDY'){
-                        rad
+                        $.ajax({
+                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
+                            type: "GET",
+                            success: function(data, textStatus, jqXHR){
+                                sessionStorage.setItem('json_estudio', JSON.stringify(data));
+                                window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                            },
+                            error: function (jqXHR, textStatus, errorThrown){
+                                console.log('Error ' + jqXHR);
+                            }
+                        });
                     }else if(requestType == 'SERIES'){
                         $.ajax({
                             url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,

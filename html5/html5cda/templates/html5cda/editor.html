@@ -1,29 +1,118 @@
 {% extends 'html5cda/base.html' %}
+{% block extra_head %}
+    {% load staticfiles %}
+    <script src='{% static "html5cda/jqueryui/jquery-ui.min.js" %}'></script>
+    <link href='{% static "html5cda/jqueryui/jquery-ui.min.css" %}' rel="stylesheet">
+    <link href='{% static "html5cda/jqueryui/jquery-ui.theme.min.css" %}' rel="stylesheet">
+{% endblock %}
 {% block content%}
     <script>
         $(function() {
             $( "button" ).click(function() {
-                for ( instance in CKEDITOR.instances )
-                    CKEDITOR.instances[instance].updateElement();
+                if (this.name == 'guardar'){
+                    for ( instance in CKEDITOR.instances )
+                        CKEDITOR.instances[instance].updateElement();
 
-                var actionurl = '{% url 'save_template' %}';
-                var form_data = $("#editor").serialize();
-                form_data = form_data + '&'+ this.name +'=' +this.name
-                $.ajax({
-                    url: actionurl,
-                    type: 'post',
-                    data: form_data,
-                    success: function(data) {
-                        if (data.error){
-                            alert(data.error)
-                            self.close()
-                        }else{
-                            alert(data.message)
-                            window.opener.refreshTableStudy()
-                            self.close()
+                    var actionurl = '{% url 'save_template' %}';
+                    var form_data = $("#editor").serialize();
+                    form_data = form_data + '&'+ this.name + '=' + this.name
+                    $.ajax({
+                        url: actionurl,
+                        type: 'post',
+                        data: form_data,
+                        success: function(data) {
+                            if (data.error){
+                                alert(data.error)
+                            }else{
+                                alert(data.message)
+                                window.opener.refreshTableStudy()
+                                self.close()
+                            }
                         }
+                    });
+                }else if (this.name == 'firmar'){
+                    $( "#dialog-firmar" ).dialog( "open" );
+                }else if (this.name == 'firmarAutenticar'){
+                    $( "#dialog-firmarAutenticar" ).dialog( "open" );
+                }
+            });
+
+            $("#dialog-firmar").dialog({
+                autoOpen: false,
+                height: 160,
+                width: 200,
+                modal: true,
+                buttons: {
+                    "Aceptar": function() {
+
+
+                        for ( instance in CKEDITOR.instances )
+                            CKEDITOR.instances[instance].updateElement();
+
+                        var actionurl = '{% url 'save_template' %}';
+                        var form_data = $("#editor").serialize();
+                        form_data = form_data + '&firmar=firmar&' + $('#form-firmar').serialize();
+                        $.ajax({
+                            url: actionurl,
+                            type: 'post',
+                            data: form_data,
+                            success: function(data) {
+                                if (data.error){
+                                    alert(data.error)
+                                }else{
+                                    alert(data.message)
+                                    window.opener.refreshTableStudy()
+                                    self.close()
+                                }
+                            }
+                        });
+                        $( this ).dialog( "close" );
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
                     }
-                });
+                },
+                close: function() {
+                    $( this ).dialog( "close" );
+                }
+            });
+
+            $("#dialog-firmarAutenticar").dialog({
+                autoOpen: false,
+                height: 160,
+                width: 200,
+                modal: true,
+                buttons: {
+                    "Aceptar": function() {
+                        for ( instance in CKEDITOR.instances )
+                            CKEDITOR.instances[instance].updateElement();
+
+                        var actionurl = '{% url 'save_template' %}';
+                        var form_data = $("#editor").serialize();
+                        form_data = form_data + '&firmarAutenticar=firmarAutenticar&' + $('#form-firmarAutenticar').serialize();
+                        $.ajax({
+                            url: actionurl,
+                            type: 'post',
+                            data: form_data,
+                            success: function(data) {
+                                if (data.error){
+                                    alert(data.error)
+                                }else{
+                                    alert(data.message)
+                                    window.opener.refreshTableStudy()
+                                    self.close()
+                                }
+                            }
+                        });
+                        $( this ).dialog( "close" );
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+                close: function() {
+                    $( this ).dialog( "close" );
+                }
             });
         });
     </script>
@@ -251,5 +340,19 @@
             </div>
         </div>
     </div>
+</div>
+<div id="dialog-firmar" title="Ingrese su clave">
+    <form id="form-firmar">
+        <input type="text" name="usuario"  id="usuario_firmar" value="{{ request.user }}" readonly><br>
+        <input type="password" name="clave" id="clave_firmar" value="" placeholder="Contraseña">
+        </fieldset>
+    </form>
+</div>
+<div id="dialog-firmarAutenticar" title="Ingrese su clave">
+    <form id="form-firmarAutenticar">
+        <input type="text" name="usuario"  id="usuario_firmarautenticar" value="{{ request.user }}" readonly><br>
+        <input type="password" name="clave" id="clave_firmarautenticar" value="" placeholder="Contraseña">
+        </fieldset>
+    </form>
 </div>
 {% endblock %}
