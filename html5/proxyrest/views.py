@@ -167,7 +167,7 @@ def study_web(request, *args, **kwargs):
             })
             login(request, sessionrest.role.user)
             context_user = {'organization': organization, 'httpdicom': Setting.objects.get(key='url_httpdicom_ext').value}
-            return render(request, template_name='html5dicom/patient.html', context=context_user)
+            return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         else:
             return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
