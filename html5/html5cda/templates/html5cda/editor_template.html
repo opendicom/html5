@@ -17,11 +17,7 @@
             <option value="visible">{{ seccion.selecttitle }}</option>
             <option value="none">{{ seccion.selecttitle }} (escondido)</option>
         </select>
-        <input class="displayNone"
-               id="{{ seccion.idseccion }}select"
-               type="checkbox"
-               name="{{ seccion.idseccion }}invisible"
-               value="invisible"/>
+        <input class="displayNone" id="{{ seccion.idseccion }}select" type="checkbox" name="{{ seccion.idseccion }}invisible" value="invisible"/>
         {% if seccion.articlehtml.html is None %}
             <article data-code="{{ seccion.code.code }}"
                      data-displayname="{{ seccion.code.displayname }}"
@@ -33,10 +29,33 @@
                             <select class="{{subseccion.0.selectcolor}}"
                                     name="{{subseccion.0.idseccion}}select"
                                     onchange="invisibility(this)">
-                                <option value="none">{{subseccion.0.selecttitle}}</option>
+                                <option value="visible">{{subseccion.0.selecttitle}}</option>
+                                <option value="none">{{subseccion.0.selecttitle}} (escondido)</option>
                             </select>
-                            <input class="displayNone" id="{{subseccion.0.idseccion}}select" type="checkbox" name="{{subseccion.0.idseccion}}invisible" value="invisible" checked="checked"/>
-                            {{ subseccion.0.articlehtml.html|safe }}
+                            <input class="displayNone" id="{{subseccion.0.idseccion}}select" type="checkbox" name="{{subseccion.0.idseccion}}invisible" value="invisible"/>
+                            {% if subseccion.0.articlehtml.html is None %}
+                                <article data-code="{{ subseccion.code.code }}"
+                                    data-displayname="{{ subseccion.code.displayname }}"
+                                    data-codesystem="{{ subseccion.code.codesystem.oid }}"
+                                    data-codesystemname="{{ subseccion.code.codesystem.name }}">
+                                    {% for subsubseccion in subseccion.0.get_all_sub_seccion %}
+                                         <div class="subsection">
+                                            <section id="{{subsubseccion.0.idseccion}}">
+                                                <select class="{{subsubseccion.0.selectcolor}}"
+                                                    name="{{subsubseccion.0.idseccion}}select"
+                                                    onchange="invisibility(this)">
+                                                    <option value="visible">{{subsubseccion.0.selecttitle}}</option>
+                                                    <option value="none">{{subsubseccion.0.selecttitle}} (escondido)</option>
+                                                </select>
+                                                <input class="displayNone" id="{{subsubseccion.0.idseccion}}select" type="checkbox" name="{{subsubseccion.0.idseccion}}invisible" value="invisible"/>
+                                                {{ subsubseccion.0.articlehtml.html|safe }}
+                                            </section>
+                                         </div>
+                                    {% endfor %}
+                                </article>
+                            {% else %}
+                                {{ subseccion.0.articlehtml.html|safe }}
+                            {% endif %}
                         </section>
                     </div>
                 {% endfor %}
