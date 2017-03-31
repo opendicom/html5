@@ -61,6 +61,7 @@ class Role(BaseModel):
         ('adm', 'Administrador'),
         ('cat', 'Catalogador'),
         ('reg', 'Registrador'),
+        ('res', 'Rest'),
     )
     name = models.CharField(max_length=3, choices=role_choices)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
@@ -68,6 +69,7 @@ class Role(BaseModel):
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, blank=True, null=True)
     default = models.BooleanField(default=False)
     max_rows = models.IntegerField(default=100, blank=False, null=False)
+    parameter_rest = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return '(%s) - (%s) - (%s) - (%s)' % (self.name, self.user, self.institution, self.service)

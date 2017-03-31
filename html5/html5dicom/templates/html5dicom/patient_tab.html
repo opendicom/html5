@@ -4,37 +4,13 @@
 <script>
     addTableStudy = function (org, inst, oid, role, service, max_rows, patientID){
         $("#table-container").empty();
-        var service_arr = service.split(',');
-        //var service_options = '<select class="control-label" id="modalities"><option value="'+ service +'">Todos</option>';
-        //var service_options = '<select class="control-label" id="modalities"><option value="*">Todos</option>';
-        var service_options = '<select class="control-label" id="modalities">';
-        for(var i = 0; i < service_arr.length; i++){
-            if (i == 0){
-                if (service_arr[i] == 'Todos') {
-                    service_options += '<option value="ALL" selected>' + service_arr[i] + '</option>';
-                }else{
-                    service_options += '<option value="' + service_arr[i]+ '" selected>' + service_arr[i] + '</option>';
-                }
-            }else{
-                if (service_arr[i] == 'Todos') {
-                    service_options += '<option value="ALL">' + service_arr[i] + '</option>';
-                }else{
-                    service_options += '<option value="' + service_arr[i]+ '">' + service_arr[i] + '</option>';
-                }
-            }
-        }
-        service_options += '</select>';
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
   	    $(ContentTabPane).appendTo('#table-container');
   	    $('<input id="new" value="true" type="hidden"/>').appendTo('#table-container');
         $('#table_study thead th').each( function () {
             var title = $('#table_study tfoot th').eq( $(this).index() ).text();
-            if (title != '' && title != 'Fecha') {
-                if (title == 'Modalidades'){
-                    $(this).html(service_options);
-                }else{
-                    $(this).html('<input type="text" placeholder="'+title+'"/>');
-                }
+            if (title != '' && title != 'Fecha' && title != 'Documento' && title != 'Nombre') {
+               $(this).html('<input type="text" placeholder="'+title+'"/>');
             }
         });
   	    var table = $('#table_study').DataTable({
@@ -134,8 +110,8 @@
                 var initDate = new Date();
                 initDate.setDate(currenDate.getDate() - 7);
                 var options_toolbar = '<button class="btn btn-primary" type="button" id="reload_study" ><span class="glyphicon glyphicon-search"></span> Nueva búsqueda</button> ';
-                options_toolbar += '<label for="date_start">Fecha Inicio : </label> <input type="date" class="form-control input-sm" id="date_start" value="'+ initDate.toISOString().slice(0, 10) +'"/> ';
-                options_toolbar += '<label for="date_end"> Fecha Fin : </label> <input type="date" class="form-control input-sm" id="date_end" value="'+ currenDate.toISOString().slice(0, 10) +'"/>';
+                options_toolbar += '<label for="date_start">Fecha Inicio : </label> <input type="date" class="form-control input-sm" id="date_start" value=""/> ';
+                options_toolbar += '<label for="date_end"> Fecha Fin : </label> <input type="date" class="form-control input-sm" id="date_end" value=""/>';
                 $("div.toolbar").append(options_toolbar);
                 $('#new').val('false');
                 $('#reload_study').click(function() {
@@ -151,19 +127,16 @@
                     });
                 }
                 $('#date_start, #date_end').change( function() {
+                    var table = $('#table_study').DataTable();
                     table.draw();
                 });
 
             },
             "fnServerParams": function ( aoData, fnCallback ) {
-                aoData.columns[6].search.value = $('#modalities').val();
+                //aoData.columns[6].search.value = $('#modalities').val();
                 aoData.columns[3].search.value = patientID;
                 if($('#date_start').val() === undefined){
-                    var currenDate = new Date();
-                    var initDate = new Date();
-                    initDate.setDate(currenDate.getDate() - 7);
-                    aoData.date_start = initDate.toISOString().slice(0, 10).replace(/-/g,"");
-                    aoData.date_end = currenDate.toISOString().slice(0, 10).replace(/-/g,"");
+
                 }else{
                     aoData.date_start = $('#date_start').val().replace(/-/g,"");
                     aoData.date_end = $('#date_end').val().replace(/-/g,"");
