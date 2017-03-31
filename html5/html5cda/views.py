@@ -7,10 +7,11 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth import authenticate
 from django.db.models import Q
-from urllib.parse import urlencode
+from urllib.parse import urlencode, parse_qs
 from urllib.parse import quote
 from datetime import datetime
 import hashlib
+import uuid
 
 
 @login_required(login_url='/html5dicom/login')
@@ -123,7 +124,8 @@ def get_save_template(request, *args, **kwargs):
         plantilla = models.Plantilla.objects.get(id=submit.plantilla.id)
         firmas = models.Firma.objects.filter(informe=submit)
         if firmas.count() == plantilla.cantidadfirmas:
-            response_save_template = {'url_editor': submit.urlparamsenviado, 'url_autentication': 'url'}
+            response_save_template = {'url_editor': submit.urlparamsenviado,
+                                      'url_autentication': request.build_absolute_uri(reverse('authenticate_report')) + '?report={}'.format(submit.id)}
         else:
             response_save_template = {'url_editor': submit.urlparamsenviado, 'url_autentication': ''}
     except models.Submit.DoesNotExist:
@@ -158,7 +160,6 @@ def save_template(request, *args, **kwargs):
         firmas = models.Firma.objects.filter(informe=submit)
         if firmas.count() > 0:
             models.Firma.objects.filter(informe=submit).delete()
-
         response_save = {'message': 'Guardado Correctamente'}
     elif request.POST.get("firmar"):
         username = ''
@@ -193,12 +194,12 @@ def save_template(request, *args, **kwargs):
                         informe=submit,
                         md5=hashlib.md5(urlencode(post_param, quote_via=quote).encode('utf-8')).hexdigest(),
                         fecha=datetime.now(),
-                        udn='',
+                        udn=user.username,
                         uid='',
                         uoid='',
-                        uname='',
+                        uname=user.get_full_name(),
                         iname='',
-                        ioid=''
+                        ioid=request.POST.get('custodianOID')
                     )
                     firmas = models.Firma.objects.filter(informe=submit)
                     if firmas.count() == plantilla.cantidadfirmas:
@@ -247,12 +248,12 @@ def save_template(request, *args, **kwargs):
                         informe=submit,
                         md5=hashlib.md5(urlencode(post_param, quote_via=quote).encode('utf-8')).hexdigest(),
                         fecha=datetime.now(),
-                        udn='',
+                        udn=user.username,
                         uid='',
                         uoid='',
-                        uname='',
+                        uname=user.get_full_name(),
                         iname='',
-                        ioid=''
+                        ioid=request.POST.get('custodianOID')
                     )
                     firmas = models.Firma.objects.filter(informe=submit)
                     if firmas.count() == plantilla.cantidadfirmas:
@@ -275,5 +276,78 @@ def save_template(request, *args, **kwargs):
     return JsonResponse(response_save)
 
 
-def authenticate_report(submit):
+def generate_authenticate_report(request, *args, **kwargs):
+    submit = models.Submit.objects.get(id=request.GET.get('report'))
+    authenticate_report(submit, request.user)
+    return HttpResponse('autenticado ok')
+
+
+def authenticate_report(submit, user):
+    # registra datos tabla autenticado
+    informeuid = '2.25.{}'.format(int(str(uuid.uuid4()).replace('-', ''), 16))
+    values_submit = parse_qs(submit.urlparamsrecibido)
+    autenticado = models.Autenticado.objects.create(
+        plantilla=submit.plantilla,
+        eiud=submit.eiud,
+        eaccnum=submit.eaccnum,
+        eaccoid=submit.eaccoid,
+        urlparams=submit.urlparamsrecibido,
+        activo='SI',
+        pnombre=values_submit['PatientName'][0],
+        pid=values_submit['PatientID'][0],
+        poid=values_submit['PatientIDIssuer'][0],
+        psexo=values_submit['PatientSex'][0],
+        pnacimiento=values_submit['PatientBirthDate'][0],
+        pbarrio='',
+        pciudad='',
+        pregion='',
+        ppais='',
+        efecha=datetime.strptime(values_submit['StudyDate'][0],'%Y%m%d'),
+        eid='',
+        erealizadoroid='',
+        estudio=submit.plantilla.estudio,
+        informetitulo='',
+        informeuid=informeuid,
+        custodianoid=values_submit['custodianOID'][0],
+        valoracion='',
+        solicituduid=''
+    )
+    # parseo submit
+    secciones = models.Seccion.objects.filter(plantilla=submit.plantilla)
+    print(secciones.query)
+    for seccion in secciones:
+        sec = models.Sec.objects.create(
+            autenticado=autenticado,
+            templateuid=seccion.templateuidroot,
+            idsec=seccion.idseccion,
+            seccode=seccion.code,
+            title=seccion.selecttitle
+        )
+        if seccion.articlehtml is not None:
+            sec.text = values_submit['{}textarea'.format(seccion.idseccion)][0]
+            sec.save()
+        else:
+            subsecciones = seccion.get_all_sub_seccion()
+            for subseccion in subsecciones:
+                subsec = models.Subsec.objects.create(
+                    templateuid=subseccion.templateuidroot,
+                    idsubsec=subseccion.idseccion,
+                    subseccode=subseccion.code,
+                    title=subseccion.selecttitle,
+                    parent_sec=sec.id
+                )
+                if subseccion.articlehtml is not None:
+                    subsec.text = values_submit['{}textarea'.format(subseccion.idseccion)][0]
+                    subsec.save()
+                else:
+                    subsubsecciones = subseccion.get_all_sub_seccion()
+                    for subsubseccion in subsubsecciones:
+                        subsubsec = models.Subsubsec.objects.create(
+                            templateuid=subsubseccion.templateuidroot,
+                            idsubsubsec=subsubseccion.idseccion,
+                            subsubseccode=subsubseccion.code,
+                            title=subsubseccion.selecttitle,
+                            parent_subsec=subsec.id,
+                            text = values_submit['{}textarea'.format(subsubsecciones.idseccion)][0]
+                        )
     return

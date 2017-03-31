@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^ajax/get_template', views.get_template, name='get_template'),
     url(r'^save_template', views.save_template, name='save_template'),
     url(r'^get_save_template', views.get_save_template, name='get_save_template'),
+    url(r'^authenticate_report', views.generate_authenticate_report, name='authenticate_report'),
 ]

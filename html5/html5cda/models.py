@@ -156,7 +156,7 @@ class Seccion(BigIntegerPKModel):
 
     # Permite obtener todas las subsecciones
     # http://stackoverflow.com/questions/4725343/django-self-recursive-foreignkey-filter-query-for-all-childs
-    def get_all_sub_seccion(self,include_self=False):
+    def get_all_sub_seccion(self, include_self=False):
         r = []
         if include_self:
             r.append(self)
@@ -221,7 +221,7 @@ class Autenticado(BigIntegerPKModel):
     eiud = models.CharField(max_length=64, blank=True, null=True)
     eaccnum = models.CharField(max_length=16, blank=True, null=True)
     eaccoid = models.CharField(max_length=64, blank=True, null=True)
-    urlparams = models.CharField(max_length=45, blank=True, null=True)
+    urlparams = models.TextField(blank=True, null=True)
     activo = models.CharField(max_length=2, blank=True, null=True)
     pnombre = models.CharField(max_length=255, blank=True, null=True)
     pid = models.CharField(max_length=16, blank=True, null=True)
