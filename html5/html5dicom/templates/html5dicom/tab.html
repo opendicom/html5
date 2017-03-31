@@ -2,16 +2,7 @@
 <div class="container-fluid" id="table-container">
 </div>
 <script>
-<<<<<<< HEAD
-    refreshTableStudy = function(){
-        var table = $('#table_study').DataTable()
-        table.draw()
-    }
-
-    addTableStudy = function (org, inst, oid, role, service, max_rows){
-=======
     addTableStudy = function (org, inst, oid, role, service, max_rows, patientID){
->>>>>>> master
         $("#table-container").empty();
         var service_arr = service.split(',');
         //var service_options = '<select class="control-label" id="modalities"><option value="'+ service +'">Todos</option>';
