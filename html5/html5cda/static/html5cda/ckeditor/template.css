@@ -29,7 +29,11 @@ body {
 	margin-bottom: .125em;
 }
 
-.editor input[value=invisible]:checked ~ article {
+.editor input.displayNoneArticleNone[value=hidden]:checked ~ article {
+	height:0px;
+}
+
+.editor input.displayNoneArticleNone[value=off]:checked ~ article {
 	height:0px;
 }
 
@@ -248,5 +252,9 @@ body {
 }
 
 .editor .displayNone {
+    display:none;
+}
+
+.editor .displayNoneArticleNone {
     display:none;
 }

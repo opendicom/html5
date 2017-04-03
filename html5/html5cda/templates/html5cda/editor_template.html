@@ -13,11 +13,13 @@
         <select class="{{ seccion.selectcolor }}"
                 name="{{ seccion.idseccion }}select"
                 title="{{ seccion.selecttitle }}"
-                onchange="invisibility(this)">
-            <option value="visible">{{ seccion.selecttitle }}</option>
-            <option value="none">{{ seccion.selecttitle }} (escondido)</option>
+                onchange="propagate(this)">
+            <option value="on">{{ seccion.selecttitle }}</option>
+            <option value="hidden">{{ seccion.selecttitle }} (escondido)</option>
+            <option value="off">-</option>
         </select>
-        <input class="displayNone" id="{{ seccion.idseccion }}select" type="checkbox" name="{{ seccion.idseccion }}invisible" value="invisible"/>
+        <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selectoff" type="checkbox" name="{{ seccion.idseccion }}selectoff" value="off" onchange="invisibility(this)"/>
+        <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selecthidden" type="checkbox" name="{{ seccion.idseccion }}selecthidden" value="hidden"/>
         {% if seccion.articlehtml.html is None %}
             <article data-code="{{ seccion.code.code }}"
                      data-displayname="{{ seccion.code.displayname }}"
@@ -28,11 +30,13 @@
                         <section id="{{subseccion.0.idseccion}}">
                             <select class="{{subseccion.0.selectcolor}}"
                                     name="{{subseccion.0.idseccion}}select"
-                                    onchange="invisibility(this)">
-                                <option value="visible">{{subseccion.0.selecttitle}}</option>
-                                <option value="none">{{subseccion.0.selecttitle}} (escondido)</option>
+                                    onchange="propagate(this)">
+                                <option value="on">{{subseccion.0.selecttitle}}</option>
+                                <option value="hidden">{{subseccion.0.selecttitle}} (escondido)</option>
+                                <option value="off">-</option>
                             </select>
-                            <input class="displayNone" id="{{subseccion.0.idseccion}}select" type="checkbox" name="{{subseccion.0.idseccion}}invisible" value="invisible"/>
+                            <input class="displayNoneArticleNone" id="{{ subseccion.0.idseccion }}selectoff" type="checkbox" name="{{ subseccion.0.idseccion }}selectoff" value="off" onchange="invisibility(this)"/>
+                            <input class="displayNoneArticleNone" id="{{ subseccion.0.idseccion }}selecthidden" type="checkbox" name="{{ subseccion.0.idseccion }}selecthidden" value="hidden"/>
                             {% if subseccion.0.articlehtml.html is None %}
                                 <article data-code="{{ subseccion.code.code }}"
                                     data-displayname="{{ subseccion.code.displayname }}"
@@ -43,11 +47,13 @@
                                             <section id="{{subsubseccion.0.idseccion}}">
                                                 <select class="{{subsubseccion.0.selectcolor}}"
                                                     name="{{subsubseccion.0.idseccion}}select"
-                                                    onchange="invisibility(this)">
-                                                    <option value="visible">{{subsubseccion.0.selecttitle}}</option>
-                                                    <option value="none">{{subsubseccion.0.selecttitle}} (escondido)</option>
+                                                    onchange="propagate(this)">
+                                                    <option value="on">{{subsubseccion.0.selecttitle}}</option>
+                                                    <option value="hidden">{{subsubseccion.0.selecttitle}} (escondido)</option>
+                                                    <option value="off">-</option>
                                                 </select>
-                                                <input class="displayNone" id="{{subsubseccion.0.idseccion}}select" type="checkbox" name="{{subsubseccion.0.idseccion}}invisible" value="invisible"/>
+                                                <input class="displayNoneArticleNone" id="{{ subsubseccion.0.idseccion }}selectoff" type="checkbox" name="{{ subsubseccion.0.idseccion }}selectoff" value="off" onchange="invisibility(this)"/>
+                                                <input class="displayNoneArticleNone" id="{{ subsubseccion.0.idseccion }}selecthidden" type="checkbox" name="{{ subsubseccion.0.idseccion }}selecthidden" value="hidden"/>
                                                 {{ subsubseccion.0.articlehtml.html|safe }}
                                             </section>
                                          </div>
