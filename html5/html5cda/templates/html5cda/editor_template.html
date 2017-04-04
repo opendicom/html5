@@ -5,54 +5,81 @@
     {{ header.header.html|safe }}
 {% endfor %}
 {% for seccion in context.secciones %}
-    <section id="{{ seccion.idseccion }}"
+    <section id="{{ seccion.idseccion }}" {%if seccion.sectionclass is not None %} class="{{seccion.sectionclass}}" {% endif %}
              data-code="{{ seccion.code.code }}"
              data-displayname="{{ seccion.code.displayname }}"
              data-codesystem="{{ seccion.code.codesystem.oid }}"
-             data-codesystemname="{{ seccion.code.codesystem.name }}">
-        <select class="{{ seccion.selectcolor }}"
-                name="{{ seccion.idseccion }}select"
-                title="{{ seccion.selecttitle }}"
-                onchange="propagate(this)">
-            <option value="on">{{ seccion.selecttitle }}</option>
-            <option value="hidden">{{ seccion.selecttitle }} (escondido)</option>
-            <option value="off">-</option>
-        </select>
-        <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selectoff" type="checkbox" name="{{ seccion.idseccion }}selectoff" value="off" onchange="invisibility(this)"/>
-        <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selecthidden" type="checkbox" name="{{ seccion.idseccion }}selecthidden" value="hidden"/>
+             data-codesystemname="{{ seccion.code.codesystem.name }}"
+             data-mandatory="{{seccion.obligatorio|upper}}">
+        {%if seccion.obligatorio == True %}
+            <select class="{{ seccion.selectcolor }}"
+                    name="{{ seccion.idseccion }}select"
+                    title="{{ seccion.selecttitle }}"
+                    onchange="propagate(this)">
+                <option value="on">{{ seccion.selecttitle }}</option>
+                <option value="hidden" {% if seccion.inputchecked == True %} selected {% endif %}>{{ seccion.selecttitle }} (escondido)</option>
+                <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selecthidden" type="checkbox" name="{{ seccion.idseccion }}selecthidden" value="hidden" {% if seccion.inputchecked == True %} checked="checked" {% endif %}/>
+            </select>
+        {% else %}
+            <select class="{{ seccion.selectcolor }}"
+                    name="{{ seccion.idseccion }}select"
+                    title="{{ seccion.selecttitle }}"
+                    onchange="propagate(this)">
+                <option value="on">{{ seccion.selecttitle }}</option>
+                <option value="hidden">{{ seccion.selecttitle }} (escondido)</option>
+                <option value="off" {% if seccion.inputchecked == True %} selected {% endif %}>-</option>
+            </select>
+            <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selectoff" type="checkbox" name="{{ seccion.idseccion }}selectoff" value="off" onchange="invisibility(this)" {% if seccion.inputchecked == True %} checked="checked" {% endif %}/>
+            <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selecthidden" type="checkbox" name="{{ seccion.idseccion }}selecthidden" value="hidden"/>
+        {% endif %}
         {% if seccion.articlehtml.html is None %}
             <article data-code="{{ seccion.code.code }}"
                      data-displayname="{{ seccion.code.displayname }}"
                      data-codesystem="{{ seccion.code.codesystem.oid }}"
                      data-codesystemname="{{ seccion.code.codesystem.name }}">
                 {% for subseccion in seccion.get_all_sub_seccion %}
-                    <div class="subsection">
-                        <section id="{{subseccion.0.idseccion}}">
-                            <select class="{{subseccion.0.selectcolor}}"
-                                    name="{{subseccion.0.idseccion}}select"
-                                    onchange="propagate(this)">
-                                <option value="on">{{subseccion.0.selecttitle}}</option>
-                                <option value="hidden">{{subseccion.0.selecttitle}} (escondido)</option>
-                                <option value="off">-</option>
-                            </select>
-                            <input class="displayNoneArticleNone" id="{{ subseccion.0.idseccion }}selectoff" type="checkbox" name="{{ subseccion.0.idseccion }}selectoff" value="off" onchange="invisibility(this)"/>
-                            <input class="displayNoneArticleNone" id="{{ subseccion.0.idseccion }}selecthidden" type="checkbox" name="{{ subseccion.0.idseccion }}selecthidden" value="hidden"/>
+                        <section id="{{subseccion.0.idseccion}}" {%if subseccion.0.sectionclass is not None %} class="{{subseccion.0.sectionclass}}" {% endif %}
+                                 data-mandatory="{{subseccion.0.obligatorio|upper}}">
+                            {%if subseccion.0.obligatorio == True %}
+                                <select class="{{subseccion.0.selectcolor}}"
+                                        name="{{subseccion.0.idseccion}}select">
+                                    <option value="on">{{subseccion.0.selecttitle}}</option>
+                                </select>
+                            {% else %}
+                                <select class="{{subseccion.0.selectcolor}}"
+                                        name="{{subseccion.0.idseccion}}select"
+                                        onchange="propagate(this)">
+                                    <option value="on">{{subseccion.0.selecttitle}}</option>
+                                    <option value="hidden">{{subseccion.0.selecttitle}} (escondido)</option>
+                                    <option value="off" {% if subseccion.0.inputchecked == True %} selected {% endif %}>-</option>
+                                </select>
+                                <input class="displayNoneArticleNone" id="{{ subseccion.0.idseccion }}selectoff" type="checkbox" name="{{ subseccion.0.idseccion }}selectoff" value="off" onchange="invisibility(this)" {% if subseccion.0.inputchecked == True %} checked="checked" {% endif %}/>
+                                <input class="displayNoneArticleNone" id="{{ subseccion.0.idseccion }}selecthidden" type="checkbox" name="{{ subseccion.0.idseccion }}selecthidden" value="hidden"/>
+                            {% endif %}
                             {% if subseccion.0.articlehtml.html is None %}
                                 <article data-code="{{ subseccion.code.code }}"
                                     data-displayname="{{ subseccion.code.displayname }}"
                                     data-codesystem="{{ subseccion.code.codesystem.oid }}"
                                     data-codesystemname="{{ subseccion.code.codesystem.name }}">
                                     {% for subsubseccion in subseccion.0.get_all_sub_seccion %}
-                                        <section id="{{subsubseccion.0.idseccion}}" {%if subsubseccion.0.sectionclass is not None %} class="{{subsubseccion.0.sectionclass}}" {% endif %}>
-                                            <select class="{{subsubseccion.0.selectcolor}}"
-                                                name="{{subsubseccion.0.idseccion}}select"
-                                                onchange="propagate(this)">
-                                                <option value="on">{{subsubseccion.0.selecttitle}}</option>
-                                                <option value="hidden">{{subsubseccion.0.selecttitle}} (escondido)</option>
-                                                <option value="off">-</option>
-                                            </select>
-                                            <input class="displayNoneArticleNone" id="{{ subsubseccion.0.idseccion }}selectoff" type="checkbox" name="{{ subsubseccion.0.idseccion }}selectoff" value="off" onchange="invisibility(this)"/>
-                                            <input class="displayNoneArticleNone" id="{{ subsubseccion.0.idseccion }}selecthidden" type="checkbox" name="{{ subsubseccion.0.idseccion }}selecthidden" value="hidden"/>
+                                        <section id="{{subsubseccion.0.idseccion}}" {%if subsubseccion.0.sectionclass is not None %} class="{{subsubseccion.0.sectionclass}}" {% endif %}
+                                                 data-mandatory="{{subsubseccion.0.obligatorio|upper}}">
+                                            {%if subsubseccion.0.obligatorio == True %}
+                                                <select class="{{subsubseccion.0.selectcolor}}"
+                                                    name="{{subsubseccion.0.idseccion}}select">
+                                                    <option value="on">{{subsubseccion.0.selecttitle}}</option>
+                                                </select>
+                                            {% else %}
+                                                <select class="{{subsubseccion.0.selectcolor}}"
+                                                    name="{{subsubseccion.0.idseccion}}select"
+                                                    onchange="propagate(this)">
+                                                    <option value="on">{{subsubseccion.0.selecttitle}}</option>
+                                                    <option value="hidden">{{subsubseccion.0.selecttitle}} (escondido)</option>
+                                                    <option value="off" {% if subsubseccion.0.inputchecked == True %} selected {% endif %}>-</option>
+                                                </select>
+                                                <input class="displayNoneArticleNone" id="{{ subsubseccion.0.idseccion }}selectoff" type="checkbox" name="{{ subsubseccion.0.idseccion }}selectoff" value="off" onchange="invisibility(this)" {% if subsubseccion.0.inputchecked == True %} checked="checked" {% endif %}/>
+                                                <input class="displayNoneArticleNone" id="{{ subsubseccion.0.idseccion }}selecthidden" type="checkbox" name="{{ subsubseccion.0.idseccion }}selecthidden" value="hidden"/>
+                                            {% endif %}
                                             {{ subsubseccion.0.articlehtml.html|safe }}
                                         </section>
                                     {% endfor %}
@@ -61,7 +88,6 @@
                                 {{ subseccion.0.articlehtml.html|safe }}
                             {% endif %}
                         </section>
-                    </div>
                 {% endfor %}
             </article>
         {% else %}

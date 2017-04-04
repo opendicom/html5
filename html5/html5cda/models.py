@@ -145,9 +145,10 @@ class Seccion(BigIntegerPKModel):
     sectionclass = models.CharField(max_length=16, blank=True, null=True)
     selectcolor = models.CharField(max_length=16, blank=True, null=True)
     selecttitle = models.CharField(max_length=255, blank=True, null=True)
-    inputchecked = models.CharField(max_length=2, blank=True, null=True)
+    inputchecked = models.BooleanField(default=False, blank=False, null=False)
     code = models.ForeignKey(Code, models.DO_NOTHING, blank=True, null=True)
     articlehtml = models.ForeignKey(Articlehtml, models.DO_NOTHING, blank=True, null=True)
+    obligatorio = models.BooleanField(default=False, blank=False, null=False)
 
     class Meta:
         db_table = 'seccion'
