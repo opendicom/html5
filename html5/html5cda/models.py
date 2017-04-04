@@ -142,6 +142,7 @@ class Seccion(BigIntegerPKModel):
     plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, blank=True, null=True)
     ordinal = models.IntegerField(blank=True, null=True)
     templateuidroot = models.CharField(max_length=64, blank=True, null=True)
+    sectionclass = models.CharField(max_length=16, blank=True, null=True)
     selectcolor = models.CharField(max_length=16, blank=True, null=True)
     selecttitle = models.CharField(max_length=255, blank=True, null=True)
     inputchecked = models.CharField(max_length=2, blank=True, null=True)

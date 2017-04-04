@@ -43,7 +43,7 @@
                                     data-codesystem="{{ subseccion.code.codesystem.oid }}"
                                     data-codesystemname="{{ subseccion.code.codesystem.name }}">
                                     {% for subsubseccion in subseccion.0.get_all_sub_seccion %}
-                                        <section id="{{subsubseccion.0.idseccion}}">
+                                        <section id="{{subsubseccion.0.idseccion}}" {%if subsubseccion.0.sectionclass is not None %} class="{{subsubseccion.0.sectionclass}}" {% endif %}>
                                             <select class="{{subsubseccion.0.selectcolor}}"
                                                 name="{{subsubseccion.0.idseccion}}select"
                                                 onchange="propagate(this)">
