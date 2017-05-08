@@ -7,8 +7,8 @@
 {% endblock %}
 {% block content%}
     <script>
-        $(function() {
-            $( "button" ).click(function() {
+        $(function(){
+            $( "button" ).on( "click", function() {
                 if (this.name == 'guardar'){
                     for ( instance in CKEDITOR.instances )
                         CKEDITOR.instances[instance].updateElement();
@@ -44,8 +44,6 @@
                 modal: true,
                 buttons: {
                     "Aceptar": function() {
-
-
                         for ( instance in CKEDITOR.instances )
                             CKEDITOR.instances[instance].updateElement();
 
@@ -305,6 +303,34 @@
                                             type: 'get',
                                             success: function(data) {
                                                 $('#editor_template').html(data);
+                                                $( "button" ).on( "click", function() {
+                                                    if (this.name == 'guardar'){
+                                                        for ( instance in CKEDITOR.instances )
+                                                            CKEDITOR.instances[instance].updateElement();
+
+                                                        var actionurl = '{% url 'save_template' %}';
+                                                        var form_data = $("#editor").serialize();
+                                                        form_data = form_data + '&'+ this.name + '=' + this.name
+                                                        $.ajax({
+                                                            url: actionurl,
+                                                            type: 'post',
+                                                            data: form_data,
+                                                            success: function(data) {
+                                                                if (data.error){
+                                                                    alert(data.error)
+                                                                }else{
+                                                                    alert(data.message)
+                                                                    window.opener.refreshTableStudy()
+                                                                    self.close()
+                                                                }
+                                                            }
+                                                        });
+                                                    }else if (this.name == 'firmar'){
+                                                        $( "#dialog-firmar" ).dialog( "open" );
+                                                    }else if (this.name == 'firmarAutenticar'){
+                                                        $( "#dialog-firmarAutenticar" ).dialog( "open" );
+                                                    }
+                                                });
                                             },
                                             failure: function(data) {
                                                 console.info('Error get template');

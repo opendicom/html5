@@ -12,22 +12,28 @@ from urllib.parse import quote
 from datetime import datetime
 import hashlib
 import uuid
+from lxml.html.soupparser import fromstring
 
 
 @login_required(login_url='/html5dicom/login')
 def editor(request, *args, **kwargs):
+    modality_filter = ''
+    if 'modalidad' in request.GET:
+        modality_filter = request.GET['modalidad']
+    else:
+        modality_filter = request.GET['Modality']
     html = ''
     modalidades = models.Estudio.objects.values('modalidad').annotate(Count('modalidad')) \
         .order_by('modalidad')
     studies_list = []
-    for estudio in models.Estudio.objects.filter(modalidad=request.GET['Modality']):
+    for estudio in models.Estudio.objects.filter(modalidad=modality_filter):
         studies_list += [{
             'id': estudio.id,
             'description': estudio.code.displayname
         }]
     template_list = []
     for plantilla in models.Plantilla.objects.filter(
-                    Q(estudio__modalidad=request.GET['Modality']) | Q(estudio__modalidad='ALL')):
+                    Q(estudio__modalidad=modality_filter) | Q(estudio__modalidad='ALL')):
         template_list += [{
             'id': plantilla.id,
             'description': plantilla.title
@@ -146,11 +152,11 @@ def save_template(request, *args, **kwargs):
         if 'guardar' in post_param:
             del post_param['guardar']
         submit, created = models.Submit.objects.update_or_create(
-            plantilla=models.Plantilla.objects.get(id=request.POST.get('plantilla')),
-            eiud=request.POST.get('StudyIUID'),
-            eaccnum=request.POST.get('AccessionNumber'),
-            eaccoid=request.POST.get('accessionNumberOID'),
+            eiud=request.POST.get('StudyIUID')
         )
+        submit.plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
+        submit.eaccnum = request.POST.get('AccessionNumber')
+        submit.eaccoid = request.POST.get('accessionNumberOID')
         submit.listoparaautenticacion = 'NO'
         submit.urlparamsenviado = request.build_absolute_uri(reverse('editor')) + '?' + \
                                   urlencode(post_param, quote_via=quote)
@@ -180,11 +186,11 @@ def save_template(request, *args, **kwargs):
                         del post_param['firmar']
                     plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
                     submit, submit_created = models.Submit.objects.update_or_create(
-                        plantilla=plantilla,
-                        eiud=request.POST.get('StudyIUID'),
-                        eaccnum=request.POST.get('AccessionNumber'),
-                        eaccoid=request.POST.get('accessionNumberOID'),
+                        eiud=request.POST.get('StudyIUID')
                     )
+                    submit.plantilla = plantilla
+                    submit.eaccnum = request.POST.get('AccessionNumber')
+                    submit.eaccoid = request.POST.get('accessionNumberOID')
                     submit.urlparamsenviado = request.build_absolute_uri(reverse('editor')) + '?' + \
                                               urlencode(post_param, quote_via=quote)
                     submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
@@ -234,11 +240,11 @@ def save_template(request, *args, **kwargs):
                         del post_param['firmarAutenticar']
                     plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
                     submit, submit_created = models.Submit.objects.update_or_create(
-                        plantilla=plantilla,
                         eiud=request.POST.get('StudyIUID'),
-                        eaccnum=request.POST.get('AccessionNumber'),
-                        eaccoid=request.POST.get('accessionNumberOID'),
                     )
+                    submit.plantilla = plantilla
+                    submit.eaccnum = request.POST.get('AccessionNumber')
+                    submit.eaccoid = request.POST.get('accessionNumberOID')
                     submit.urlparamsenviado = request.build_absolute_uri(reverse('editor')) + '?' + \
                                               urlencode(post_param, quote_via=quote)
                     submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
@@ -314,7 +320,6 @@ def authenticate_report(submit, user):
     )
     # parseo submit
     secciones = models.Seccion.objects.filter(plantilla=submit.plantilla)
-    print(secciones.query)
     for seccion in secciones:
         sec = models.Sec.objects.create(
             autenticado=autenticado,
@@ -347,7 +352,16 @@ def authenticate_report(submit, user):
                             idsubsubsec=subsubseccion.idseccion,
                             subsubseccode=subsubseccion.code,
                             title=subsubseccion.selecttitle,
-                            parent_subsec=subsec.id,
-                            text = values_submit['{}textarea'.format(subsubsecciones.idseccion)][0]
+                            parent_subsec=subsec.id
                         )
+                        if '{}textarea'.format(subsubseccion.idseccion) in values_submit:
+                            subsubsec.text = values_submit['{}textarea'.format(subsubseccion.idseccion)][0]
+                            subsubsec.save()
+                        else:
+                            if values_submit['{}select'.format(subsubseccion.idseccion)][0] == 'on' or \
+                                            values_submit['{}select'.format(subsubseccion.idseccion)][0] == 'hidden':
+                                # //code[@data-code="366301005"]/@data-displayName
+                                articlehtml = fromstring(subsubseccion.articlehtml.html)
+                                articlehtml.xpath('')
+
     return
