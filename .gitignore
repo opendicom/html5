@@ -3,3 +3,6 @@
 venv/
 *.pyc
 logs/
+html5/html5cda/migrations/
+html5/proxyrest/migrations/
+html5/html5dicom/migrations/
