@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map>
+    <title>OPENDICOM DICOM CDA</title>
+    <topicref href="objectmodel.dita"/>
+    <topicref href="representations.ditamap" format="ditamap">
+        <mapref href="html5.ditamap"/>
+        <topicref href="url.ditamap" format="ditamap">
+            <topicref href="guardar.dita"/>
+            <topicref href="autenticar.dita"/>
+        </topicref>
+        <topicref href="sql.ditamap" format="ditamap"/>
+        <topicref href="cda.ditamap" format="ditamap"/>
+    </topicref>
+</map>
