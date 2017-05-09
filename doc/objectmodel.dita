@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="objectmodel">
+    <title>ObjectModel</title>
+    <body>
+        <p>Nuestro editor de informes conyugue tecnologías html5 para templating, url para la
+            captura de datos, sql para su persistencia y cda+xslt para su exportación. Pues un mismo
+            informe puede representarse  por 4 formatos distintos.</p>
+        <p>
+            <ul id="ul_jtm_t13_vz">
+                <li>el usuario pide un template de informe para rellenarlo. Se crea dichto template
+                    html5 desde las tablas sql de plantilla.</li>
+                <li>El usuario, para guardar su informe, genera un evento submit desde el template
+                    html5 que genera el formato url en base al formato html5. Se guarda este formato
+                    url dentro de unas tablas del sql hasta que el usuario autentique el informe,
+                    autorizando su exportación.</li>
+                <li>La autenticación tiene por efecto el parseo de el las tablas que registran en
+                    formato url para crear nuevas instancias de objetos relacionados que permiten
+                    investigación estadistica y creación inmediata el CDA.</li>
+            </ul>
+        </p>
+        <p>Para exponer con claridad la correspondencia entre los diversos formatos, definimos un
+            modelo objeto subyacente  al cual todas las representaciones tienen que conformarse. El
+            modelo describe el contenido clínico del informe (que puede ser muy complejo), no la
+            metadata relativa a datos del paciente, radiólogo etc, (que no tiene complejidad).</p>
+        <section id="section_hw1_tg3_vz">
+            <title>contenido clínico del informe</title>
+            <p>El contenido clínico del informe está structurado por uno o más elementos
+                    <i>section</i>.</p>
+        </section>
+        <section id="section_an3_m33_vz">
+            <p/>
+        </section>
+        <section id="section_wyc_1h3_vz">
+            <title><i>section</i></title>
+            <p>Los elementos <i>section</i> pueden contener otros elementos <i>section</i>, en forma
+                recurrente.</p>
+            <p>Limitamos la recursión a 3 niveles máximo. El primero  corresponde a las
+                subdivisiones principales entre datos clínicos, procedimiento, hallazgos, impresión
+                y descargo. El segundo permite tratar por separado items claramente distintos de un
+                procedimiento, por ejemplo la tomografía por rayos X y la tomografía por emisión de
+                positrones realizados en conjunto justifican un subcapitulo para cada una de las
+                especialidades. Finalmente el tercer nivel permite registrar indicaciones básicas de
+                diagramación (rango y columna de la sección dentro de la representación.</p>
+            <p>Cada sección consta de identificación, localizador,  selector de título y
+                contenedor:</p>
+            <p>
+                <ul id="ul_i4t_tnj_vz">
+                    <li>identificación en relación a vocabulario controlado, constituida de (code,
+                        displayName, codeSystem y codeSystemName).</li>
+                    <li>localizador de sección dentro del informe. Este localizador està constituido
+                        de una letra que representa la subdivisión principal un digito ordinal para
+                        distinguir items de un procedimientos, un digito para indicar el rango de
+                        diagramado y otro para indicar la columna de diagramación.</li>
+                    <li>el selector de titulo permite la selección de un titulo de sección, la no
+                        representación del contenido de la sección y la supresión de la sección
+                        dentro del resultado.</li>
+                    <li>el contenedor puede incluir o texto libre o contenido estructurado en forma
+                        de tabla.</li>
+                </ul>
+            </p>
+        </section>
+        <p/>
+        <p/>
+    </body>
+</topic>

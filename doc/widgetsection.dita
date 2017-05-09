@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="widgetsection">
+    <title>widgetSection</title>
+    <body>
+        <p><i>Section</i> es un objeto de html5</p>
+        <section id="section_bnn_lvh_vz">
+            <title/>
+            <p/>
+        </section>
+    </body>
+</topic>
