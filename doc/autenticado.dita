@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="autenticado">
+    <title>autenticado</title>
+    <body>
+        <p>La tabla autenticado contiene los dados recabados por evento submit POST "autenticar" de
+            la representación del formulario html5 en el navegador del usuario.</p>
+        <p>Muchos de ellos sirven para informar los elementos de metadata del CDA, o sea todo salvo
+            el contenido de &lt;structuredBody>.</p>
+        <p>Los campos fkpantilla y el campo urlparams (que contiene una serialización del
+            diferencial entre el template y el contendio a autenticar) son los que permiten el
+            parseo y creación de los elementos correspondientes en las tablas que contienen los
+            elementos de información necesarios para armar el &lt;structuredBody> del CDA.</p>
+    </body>
+</topic>

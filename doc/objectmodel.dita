@@ -19,7 +19,7 @@
                 <li>El usuario, para autenticar el informe, manda un evento submit desde el form
                     html5 que tiene por efecto el parseo del registro correspondiente en las tablas
                     de almacenamiento en formato url para crear nuevas instancias de objetos
-                    relacionados  entre sí faciliando la investigación estadistica y la creación
+                    relacionados  entre sí facilitando la investigación estadistica y la creación
                     inmediata de un CDA.</li>
             </ul>
         </p>
@@ -29,7 +29,7 @@
             &lt;StructurredBody>,</p>
         <section id="section_wyc_1h3_vz">
             <title><i>section</i></title>
-            <p>&lt;StructuredBody> contiene elementos &lt;sections> (secciones). Las seccciones
+            <p>&lt;StructuredBody> contiene elementos &lt;section> (secciones). Las seccciones
                 pueden contener otras secciones, en forma recurrente.</p>
             <p>Limitamos la recursión a 3 niveles máximo. El primero  corresponde a la subdivisión
                 principal del informe en capitulos datos clínicos, procedimiento, hallazgos,
@@ -39,10 +39,9 @@
                 especialidades. Finalmente el tercer nivel permite registrar indicaciones básicas de
                 diagramación (rango y columna de la sección) dentro de la representación.</p>
             <p>
-                <fig id="fig_a3l_zxl_vz">
+                <fig id="fig_pp1_ht5_vz">
                     <title>Tres niveles de encapsulación de secciones</title>
-                    <image href="sectionLevels.png" width="1494" height="1440" id="image_b3l_zxl_vz"
-                        scalefit="yes">
+                    <image href="sectionLevels.png" id="image_qp1_ht5_vz">
                         <alt>Tres niveles de encapsulación de secciones</alt>
                     </image>
                 </fig>
@@ -59,20 +58,25 @@
                         diagramación y otro para indicar la columna de diagramación.</li>
                     <li>el selector de titulo define el titulo de sección, la obfuscación del
                         contenido de la sección o su eliminación.</li>
-                    <li>el contenedor puede incluir una o más secciones de nivel superior,  un campo
-                        de texto libre o una tabla de contenido estructurado.</li>
+                    <li>el contenedor puede incluir o una (s) seccion(es),  o un campo de texto
+                        libre,  o una tabla de contenido estructurado.</li>
                 </ul>
             </p>
         </section>
         <section id="section_x5r_2tl_vz">
             <title>Tabla de contenido estructurado</title>
             <p>La tabla contiene uno o más par(es) de columnas dónde la primera del par titula un
-                elemento de información y la segunda indica el valor elegido por el radiologo para
-                este elemento de información.</p>
-            <p>La columna de valor puede contener un selector dentro de un grupo de opciones, un
-                switch boleano (sí/no) o un campo de ingreso de datos (fecha, hora, numérico o
-                textual).</p>
+                elemento de información y la segunda indica el valor elegido para este elemento de
+                información.</p>
+            <p>La columna de valor puede contener un selector de una opción dentro de  un grupo de
+                alternativas, un switch boleano (sí/no) o un campo de ingreso de datos (fecha, hora,
+                numérico o textual).</p>
+            <p>Cada celda es objeto de una codificación en base a vocabulario controlado</p>
         </section>
-        <p/>
+        <section id="section_j5y_1pr_vz">
+            <title>Campo de texto libre</title>
+            <p>Facilita el ingres de texto libre, sin requerimiento de codificación de los conceptos
+                usados.</p>
+        </section>
     </body>
 </topic>

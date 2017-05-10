@@ -35,9 +35,14 @@
             <p>
                 <fig id="fig_e5d_44p_vz">
                     <title>secciones del template html5 guardadas en tablas del sql</title>
-                    <image href="sectionHtml5.png" width="1436" height="1240" id="image_f5d_44p_vz">
-                        <alt>secciones del template html5 guardadas en tablas del sql</alt>
-                    </image>
+                    <p>
+                        <fig id="fig_etc_st5_vz">
+                            <title>tablas para registras las secciones de los templates</title>
+                            <image href="sectionHtml5.png" id="image_ftc_st5_vz">
+                                <alt>tablas para registras las secciones de los templates</alt>
+                            </image>
+                        </fig>
+                    </p>
                 </fig>
             </p>
         </section>

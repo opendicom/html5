@@ -9,7 +9,12 @@
             <topicref href="guardar.dita"/>
             <topicref href="autenticar.dita"/>
         </topicref>
-        <topicref href="sql.ditamap" format="ditamap"/>
-        <topicref href="cda.ditamap" format="ditamap"/>
+        <topicref href="cda.ditamap" format="ditamap">
+            <topicref href="autenticado.dita"/>
+            <topicref href="parseo_del_url.dita"/>
+            <topicref href="sec.dita"/>
+            <topicref href="subsec.dita"/>
+            <topicref href="subsubsec.dita"/>
+        </topicref>
     </topicref>
 </map>

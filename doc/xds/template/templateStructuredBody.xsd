@@ -14,8 +14,13 @@
                 <xs:element name="section" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
+                            <xs:element name="select" />
+                            <xs:element name="input" />
+                            
                             <xs:choice>
                                 <xs:element ref="tl:textarea" />
+                                <xs:element ref="tl:table" />
+                                <xs:element ref="tn:section" />                                
                             </xs:choice>
                         </xs:sequence>
                         <xs:attribute name="id" fixed="C000"/>

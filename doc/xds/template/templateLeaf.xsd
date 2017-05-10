@@ -6,21 +6,14 @@
     xmlns:tl="com.opendicom.xsd.dir.template.leaf"
     >
     <xs:element name="textarea">
+        <xs:complexType mixed="true">
+            <xs:attribute name="name" type="xs:NCName"/>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="table">
         <xs:complexType>
             <xs:sequence>
-                <xs:choice>
-                    <xs:element name="textarea">
-                        <xs:complexType mixed="true">
-                            <xs:attribute name="a"/>
-                        </xs:complexType>
-                    </xs:element>
-                </xs:choice>
             </xs:sequence>
-            <xs:attribute name="id" fixed="C000"/>
-            <xs:attribute name="data-code" fixed="1.2.840.10008.9.2"/>
-            <xs:attribute name="data-displayname" fixed="Clinical Information"/>
-            <xs:attribute name="data-codesystem" fixed="1.2.840.2.10008.6.1"/>
-            <xs:attribute name="data-codesystemname" fixed="DCM"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>
