@@ -18,8 +18,8 @@
                     onchange="propagate(this)">
                 <option value="on">{{ seccion.selecttitle }}</option>
                 <option value="hidden" {% if seccion.inputchecked == True %} selected {% endif %}>{{ seccion.selecttitle }} (escondido)</option>
-                <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selecthidden" type="checkbox" name="{{ seccion.idseccion }}selecthidden" value="hidden" {% if seccion.inputchecked == True %} checked="checked" {% endif %}/>
             </select>
+            <input class="displayNoneArticleNone" id="{{ seccion.idseccion }}selecthidden" type="checkbox" name="{{ seccion.idseccion }}selecthidden" value="hidden" {% if seccion.inputchecked == True %} checked="checked" {% endif %}/>
         {% else %}
             <select class="{{ seccion.selectcolor }}"
                     name="{{ seccion.idseccion }}select"

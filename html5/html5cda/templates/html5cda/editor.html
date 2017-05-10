@@ -360,6 +360,10 @@
                             {
                                 document.getElementById(duo[0]).checked = true;
                             }
+                            if ((o.type == "select-one") && (o.onchange != null))
+                            {
+                                propagate(o);
+                            }
                         }
                     }
                 </script>
