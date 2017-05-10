@@ -3,10 +3,117 @@
 <topic id="widgetsection">
     <title>widgetSection</title>
     <body>
-        <p><i>Section</i> es un objeto de html5</p>
+        <p>El elemento <i>Section</i> es un objeto nativo de html5 y nativo de cda. Usaremos
+            html5Section y cdaSection para desambiguar  los conceptos.</p>
         <section id="section_bnn_lvh_vz">
-            <title/>
-            <p/>
+            <title>html5Section</title>
+            <p>En conformidad con el modelo de objeto, nuestra html5Section incluye los elementos
+                siguientes:</p>
+            <p>
+                <ul id="ul_wkd_f2p_vz">
+                    <li>&lt;select> para confirmar el titulo, ver el titulo y esconder el contenido,
+                        o eliminar la sección del documento a validar.</li>
+                    <li>&lt;input> tipo checkbox que registra la eliminación eventual de la
+                        sección</li>
+                    <li>&lt;input> tipo checkbox que registra la obfuscación eventual de la
+                        sección</li>
+                    <li>&lt;article> contenedor de los elementos que estarán traducidos en elementos
+                        de la cdaSection</li>
+                </ul>
+            </p>
+        </section>
+        <section id="section_fyl_5gp_vz">
+            <title>recursión</title>
+            <p>La recursión explicitada en el modelo de objetos con los tres niveles posibles de
+                encapsulación de secciones, se manifiesta dentro del html5 con inclusión
+                &lt;section>&lt;article>&lt;section> para el segundo nivel y
+                &lt;section>&lt;article>&lt;section>&lt;article>&lt;section> para el tercero.</p>
+            <p>En las tablas del sql relativas al html5, la recursión se realiza directamente desde
+                la tabla sección y cada sección está vinculada a un registro en la table
+                articlehtml. Un mismo registro en esta tabla puede ser usado por varias
+                secciones.</p>
+            <p>
+                <fig id="fig_e5d_44p_vz">
+                    <title>secciones del template html5 guardadas en tablas del sql</title>
+                    <image href="sectionHtml5.png" width="1436" height="1240" id="image_f5d_44p_vz">
+                        <alt>secciones del template html5 guardadas en tablas del sql</alt>
+                    </image>
+                </fig>
+            </p>
+        </section>
+        <section id="section_tsc_mrp_vz">
+            <title>Campos de la tabla seccion </title>
+            <p>La tabla seccion del sql contiene las secciones de los templates. No contiene ninguna
+                información significativa recabada por el radiólogo en su diagnóstico.</p>
+            <p>Sus campos contienen la información siguiente:</p>
+            <p>
+                <simpletable frame="all" relcolwidth="1.0* 5.27*" id="simpletable_tdy_tbr_vz">
+                    <sthead>
+                        <stentry>nombre</stentry>
+                        <stentry>descripción</stentry>
+                    </sthead>
+                    <strow>
+                        <stentry>id</stentry>
+                        <stentry>primary key</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>fksection</stentry>
+                        <stentry>relación a la primary key que indica que una sección es hija de la
+                            sección de referencia</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>idseccion</stentry>
+                        <stentry>letra CPHID de referencia a la sección principal + cifra ordinal de
+                            item dentro del procedimiento + cifra de rango en la diagramación de la
+                            representación del CDA + cifra de columna en la diagramación de la
+                            representación del CDA</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>fkplantilla</stentry>
+                        <stentry>foreign key del template de referencia que contiene esta
+                            sección</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>ordinal</stentry>
+                        <stentry>orden de la sección en relación a las secciones adyacentes dentro
+                            de un mismo contenedor</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>templateuidroot</stentry>
+                        <stentry>uid del template de referencia</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>selectcolor</stentry>
+                        <stentry>no usado, reemplazado por campo binario inputOff, indicando si la
+                            sección está inicialmente en el estado "off", es decir, eliminada del
+                            CDA</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>selecttitle</stentry>
+                        <stentry>html5 del &lt;select> de titulo con sus opciones  y de los dos
+                            &lt;input> asociados</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>inputcheked</stentry>
+                        <stentry>no usado, reemplazado por inputHidden, indicando si la sección
+                            está inicialmente en el estado "hidden", es decir si aparece solamente
+                            el titulo y el contenido queda obfuscado</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>fkcode</stentry>
+                        <stentry>foreign key referencia al código de la sección (que
+                            incluye</stentry>
+                    </strow>
+                    <strow>
+                        <stentry>fkarticlehtml</stentry>
+                        <stentry>foreign key referencia a la tabla articlehtml, que contiene entre
+                            otros el código html5 del &lt;textarea> o de la &lt;tabla> cuando el
+                            elemento &lt;article> la sección contiene uno de estos  elementos. Si la
+                            sección contiene una subsección,  no existe relación con ningún registro
+                            en la tabla articlehtml</stentry>
+                    </strow>
+                </simpletable>
+            </p>
         </section>
     </body>
 </topic>
