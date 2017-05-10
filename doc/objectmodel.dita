@@ -3,64 +3,80 @@
 <topic id="objectmodel">
     <title>ObjectModel</title>
     <body>
-        <p>Nuestro editor de informes conyugue tecnologías html5 para templating, url para la
-            captura de datos, sql para su persistencia y cda+xslt para su exportación. Pues un mismo
-            informe puede representarse  por 4 formatos distintos.</p>
+        <p>Nuestro editor de informes conyugue tecnologías form html5 para templating, url para la
+            captura de datos, y cda+xslt para su exportación. Un mismo informe puede representarse
+            en estos tres formatos. Estos 3 formatos pueden guardarse dentro de tablas de base de
+            datos sql para su persistencia.</p>
         <p>
             <ul id="ul_jtm_t13_vz">
-                <li>el usuario pide un template de informe para rellenarlo. Se crea dichto template
-                    html5 desde las tablas sql de plantilla.</li>
-                <li>El usuario, para guardar su informe, genera un evento submit desde el template
-                    html5 que genera el formato url en base al formato html5. Se guarda este formato
-                    url dentro de unas tablas del sql hasta que el usuario autentique el informe,
-                    autorizando su exportación.</li>
-                <li>La autenticación tiene por efecto el parseo de el las tablas que registran en
-                    formato url para crear nuevas instancias de objetos relacionados que permiten
-                    investigación estadistica y creación inmediata el CDA.</li>
+                <li>El usuario pide un template de informe para rellenarlo. Se crea dichto template
+                    form html5 desde las tablas sql dónde están almacenados los elementos de los
+                    templates.</li>
+                <li>El usuario, para guardar el informe, manda un evento submit desde el form html5
+                    y genera así el formato url. Se guarda este formato url dentro de unas tablas
+                    del sql hasta que el usuario autentique el informe, autorizando su
+                    exportación.</li>
+                <li>El usuario, para autenticar el informe, manda un evento submit desde el form
+                    html5 que tiene por efecto el parseo del registro correspondiente en las tablas
+                    de almacenamiento en formato url para crear nuevas instancias de objetos
+                    relacionados  entre sí facilitando la investigación estadistica y la creación
+                    inmediata de un CDA.</li>
             </ul>
         </p>
         <p>Para exponer con claridad la correspondencia entre los diversos formatos, definimos un
-            modelo objeto subyacente  al cual todas las representaciones tienen que conformarse. El
-            modelo describe el contenido clínico del informe (que puede ser muy complejo), no la
-            metadata relativa a datos del paciente, radiólogo etc, (que no tiene complejidad).</p>
-        <section id="section_hw1_tg3_vz">
-            <title>contenido clínico del informe</title>
-            <p>El contenido clínico del informe está structurado por uno o más elementos
-                    <i>section</i>.</p>
-        </section>
-        <section id="section_an3_m33_vz">
-            <p/>
-        </section>
+            modelo objeto subyacente  al cual todas las representaciones tienen que conformarse. </p>
+        <p>Nuestro modelo describe el contenido clínico, delimitado por el elemento
+            &lt;StructurredBody>,</p>
         <section id="section_wyc_1h3_vz">
             <title><i>section</i></title>
-            <p>Los elementos <i>section</i> pueden contener otros elementos <i>section</i>, en forma
-                recurrente.</p>
-            <p>Limitamos la recursión a 3 niveles máximo. El primero  corresponde a las
-                subdivisiones principales entre datos clínicos, procedimiento, hallazgos, impresión
-                y descargo. El segundo permite tratar por separado items claramente distintos de un
+            <p>&lt;StructuredBody> contiene elementos &lt;section> (secciones). Las seccciones
+                pueden contener otras secciones, en forma recurrente.</p>
+            <p>Limitamos la recursión a 3 niveles máximo. El primero  corresponde a la subdivisión
+                principal del informe en capitulos datos clínicos, procedimiento, hallazgos,
+                impresión y descargo. El segundo permite tratar por separado items distintos de un
                 procedimiento, por ejemplo la tomografía por rayos X y la tomografía por emisión de
                 positrones realizados en conjunto justifican un subcapitulo para cada una de las
                 especialidades. Finalmente el tercer nivel permite registrar indicaciones básicas de
-                diagramación (rango y columna de la sección dentro de la representación.</p>
-            <p>Cada sección consta de identificación, localizador,  selector de título y
+                diagramación (rango y columna de la sección) dentro de la representación.</p>
+            <p>
+                <fig id="fig_pp1_ht5_vz">
+                    <title>Tres niveles de encapsulación de secciones</title>
+                    <image href="sectionLevels.png" id="image_qp1_ht5_vz">
+                        <alt>Tres niveles de encapsulación de secciones</alt>
+                    </image>
+                </fig>
+            </p>
+            <p>Cada sección consta de identificador, localizador,  selector de título y
                 contenedor:</p>
             <p>
                 <ul id="ul_i4t_tnj_vz">
-                    <li>identificación en relación a vocabulario controlado, constituida de (code,
+                    <li>identificador en base a vocabulario controlado, constituida de (code,
                         displayName, codeSystem y codeSystemName).</li>
                     <li>localizador de sección dentro del informe. Este localizador està constituido
-                        de una letra que representa la subdivisión principal un digito ordinal para
-                        distinguir items de un procedimientos, un digito para indicar el rango de
-                        diagramado y otro para indicar la columna de diagramación.</li>
-                    <li>el selector de titulo permite la selección de un titulo de sección, la no
-                        representación del contenido de la sección y la supresión de la sección
-                        dentro del resultado.</li>
-                    <li>el contenedor puede incluir o texto libre o contenido estructurado en forma
-                        de tabla.</li>
+                        de una letra que representa la subdivisión principal un digito ordinal de
+                        item dentro de un procedimiento, un digito para indicar el rango en la
+                        diagramación y otro para indicar la columna de diagramación.</li>
+                    <li>el selector de titulo define el titulo de sección, la obfuscación del
+                        contenido de la sección o su eliminación.</li>
+                    <li>el contenedor puede incluir o una (s) seccion(es),  o un campo de texto
+                        libre,  o una tabla de contenido estructurado.</li>
                 </ul>
             </p>
         </section>
-        <p/>
-        <p/>
+        <section id="section_x5r_2tl_vz">
+            <title>Tabla de contenido estructurado</title>
+            <p>La tabla contiene uno o más par(es) de columnas dónde la primera del par titula un
+                elemento de información y la segunda indica el valor elegido para este elemento de
+                información.</p>
+            <p>La columna de valor puede contener un selector de una opción dentro de  un grupo de
+                alternativas, un switch boleano (sí/no) o un campo de ingreso de datos (fecha, hora,
+                numérico o textual).</p>
+            <p>Cada celda es objeto de una codificación en base a vocabulario controlado</p>
+        </section>
+        <section id="section_j5y_1pr_vz">
+            <title>Campo de texto libre</title>
+            <p>Facilita el ingres de texto libre, sin requerimiento de codificación de los conceptos
+                usados.</p>
+        </section>
     </body>
 </topic>

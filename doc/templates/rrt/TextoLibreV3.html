@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns="http://www.w3.org/1999/xhtml"
+    >
+    <head>
+        <meta charset="UTF-8" ></meta>
+        <meta content="Diagnóstico imagenológico" name="dcterms.title"></meta>
+        <meta content="IMAGE_REPORT_TEMPLATE" name="dcterms.type"></meta>
+        <meta content="salud.uy" name="dcterms.publisher"></meta>
+        <meta content="código libre" name="dcterms.rights"></meta>
+        <meta content="http://mozilla.org/MPL/2.0/" name="dcterms.licence"></meta>
+        <meta content="2016-07-13" name="dcterms.date"></meta>
+        <meta content="jacques.fauquex@gmail.com" name="dcterms.creator"></meta>
+        <meta content="es" name="dcterms.language"></meta>
+
+        <meta content="texto libre con evaluación del diagnóstico" name="dcterms.title"></meta>
+        <meta content="2.16.858.2.10000675.72591.1.1.3" name="dcterms.identifier"></meta>
+        <meta content="3" name="dcterms.signatures"></meta>
+
+        <link rel="stylesheet" type="text/css" href="../ckeditor/template.css" ></link>
+        <script src="../ckeditor/ckeditor.js"></script>
+
+        <script type="text/javascript">
+            function BN(cb) {
+                document.getElementsByName(cb.id)[0].value=cb.checked;
+            }
+        </script>
+
+
+        <script type="text/javascript">
+            function propagate(select) {
+                document.getElementById(select.name+'hidden').checked=(select.options[select.selectedIndex].value == "hidden");
+                document.getElementById(select.name+'off').checked=(select.options[select.selectedIndex].value == "off");
+            }
+        </script>
+        
+        <script type="text/javascript">
+            function invisibility(checkbox) {
+                document.getElementById(input.name+'hidden').checked=(checkbox.checked);
+            }
+        </script>
+
+        <title
+            data-code="1.2.840.10008.9.1"
+            data-displayname="Imaging Report"
+            data-codesystem="1.2.840.2.10008.6.1"
+            data-codesystemname="DCM"
+            >Diagnóstico imagenológico</title>
+    </head>
+    <body>
+        <form>
+            <header>
+                <input
+                    type="hidden"
+                    name="PatientIDIssuer"
+                    value="1.2.3"
+                    ></input>
+                <table>
+                    <tr>
+                        <td class="td1">
+                            PACIENTE id:<input
+                                class="headerId"
+                                name="PatientID"
+                                type="text"
+                                disabled="disabled"
+                                value=""
+                                ></input>
+                            <button
+                                name="PatientInfo"
+                                type="submit"
+                                title="más información demográfica sobre el paciente"
+                                > más info </button>
+                            nacido:
+                            <input
+                                class="headerDate"
+                                name="PatientBirthDate"
+                                type="text"
+                                disabled="disabled"
+                                value="19650123"
+                                ></input>sexo: <input
+                                class="headerMod"
+                                name="PatientSex"
+                                type="text"
+                                disabled="disabled"
+                                value="M"
+                            />
+                            apellidos^n.:
+                        </td>
+                        <td class="td2">
+                            <input
+                                class="headerName"
+                                name="PatientName"
+                                type="text"
+                                disabled="disabled"
+                                value="Fauquex^Jacques"
+                                ></input>
+                        </td>
+                    </tr>
+                </table>
+            </header>
+            <header>
+                <input
+                    type="hidden"
+                    name="StudyIUID"
+                    value="1.2.3"
+                    ></input>
+                <input
+                    type="hidden"
+                    name="accessionNumberOID"
+                    value="1.2.3"
+                    ></input>
+                <table>
+                    <tr>
+                        <td class="td1">
+                            ESTUDIO an:
+                            <input
+                                class="headerId"
+                                name="AccessionNumber"
+                                type="text"
+                                disabled="disabled"
+                                value="50637300"
+                                ></input>
+                            <button
+                                name="StudyInfo"
+                                type="submit"
+                                title="más información sobre el estudio"
+                                >más info</button>
+                            fecha :
+                            <input
+                                class="headerDate"
+                                name="StudyDate"
+                                type="text"
+                                disabled="disabled"
+                                value="20160715"
+                                title="fecha estudio"
+                                ></input>
+                            mod.:
+                            <input
+                                class="headerMod"
+                                name="Modality"
+                                type="text"
+                                disabled="disabled"
+                                value="CT"
+                                ></input>
+                            descripción:
+                        </td>
+                        <td class="td2">
+                            <input
+                                class="headerName"
+                                name="StudyDescription"
+                                type="text"
+                                value="displayNameDelProcedimiento"
+                            ></input>
+                        </td>
+                    </tr>
+                </table>
+            </header>
+            <header>
+                <input
+                    type="hidden"
+                    name="templateID"
+                    value="1.2.3"
+                    ></input>
+                <table>
+                    <tr>
+                        <td class="td1">
+                            PLANTILLA:
+                            <select name="modalidad">
+                                <option value="CR">CR</option>
+                                <option value="CT">CT</option>
+                            </select>
+                            <select name="estudio">
+                                <option value="code^codeSystem^codeSystemName">displayNameProcedimiento</option>
+                                <option value="code^codeSystem^codeSystemName">displayNameProcedimiento</option>
+                            </select>
+<!--copiar displayNameProcedimiento seleccionado en descripción-->
+                        </td>
+                        <td class="td2">
+                            <select name="plantilla">
+                                <option value="plantillaID" title="plantillaDescription">plantillaNombre</option>
+                                <option value="plantillaID" title="plantillaDescription">plantillaNombre</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+            </header>
+            <section
+                id="C000"
+                data-code="1.2.840.10008.9.2"
+                data-displayname="Clinical Information"
+                data-codesystem="1.2.840.2.10008.6.1"
+                data-codesystemname="DCM"
+                >
+                <select 
+                    class="azul" 
+                    name="C000select" 
+                    title="dato clínico relativo al caso (eventualmente automaticamente copiados desde la solicitud)"
+                    onchange="propagate(this)">
+                    <option 
+                        value="on"
+                        >+ Dato clínico</option>
+                    <option 
+                        value="hidden"
+                        >+ Dato clínico (escondido)</option>
+                    <option 
+                        value="off"
+                        >-</option>
+                </select>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="C000selectoff" 
+                    type="checkbox" 
+                    name="C000selectoff" 
+                    value="off"
+                    onchange="invisibility(this)" 
+                    ></input>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="C000selecthidden" 
+                    type="checkbox" 
+                    name="C000selecthidden" 
+                    value="hidden"
+                    ></input>
+                <article
+                    data-code="55752-0"
+                    data-displayname="Dato clínico"
+                    data-codesystem="1.2.840.10008.2.16.4"
+                    data-codesystemname="LOINC"
+                    >
+                    <textarea name="C000textarea"></textarea>
+                </article>
+            </section>
+            <section
+                id="P000"
+                data-code="1.2.840.10008.9.3"
+                data-displayname="Imaging Procedure Description"
+                data-codesystem="1.2.840.2.10008.6.1"
+                data-codesystemname="DCM"
+                >
+                <select 
+                    class="azul" 
+                    name="P000select" 
+                    title="Protocolo, equipo imagenológico, medios de contraste, dosis de radiación, medicación administrada (sedantes, agentes de estrés), etc."
+                    onchange="propagate(this)">
+                    <option 
+                        value="on"
+                        >+ Procedimiento imagenológico</option>
+                    <option 
+                        value="hidden"
+                        >+ Procedimiento imagenológico (escondido)</option>
+                    <option 
+                        value="off"
+                        >-</option>
+                </select>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="P000selectoff" 
+                    type="checkbox" 
+                    name="P000selectoff" 
+                    value="off"
+                    onchange="invisibility(this)" 
+                    ></input>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="P000selecthidden" 
+                    type="checkbox" 
+                    name="P000selecthidden" 
+                    value="hidden"
+                    ></input>
+                <article
+                   data-code="55111-9"
+                   data-displayname="Procedimiento imagenológico"
+                   data-codesystem="1.2.840.10008.2.16.4"
+                   data-codesystemname="LOINC"
+                   >
+                   <textarea name="P000textarea"></textarea>
+                </article>
+            </section>
+            <section
+                id="F000"
+                data-code="2.16.840.1.113883.10.20.6.2.1"
+                data-displayname="Findings"
+                data-codesystem="1.2.840.2.10008.6.1"
+                data-codesystemname="DCM"
+                >
+                <select 
+                    class="azul" 
+                    name="F000select" 
+                    title="Observaciones clínicas significativas confirmadas o descubiertas durante el procedimiento."
+                    onchange="propagate(this)">
+                    <option 
+                        value="on"
+                        >+ Hallazgos</option>
+                    <option 
+                        value="hidden"
+                        >+ Hallazgos (escondido)</option>
+                    <option 
+                        value="off"
+                        >-</option>
+                </select>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="F000selectoff" 
+                    type="checkbox" 
+                    name="F000selectoff" 
+                    value="off"
+                    onchange="invisibility(this)" 
+                    ></input>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="F000selecthidden" 
+                    type="checkbox" 
+                    name="F000selecthidden" 
+                    value="hidden"
+                    ></input>                
+                <article
+                    data-code="59776-5"
+                    data-displayname="Hallazgos"
+                    data-codesystem="1.2.840.10008.2.16.4"
+                    data-codesystemname="LOINC"
+                    >
+                    <section id="F100">
+                        <select
+                            class="gris"
+                            name="F100select"
+                            onchange="propagate(this)"
+                            >
+                            <option
+                                value="tórax"
+                                data-code="59776-5"
+                                data-displayname="Hallazgos"
+                                data-codesystem="1.2.840.10008.2.16.4"
+                                data-codesystemname="LOINC"
+                                >+ step1</option>
+                        </select>
+                        <input class="displayNoneArticleNone" id="F100selectoff" type="checkbox" name="F100selectoff" value="hidden"/>
+                        <input class="displayNoneArticleNone" id="F100selecthidden" type="checkbox" name="F100selecthidden" value="hidden"/>
+                        <article>
+                            <textarea name="F100textarea"></textarea>
+                        </article>
+                    </section>
+                    <section id="F200">
+                        <select
+                            class="gris"
+                            name="F200select"
+                            onchange="propagate(this)"
+                            >
+                            <option value="off" selected="selected">-</option>
+                            <option value="step2">+ step2</option>
+                        </select>
+                        <input class="displayNoneArticleNone" id="F200selectoff" type="checkbox" name="F200selectoff" value="off" checked="checked"/>
+                        <input class="displayNoneArticleNone" id="F200selecthidden" type="checkbox" name="F200selecthidden" value="hidden" checked="checked"/>
+                        <article>
+                            <textarea name="F200textarea"></textarea>
+                        </article>
+                    </section>
+                    <section id="F300">
+                        <select
+                            class="gris"
+                            name="F300select"
+                            onchange="propagate(this)"
+                            >
+                            <option value="off" selected="selected">-</option>
+                            <option value="step3">+ step3</option>
+                        </select>
+                        <input class="displayNoneArticleNone" id="F300selectoff" type="checkbox" name="F300selectoff" value="off" checked="checked"/>
+                        <input class="displayNoneArticleNone" id="F300selecthidden" type="checkbox" name="F300selecthidden" value="hidden" checked="checked"/>
+                        <article>
+                            <textarea name="F300textarea"></textarea>
+                        </article>
+                    </section>
+                </article>
+            </section>
+            <section
+                id="I000"
+                data-code="1.2.840.10008.9.5"
+                data-displayname="impressions"
+                data-codesystem="1.2.840.2.10008.6.1"
+                data-codesystemname="DCM"
+                >
+                <select 
+                    class="azul" 
+                    name="I000select" 
+                    title="Conclusiones clínicas inferidas de las observaciones y otras informaciones consignadas en el documento. Esta sección puede incluir recomendaciones de pruebas imagenologicas adicionales u otras acciones, y también asesoramiento global, como por ejemplo las categorías BI-RADS."
+                    onchange="propagate(this)">
+                    <option 
+                        value="on"
+                        >+ Impresión diagnóstica</option>
+                    <option 
+                        value="hidden"
+                        >+ Impresión diagnóstica (escondido)</option>
+                    <option 
+                        value="off"
+                        >-</option>
+                </select>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="I000selectoff" 
+                    type="checkbox" 
+                    name="I000selectoff" 
+                    value="off"
+                    onchange="invisibility(this)" 
+                    ></input>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="I000selecthidden" 
+                    type="checkbox" 
+                    name="I000selecthidden" 
+                    value="hidden"
+                    ></input>                
+                
+                <article
+                    data-code="19005-8"
+                    data-displayname="Impresiones"
+                    data-codesystem="1.2.840.10008.2.16.4"
+                    data-codesystemname="LOINC"
+                    >
+                    <textarea name="I000textarea"></textarea>
+                </article>
+            </section>
+            <section
+                id="D000"
+                data-code="D"
+                data-displayname="Descargo de responsabilidad"
+                data-codesystem="2.16.858.2.10000675"
+                data-codesystemname="saluduy"
+                >
+                <select 
+                    class="azul" 
+                    name="D000select" 
+                    title="texto no editable por el radiólogo que aparece en todos los informes realizados en base al template."
+                    onchange="propagate(this)">
+                    <option 
+                        value="on"
+                        >+ Descargo de responsabilidad</option>
+                    <option 
+                        value="hidden"
+                        >+ Descargo de responsabilidad (escondido)</option>
+                    <option 
+                        value="off"
+                        >-</option>
+                </select>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="D000selectoff" 
+                    type="checkbox" 
+                    name="D000selectoff" 
+                    value="off"
+                    onchange="invisibility(this)" 
+                    ></input>
+                <input 
+                    class="displayNoneArticleNone" 
+                    id="D000selecthidden" 
+                    type="checkbox" 
+                    name="D000selecthidden" 
+                    value="hidden"
+                    ></input>                
+                
+                <article
+                    data-code="8653-8"
+                    data-displayname="Descargo de responsabilidad"
+                    data-codesystem="1.2.840.10008.2.16.4"
+                    data-codesystemname="LOINC"
+                    >
+                    <input type="text" name="D000input" readonly="readonly" value="algún descargo"></input>
+                </article>
+            </section>
+            <footer>
+                <input class="displayNone" type="radio" name="firma1" value="notToBeSigned"></input>
+                <input class="displayNone" type="radio" name="firma1" value="toBeSigned"></input>
+                <input class="displayNone" type="radio" name="firma1" value="signed" checked="checked"></input>
+                <article class="firma">
+                    <input
+                        type="hidden"
+                        name="fkfirma1"
+                        value=""
+                        ></input>
+                    <button name="guardar" type="submit" title="sin firmar">guardar</button>
+                    <label>radiólogo: <input name="usuario1" type="text" class="footer"></input></label>
+                    <label>clave: <input name="clave1" type="password" class="footer"></input></label>
+                    <button name="firmar" type="submit" class="sign" title="firmar sin autenticar">firmar</button>
+                    <button name="firmarAutenticar" type="submit" class="sign" title="firmar y autenticar">autenticar</button>
+                    <button name="borrarPlantilla" type="submit">borrar plantilla</button>
+                    <button name="crearPlantilla" type="submit">crear plantilla</button>
+                 </article>
+            </footer>
+            <footer>
+                <input class="displayNone" type="radio" name="firma2" value="notToBeSigned"></input>
+                <input class="displayNone" type="radio" name="firma2" value="toBeSigned" checked="checked"></input>
+                <input class="displayNone" type="radio" name="firma2" value="signed"></input>
+                <article>
+                    <input
+                        type="hidden"
+                        name="fkfirma2"
+                        value=""
+                        ></input>
+                    <button name="guardar" type="submit" title="sin firmar">guardar</button>
+                    <label>radiólogo: <input name="usuario2" type="text" class="footer"></input></label>
+                    <label>clave: <input name="clave2" type="password" class="footer"></input></label>
+                    <button name="firmar" type="submit" class="sign" title="firmar sin autenticar">firmar</button>
+                    <button name="firmarAutenticar" type="submit" class="sign" title="firmar y autenticar">autenticar</button>
+                    <button name="borrarPlantilla" type="submit">borrar plantilla</button>
+                    <button name="crearPlantilla" type="submit">crear plantilla</button>
+                </article>
+            </footer>
+            <footer>
+                <input class="displayNone" type="radio" name="firma3" value="notToBeSigned" checked="checked"></input>
+                <input class="displayNone" type="radio" name="firma3" value="toBeSigned"></input>
+                <input class="displayNone" type="radio" name="firma3" value="signed"></input>
+                <article>
+                    <input
+                        type="hidden"
+                        name="fkfirma3"
+                        value=""
+                        ></input>
+                    <button name="guardar" type="submit" title="sin firmar">guardar</button>
+                    <label>radiólogo: <input name="usuario3" type="text" class="footer"></input></label>
+                    <label>clave: <input name="clave3" type="password" class="footer"></input></label>
+                    <button name="firmar" type="submit" class="sign" title="firmar sin autenticar">firmar</button>
+                    <button name="firmarAutenticar" type="submit" class="sign" title="firmar y autenticar">autenticar</button>
+                    <button name="borrarPlantilla" type="submit">borrar plantilla</button>
+                    <button name="crearPlantilla" type="submit">crear plantilla</button>
+                </article>
+            </footer>
+            <footer>
+                <select id="evaluar" name="evaluar" class="gris" title="esta evaluación no forma parte del documento clínico y no está comunicada al paciente">
+                    <option value="sin evaluación" selected="selected">por favor, evalue el caso ...</option>
+                    <option value="normal">normal</option>
+                    <option value="patológico con relación al dato clinico">patológico con relación al dato clinico</option>
+                    <option value="patológico sin relación con el dato clínico">patológico sin relación al dato clinico</option>
+                    <option value="dudoso">dudoso</option>
+                </select>
+                <!-- "TIPOHALLAZGO" queda exclusivamente registrado en el atributo (0040,E008) "Document Class Code Sequence" del contenedor DICOM del CDA.
+                (0040,E008) contiene "Additional classifications of the document, beyond the title represented in Concept Name Code Sequence."
+                Es equivalente a HL7 v2.x TXA-2.
+                -->
+            </footer>
+        </form>
+
+        <script type="text/javascript">
+            CKEDITOR.replaceAll();
+        </script>
+
+        <script type="text/javascript">
+            <!--
+            var params = location.search.substr(1).split("&");
+            for (var i=0; i<params.length; i++)
+            {
+                duo = params[i].split("=");
+                if ((duo.length == 2) && (duo[0].length > 0) && (duo[1].length > 0))
+                {
+                    o=document.getElementsByName(duo[0])[0];
+                    o.value = decodeURIComponent(duo[1]);
+                    /* checkbox with id is linked with input hidden with name*/
+                    if ((o.type == "hidden") && (duo[1]==="true"))
+                    {
+                        document.getElementById(duo[0]).checked = true;
+                    }
+                }
+            }
+            -->
+        </script>
+    </body>
+</html>

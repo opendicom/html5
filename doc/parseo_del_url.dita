@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN" "topic.dtd">
+<topic id="parseo_del_url">
+    <title>parseo del URL</title>
+    <body>
+        <p>El parseo del URL está guíado por la estructura de la plantilla conservado en las tablas
+            correspondientes.</p>
+        <p>Si bien la estructura de las plantillas y de los CDA corresponden al modelo objeto de
+            nuestro editor de informe, dichas estructuras se plasman en una organización de tablas
+            distinta.</p>
+        <p>Del lado de los templates, las estructuras son minimalistas y genéricas. Por ejemplo se
+            usa autoreferencia en la tabla seccion para agrupar dentro de una misma tabla todas las
+            secciones constituyentes del template.</p>
+        <p>Por otro lado, el conjunto de tablas que registran los elementos de los CDA tienen que
+            permitir busqueda semántica y  la semántica de un elemento de CDA depende de su
+            localización dentro de las secciones del &lt;structuredBody>. Por esta razón plasmamos
+            la restricción que hemos definido en nuestro modelo de objeto en cuanto a encapsulación
+            de secciones y significado de cada nivel de encapsulación con la creación de tablas
+            distintas para cada nivel.</p>
+        <p>La serialización de los elementos de información mantiene para cada uno de ellos la
+            información de la localización de esta información en el sistema de secciones que
+            constituye el &lt;structuredBody>.</p>
+        <p>La tarea de parseo incluye varias etapas:</p>
+        <p>
+            <ol id="ol_bzk_fx5_vz">
+                <li>Creación de un map nombre=value de los elementos de información incluidos</li>
+                <li>Guiado por el orden de la estructura arbolescente de los widgets en el template
+                    correspondiente, y usando al información estática presente en el template (por
+                    ejemplo referencias a vocabulario controlado) en conjunto con la información
+                    colectada en los parámetros del URL, se crean registros en las tablas sec,
+                    subsec, subsubsec y tablas derivadas.</li>
+            </ol>
+        </p>
+    </body>
+</topic>
