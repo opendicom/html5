@@ -42,7 +42,7 @@ def user_logout(request, *args, **kwargs):
 def main(request, *args, **kwargs):
     if request.user.is_authenticated:
         url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
-        url_httpdicom_ext = models.Setting.objects.get(key='url_httpdicom_ext').value
+        # url_httpdicom_ext = models.Setting.objects.get(key='url_httpdicom_ext').value
         organization = {}
         for role in models.Role.objects.filter(user=request.user.id).order_by('default'):
             if role.institution:
