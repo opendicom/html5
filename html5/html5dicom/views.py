@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -173,6 +173,12 @@ def weasis(request, *args, **kwargs):
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
+def stream_response(url_zip):
+    r = requests.get(url_zip, stream=True)
+    for chunk in r.iter_content(512 * 1024):
+        yield chunk
+
+
 def osirix(request, *args, **kwargs):
     if 'session' in request.GET:
         try:
@@ -187,13 +193,11 @@ def osirix(request, *args, **kwargs):
                 #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
                 #else:
                 #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
-                r = requests.get(url_zip)
-                return HttpResponse(r.content, content_type=r.headers.get('content-type'))
+                return StreamingHttpResponse(stream_response(url_zip))
             elif request.GET['requestType'] == 'SERIES':
                 url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
                           request.GET['series_uid']
-                r = requests.get(url_zip)
-                return HttpResponse(r.content, content_type=r.headers.get('content-type'))
+                return StreamingHttpResponse(stream_response(url_zip))
         except (Session.DoesNotExist, KeyError):
             raise PermissionDenied
     else:
