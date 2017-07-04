@@ -188,16 +188,15 @@ def osirix(request, *args, **kwargs):
             if request.GET['requestType'] == 'STUDY':
                 url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + \
                           request.GET['study_uid']
-                # Valida accession number
-                #if request.GET['accession_no'] == '':
-                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
-                #else:
-                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
-                return StreamingHttpResponse(stream_response(url_zip))
+                r = StreamingHttpResponse(stream_response(url_zip))
+                r['Content-Disposition'] = "attachment; filename=dcm.zip"
+                return r
             elif request.GET['requestType'] == 'SERIES':
                 url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
                           request.GET['series_uid']
-                return StreamingHttpResponse(stream_response(url_zip))
+                r = StreamingHttpResponse(stream_response(url_zip))
+                r['Content-Disposition'] = "attachment; filename=dcm.zip"
+                return r
         except (Session.DoesNotExist, KeyError):
             raise PermissionDenied
     else:
