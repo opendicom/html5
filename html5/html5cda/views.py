@@ -40,12 +40,12 @@ def editor(request, *args, **kwargs):
         }]
     if 'plantilla' in request.GET:
         # edicion de informe
-        secciones = models.Seccion.objects.filter(plantilla=request.GET['plantilla']).order_by('ordinal')
+        secciones = models.Section.objects.filter(plantilla=request.GET['plantilla']).order_by('ordinal')
         headscripts = models.IntermediateHeadScript.objects.filter(plantilla=request.GET['plantilla'])
         bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=request.GET['plantilla'])
         headers = models.IntermediatePlantillaHeader.objects.filter(plantilla=request.GET['plantilla'])
         footers = models.IntermediatePlantillaFooter.objects.filter(plantilla=request.GET['plantilla'])
-        context_user = {'context': {'secciones': secciones,
+        context_user = {'context': {'sections': secciones,
                                     'headscripts': headscripts,
                                     'bodyscripts': bodyscripts,
                                     'headers': headers,
@@ -59,12 +59,12 @@ def editor(request, *args, **kwargs):
                                                      estudio__code__displayname=request.GET['StudyDescription'])
         except models.Plantilla.DoesNotExist:
             plantilla = models.Plantilla.objects.get(estudio__modalidad='ALL')
-        secciones = models.Seccion.objects.filter(plantilla=plantilla).order_by('ordinal')
+        secciones = models.Section.objects.filter(plantilla=plantilla).order_by('ordinal')
         headscripts = models.IntermediateHeadScript.objects.filter(plantilla=plantilla)
         bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=plantilla)
         headers = models.IntermediatePlantillaHeader.objects.filter(plantilla=plantilla)
         footers = models.IntermediatePlantillaFooter.objects.filter(plantilla=plantilla)
-        context_user = {'context': {'secciones': secciones,
+        context_user = {'context': {'sections': secciones,
                                     'headscripts': headscripts,
                                     'bodyscripts': bodyscripts,
                                     'headers': headers,
@@ -108,12 +108,12 @@ def template_list(request, *args, **kwargs):
 
 
 def get_template(request, *args, **kwargs):
-    secciones = models.Seccion.objects.filter(plantilla=request.GET['template']).order_by('ordinal')
+    secciones = models.Section.objects.filter(plantilla=request.GET['template']).order_by('ordinal')
     headscripts = models.IntermediateHeadScript.objects.filter(plantilla=request.GET['template'])
     bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=request.GET['template'])
     headers = models.IntermediatePlantillaHeader.objects.filter(plantilla=request.GET['template'])
     footers = models.IntermediatePlantillaFooter.objects.filter(plantilla=request.GET['template'])
-    context_user = {'context': {'secciones': secciones,
+    context_user = {'context': {'sections': secciones,
                                 'headscripts': headscripts,
                                 'bodyscripts': bodyscripts,
                                 'headers': headers,
@@ -319,49 +319,78 @@ def authenticate_report(submit, user):
         solicituduid=''
     )
     # parseo submit
-    secciones = models.Seccion.objects.filter(plantilla=submit.plantilla)
-    for seccion in secciones:
+    sections = models.Section.objects.filter(plantilla=submit.plantilla)
+    for section in sections:
         sec = models.Sec.objects.create(
             autenticado=autenticado,
-            templateuid=seccion.templateuidroot,
-            idsec=seccion.idseccion,
-            seccode=seccion.code,
-            title=seccion.selecttitle
+            #templateuid=section.templateuidroot,
+            idsec=section.idattribute,
+            seccode=section.conceptcode,
+            title=section.selecttitle
         )
-        if seccion.articlehtml is not None:
-            sec.text = values_submit['{}textarea'.format(seccion.idseccion)][0]
+        if section.article is not None:
+            # replace html5 -> cda
+            sec.text = values_submit['{}textarea'.format(section.idattribute)][0]
             sec.save()
         else:
-            subsecciones = seccion.get_all_sub_seccion()
-            for subseccion in subsecciones:
+            subsections = section.get_all_sub_seccion()
+            for subsection in subsections:
                 subsec = models.Subsec.objects.create(
-                    templateuid=subseccion.templateuidroot,
-                    idsubsec=subseccion.idseccion,
-                    subseccode=subseccion.code,
-                    title=subseccion.selecttitle,
+                    #templateuid=subsection.templateuidroot,
+                    idsubsec=subsection.idattribute,
+                    subseccode=subsection.conceptcode,
+                    title=subsection.selecttitle,
                     parent_sec=sec.id
                 )
-                if subseccion.articlehtml is not None:
-                    subsec.text = values_submit['{}textarea'.format(subseccion.idseccion)][0]
+                if subsection.article is not None:
+                    #replace html5 -> cda
+
+                    subsec.text = values_submit['{}textarea'.format(subsection.idattribute)][0]
                     subsec.save()
                 else:
-                    subsubsecciones = subseccion.get_all_sub_seccion()
-                    for subsubseccion in subsubsecciones:
+                    subsubsections = subsection.get_all_sub_seccion()
+                    for subsubsection in subsubsections:
                         subsubsec = models.Subsubsec.objects.create(
-                            templateuid=subsubseccion.templateuidroot,
-                            idsubsubsec=subsubseccion.idseccion,
-                            subsubseccode=subsubseccion.code,
-                            title=subsubseccion.selecttitle,
+                            #templateuid=subsubsection.templateuidroot,
+                            idsubsubsec=subsubsection.idattribute,
+                            subsubseccode=subsubsection.conceptcode,
+                            title=subsubsection.selecttitle,
                             parent_subsec=subsec.id
                         )
-                        if '{}textarea'.format(subsubseccion.idseccion) in values_submit:
-                            subsubsec.text = values_submit['{}textarea'.format(subsubseccion.idseccion)][0]
+                        if '{}textarea'.format(subsubsection.idattribute) in values_submit:
+                            # replace html5 -> cda
+                            subsubsec.text = values_submit['{}textarea'.format(subsubsection.idattribute)][0]
                             subsubsec.save()
                         else:
-                            if values_submit['{}select'.format(subsubseccion.idseccion)][0] == 'on' or \
-                                            values_submit['{}select'.format(subsubseccion.idseccion)][0] == 'hidden':
+                            if values_submit['{}select'.format(subsubsection.idattribute)][0] == 'on' or \
+                                            values_submit['{}select'.format(subsubsection.idattribute)][0] == 'hidden':
                                 # //code[@data-code="366301005"]/@data-displayName
-                                articlehtml = fromstring(subsubseccion.articlehtml.html)
-                                articlehtml.xpath('')
+                                # articlehtml = fromstring(subsubseccion.articlehtml.html)
+                                # articlehtml.xpath('')
+                                entry, entry_created = models.Entry.objects.update_or_create(
+                                    element='',
+                                    elementclasscode='',
+                                    elementmoodcode='',
+                                    templateuid='',
+                                    identry='',
+                                    code='',
+                                    textreferencevalue=''
+                                )
+                                value, value_created = models.Value.objects.update_or_create(
+                                    entry=entry,
+                                    type='',
+                                    code='',
+                                    unit='',
+                                    value='',
+                                    nullflavor=''
+                                )
+                                qualifier, qualifier_created = models.Qualifier.objects.update_or_create(
+                                    entry=entry,
+                                    ordinal='',
+                                    code='',
+                                    valueoriginaltext=''
+                                )
+                                subsubsec.entries.add(entry)
+                                subsubsec.save()
 
     return

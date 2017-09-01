@@ -11,8 +11,8 @@ admin.site.register(models.Estudio, EstudioAdmin)
 
 
 class CodesystemAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'oid']
-    search_fields = ['name', 'oid']
+    list_display = ['id', 'shortname', 'oid']
+    search_fields = ['shortname', 'oid']
 
 admin.site.register(models.Codesystem, CodesystemAdmin)
 
@@ -35,33 +35,44 @@ class ArticlehtmlAdmin(admin.ModelAdmin):
 admin.site.register(models.Articlehtml, ArticlehtmlAdmin)
 
 
-class SeccionAdmin(admin.ModelAdmin):
-    list_display = ['idseccion', 'ordinal','plantilla']
-    search_fields = ['idseccion', 'plantilla']
-    list_filter = ('plantilla',)
+class SelectOptionInline(admin.TabularInline):
+    model = models.Selectoption
+    extra = 1
 
-admin.site.register(models.Seccion, SeccionAdmin)
+
+class SectionAdmin(admin.ModelAdmin):
+    list_display = ['idattribute', 'ordinal','plantilla']
+    search_fields = ['idattribute', 'plantilla']
+    list_filter = ('plantilla',)
+    inlines = (SelectOptionInline,)
+
+admin.site.register(models.Section, SectionAdmin)
 
 
 admin.site.register(models.Header)
 admin.site.register(models.Footer)
 admin.site.register(models.Scriptelement)
 
+
 class IntermediatePlantillaHeaderInline(admin.TabularInline):
     model = models.IntermediatePlantillaHeader
     extra = 1
+
 
 class IntermediatePlantillaFooterInline(admin.TabularInline):
     model = models.IntermediatePlantillaFooter
     extra = 1
 
+
 class IntermediateHeadScriptInline(admin.TabularInline):
     model = models.IntermediateHeadScript
     extra = 1
 
+
 class IntermediateBodyScriptInline(admin.TabularInline):
     model = models.IntermediateBodyScript
     extra = 1
+
 
 class PlantillaAdmin(admin.ModelAdmin):
     model = models.Plantilla
