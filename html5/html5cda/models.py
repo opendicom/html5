@@ -60,6 +60,9 @@ class Code1(BigIntegerPKModel):
     class Meta:
         db_table = 'code1'
 
+    def __str__(self):
+        return '{} ({})'.format(self.code, self.category)
+
 
 class Code2(BigIntegerPKModel):
     code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
@@ -69,6 +72,9 @@ class Code2(BigIntegerPKModel):
     class Meta:
         db_table = 'code2'
 
+    def __str__(self):
+        return '{} {} {}'.format(self.code1, self.rel, self.code)
+
 
 class Code3(BigIntegerPKModel):
     code2 = models.ForeignKey('Code2', models.DO_NOTHING, blank=True, null=True)
@@ -77,6 +83,9 @@ class Code3(BigIntegerPKModel):
 
     class Meta:
         db_table = 'code3'
+
+    def __str__(self):
+        return '{} {} {}'.format(self.code2, self.rel, self.code)
 
 
 class Observation(BigIntegerPKModel):

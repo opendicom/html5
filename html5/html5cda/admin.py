@@ -17,6 +17,11 @@ class CodesystemAdmin(admin.ModelAdmin):
 admin.site.register(models.Codesystem, CodesystemAdmin)
 
 
+class Code1Inline(admin.TabularInline):
+    model = models.Code1
+    extra = 1
+
+
 class CodeAdmin(admin.ModelAdmin):
     list_display = ['id', 'codesystem', 'code', 'displayname']
     search_fields = ['name', 'oid']
@@ -24,9 +29,31 @@ class CodeAdmin(admin.ModelAdmin):
     #raw_id_fields = ('codesystem',) # para buscar la fk en popup de busaueda
     list_filter = ('codesystem',) # habilita los filtros al costado derecho
     #list_filter = (('codesystem', admin.RelatedOnlyFieldListFilter),) #muestra solo los que tengan relacion
+    inlines = (Code1Inline,)
 
 admin.site.register(models.Code, CodeAdmin)
 
+
+class Code2Inline(admin.TabularInline):
+    model = models.Code2
+    extra = 1
+
+
+class Code1Admin(admin.ModelAdmin):
+    inlines = (Code2Inline, )
+
+admin.site.register(models.Code1, Code1Admin)
+
+
+class Code3Inline(admin.TabularInline):
+    model = models.Code3
+    extra = 1
+
+
+class Code2Admin(admin.ModelAdmin):
+    inlines = (Code3Inline, )
+
+admin.site.register(models.Code2, Code2Admin)
 
 class ArticlehtmlAdmin(admin.ModelAdmin):
     list_display = ['id', 'titulo', 'descripcion']
