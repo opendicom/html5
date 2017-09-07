@@ -30,10 +30,16 @@ class Codesystem(BigIntegerPKModel):
 
 
 class Code(BigIntegerPKModel):
-    translation = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True, related_name="translation_code")
+    category_choice = (
+        ('relation', 'relation'),
+        ('unit', 'unit'),
+        ('other', 'other'),
+    )
+    translation = models.ForeignKey('self', models.DO_NOTHING, related_name="translation_code", blank=True, null=True)
     code = models.CharField(max_length=16, blank=True, null=True)
     displayname = models.CharField(max_length=255, blank=True, null=True)
     codesystem = models.ForeignKey('Codesystem', models.DO_NOTHING, blank=True, null=True)
+    category = models.CharField(max_length=8, blank=True, null=True, choices=category_choice)
 
     class Meta:
         db_table = 'code'
@@ -42,64 +48,129 @@ class Code(BigIntegerPKModel):
         return '{} ({})'.format(self.displayname, self.codesystem)
 
 
-class Node(BigIntegerPKModel):
-    name = models.CharField(max_length=255, blank=True, null=True)
-    super = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
+class Code1(BigIntegerPKModel):
+    category_choice = (
+        ('relation', 'relation'),
+        ('unit', 'unit'),
+        ('other', 'other'),
+    )
     code = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True)
+    category = models.CharField(max_length=8, blank=True, null=True, choices=category_choice)
 
     class Meta:
-        db_table = 'node'
+        db_table = 'code1'
 
-    def __str__(self):
-        return '{}'.format(self.name)
+
+class Code2(BigIntegerPKModel):
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+    rel = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True, related_name="rel_code2")
+    code = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True, related_name="code_code2")
+
+    class Meta:
+        db_table = 'code2'
+
+
+class Code3(BigIntegerPKModel):
+    code2 = models.ForeignKey('Code2', models.DO_NOTHING, blank=True, null=True)
+    rel = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True, related_name="rel_code3")
+    code = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True, related_name="code_code3")
+
+    class Meta:
+        db_table = 'code3'
 
 
 class Observation(BigIntegerPKModel):
+    interpretation_choice = (
+        ('B', 'B'), ('D', 'D'), ('U', 'U'), ('W', 'W'),
+        ('<', '<'), ('>', '>'), ('A', 'A'), ('AA', 'AA'),
+        ('HH', 'HH'), ('LL', 'LL'), ('H', 'H'), ('L', 'L'),
+        ('N', 'N'), ('I', 'I'), ('MS', 'MS'), ('R', 'R'),
+        ('S', 'S'), ('VS', 'VS'),
+    )
     sec = models.ForeignKey('Sec', models.DO_NOTHING, blank=True, null=True)
     subsec = models.ForeignKey('Subsec', models.DO_NOTHING, blank=True, null=True)
     subsubsec = models.ForeignKey('Subsubsec', models.DO_NOTHING, blank=True, null=True)
-    ordinal = models.BigIntegerField(blank=True, null=True)
-    node = models.ForeignKey(Node, models.DO_NOTHING, blank=True, null=True)
+    tbody = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="tbody")
+    tr = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="tr")
+    td = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="td")
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+    interpretationcode = models.CharField(max_length=2, choices=interpretation_choice, default="B")
+    rel = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="rel")
+    list = models.ForeignKey('List', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'observation'
 
 
+class List(BigIntegerPKModel):
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        db_table = 'list'
+
+
+class Item(BigIntegerPKModel):
+    selected_choice = (
+        ('selected', ' selected="selected"'),
+        ('none', ''),
+    )
+    list = models.ForeignKey('List', models.DO_NOTHING, blank=True, null=True)
+    number = models.SmallIntegerField(blank=True, null=True)
+    selected = models.CharField(max_length=2, choices=selected_choice, default="")
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        db_table = 'item'
+
+
 class Referencerange(BigIntegerPKModel):
+    ucum_choice = (
+        ('cm', 'cm'),
+        ('none', ''),
+    )
     observation = models.ForeignKey('Observation', models.DO_NOTHING, blank=True, null=True)
-    node = models.ForeignKey('Node', models.DO_NOTHING, blank=True, null=True)
-    text = models.TextField(blank=True, null=True)
-    value = models.ForeignKey('Value', models.DO_NOTHING, blank=True, null=True)
-    code = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True)
+    ucum = models.CharField(max_length=2, choices=ucum_choice, default="")
+    low = models.FloatField(blank=True, null=True)
+    high = models.FloatField(blank=True, null=True)
 
     class Meta:
         db_table = 'referencerange'
 
 
-class Interpretationcode(BigIntegerPKModel):
-    observation = models.ForeignKey('Observation', models.DO_NOTHING, blank=True, null=True)
-    code = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True)
-
-    class Meta:
-        db_table = 'interpretationcode'
-
-
 class Value(BigIntegerPKModel):
     type_choice = (
+        ('ED', 'ED'),
         ('BN', 'BN'),
         ('CD', 'CD'),
         ('CR', 'CR'),
         ('INT', 'INT'),
         ('REAL', 'REAL'),
+        ('TS', 'TS'),
+        ('PQ', 'PQ'),
     )
     observation = models.ForeignKey('Observation', models.DO_NOTHING, blank=True, null=True)
-    xsitype = models.CharField(max_length=2, choices=type_choice, default="BL")
-    node = models.ForeignKey('Node', models.DO_NOTHING, blank=True, null=True)
-    value = models.CharField(max_length=255, blank=True, null=True)
-    text = models.CharField(max_length=255, blank=True, null=True)
+    xsitype = models.CharField(max_length=2, choices=type_choice, default="ED")
+    item = models.ForeignKey('Item', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'value'
+
+
+class Valueattribute(BigIntegerPKModel):
+    value = models.ForeignKey('Value', models.DO_NOTHING, blank=True, null=True)
+    content = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=32, blank=True, null=True)
+
+    class Meta:
+        db_table = 'valueattribute'
+
+
+class Valuecontent(BigIntegerPKModel):
+    value = models.ForeignKey('Value', models.DO_NOTHING, blank=True, null=True)
+    content = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'valuecontent'
 
 
 class Scriptelement(BigIntegerPKModel):
