@@ -120,12 +120,12 @@ class List(BigIntegerPKModel):
 
 class Item(BigIntegerPKModel):
     selected_choice = (
-        ('selected', ' selected="selected"'),
-        ('none', ''),
+        (' selected="selected"', 'selected'),
+        ('', 'none'),
     )
     list = models.ForeignKey('List', models.DO_NOTHING, blank=True, null=True)
     number = models.SmallIntegerField(blank=True, null=True)
-    selected = models.CharField(max_length=2, choices=selected_choice, default="")
+    selected = models.CharField(max_length=20, choices=selected_choice, default="")
     code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -135,7 +135,7 @@ class Item(BigIntegerPKModel):
 class Referencerange(BigIntegerPKModel):
     ucum_choice = (
         ('cm', 'cm'),
-        ('none', ''),
+        ('', 'none'),
     )
     observation = models.ForeignKey('Observation', models.DO_NOTHING, blank=True, null=True)
     ucum = models.CharField(max_length=2, choices=ucum_choice, default="")
