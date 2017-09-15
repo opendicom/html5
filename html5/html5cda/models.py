@@ -123,9 +123,14 @@ class Item(BigIntegerPKModel):
         (' selected="selected"', 'selected'),
         ('', 'none'),
     )
+    disabled_choice = (
+        (' disabled="disabled"', 'disabled'),
+        ('', 'none'),
+    )
     list = models.ForeignKey('List', models.DO_NOTHING, blank=True, null=True)
     number = models.SmallIntegerField(blank=True, null=True)
     selected = models.CharField(max_length=20, choices=selected_choice, default="")
+    disabled = models.CharField(max_length=20, choices=disabled_choice, default="")
     code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -245,16 +250,22 @@ class Articlehtml(BigIntegerPKModel):
     def json2html5(self, json_value):
         xhtml5 = '<{}'.format(json_value['xhtml5'])
         for key in json_value:
-            if key not in ("xhtml5", "cda", "xsitype", "array"):
-                xhtml5 += ' {}={}'.format(key,json_value[key])
+            if key not in ('xhtml5', 'cda', 'xsitype', 'array', 'list'):
+                xhtml5 += ' {}={}'.format(key, json_value[key])
         xhtml5 += '>'
+        if 'list' in json_value:
+            items = Item.objects.filter(list=json_value['list']).order_by('number')
+            for item in items:
+                xhtml5 += '<option value="item/{}" {} {}>{}</option>'.format(item.id,
+                                                                             item.selected,
+                                                                             item.disabled,
+                                                                             item.code1.code.displayname)
         if 'array' in json_value:
             for key in json_value['array']:
                 if type(key) == str:
                     xhtml5 += key
                 else:
                     xhtml5 += self.json2html5(key)
-
         xhtml5 += '</{}>'.format(json_value['xhtml5'])
         return xhtml5
 
