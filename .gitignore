@@ -6,4 +6,4 @@ logs/
 html5/html5cda/migrations/
 html5/proxyrest/migrations/
 html5/html5dicom/migrations/
-
+html5/html5cda/migrations/0001_initial.py
