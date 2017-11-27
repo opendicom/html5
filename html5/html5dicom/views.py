@@ -154,14 +154,9 @@ def main(request, *args, **kwargs):
 def weasis(request, *args, **kwargs):
     url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
     jnlp_text = ''
-    if 'Windows NT 10.0' in request.META['HTTP_USER_AGENT']:
-        jnlp_file = open(settings.STATIC_ROOT + 'html5dicom/weasis-win10/weasis.jnlp', 'r')
-        jnlp_text = jnlp_file.read()
-        jnlp_file.close()
-    else:
-        jnlp_file = open(settings.STATIC_ROOT + 'html5dicom/weasis/weasis.jnlp', 'r')
-        jnlp_text = jnlp_file.read()
-        jnlp_file.close()
+    jnlp_file = open(settings.STATIC_ROOT + 'html5dicom/weasis/weasis.jnlp', 'r')
+    jnlp_text = jnlp_file.read()
+    jnlp_file.close()
     base_url = request.META['wsgi.url_scheme']+'://'+request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
         manifiest = requests.get(url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
