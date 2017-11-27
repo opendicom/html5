@@ -16,7 +16,8 @@
         </select>
         <input class="displayNoneArticleNone" id="{{ section.idattribute }}selectoff" type="checkbox" name="{{ section.idattribute }}selectoff" value="off" onchange="invisibility(this)"/>
         <input class="displayNoneArticleNone" id="{{ section.idattribute }}selecthidden" type="checkbox" name="{{ section.idattribute }}selecthidden" value="hidden"/>
-        {% if section.article.check_xhtml5 is None %}
+        {% if section.check_article_xhtml5 is None %}
+            <article>
             {% for subsection in section.get_all_sub_seccion %}
                 <section id="{{subsection.0.idattribute}}" {%if subsection.0.classattribute is not None %} class="{{subsection.0.classattribute}}" {% endif %}>
                     <select class="{{subsection.0.selectclass}}"
@@ -29,7 +30,8 @@
                     </select>
                     <input class="displayNoneArticleNone" id="{{ subsection.0.idattribute }}selectoff" type="checkbox" name="{{ subsection.0.idattribute }}selectoff" value="off" onchange="invisibility(this)"/>
                     <input class="displayNoneArticleNone" id="{{ subsection.0.idattribute }}selecthidden" type="checkbox" name="{{ subsection.0.idattribute }}selecthidden" value="hidden"/>
-                    {% if subsection.0.article.check_xhtml5 is None %}
+                    {% if subsection.0.check_article_xhtml5 is None %}
+                        <article>
                         {% for subsubsection in subsection.0.get_all_sub_seccion %}
                             <section id="{{subsubsection.0.idattribute}}" {%if subsubsection.0.classattribute is not None %} class="{{subsubsection.0.classattribute}}" {% endif %}>
                                 <select class="{{subsubsection.0.selectclass}}"
@@ -42,16 +44,18 @@
                                 </select>
                                 <input class="displayNoneArticleNone" id="{{ subsubsection.0.idattribute }}selectoff" type="checkbox" name="{{ subsubsection.0.idattribute }}selectoff" value="off" onchange="invisibility(this)"/>
                                 <input class="displayNoneArticleNone" id="{{ subsubsection.0.idattribute }}selecthidden" type="checkbox" name="{{ subsubsection.0.idattribute }}selecthidden" value="hidden"/>
-                                {{ subsubsection.0.article.get_xhtml5|safe }}
+                                {{ subsubsection.0.get_article_xhtml|safe }}
                             </section>
                         {% endfor %}
+                        </article>
                     {% else %}
-                        {{ subsection.0.article.get_xhtml5|safe }}
+                        {{ subsection.0.get_article_xhtml|safe }}
                     {% endif %}
                 </section>
             {% endfor %}
+            </article>
         {% else %}
-            {{ section.article.get_xhtml5|safe }}
+            {{ section.get_article_xhtml|safe }}
         {% endif %}
     </section>
 {% endfor %}

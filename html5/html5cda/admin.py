@@ -56,22 +56,76 @@ class Code2Admin(admin.ModelAdmin):
 admin.site.register(models.Code2, Code2Admin)
 
 
+class LabelAdmin(admin.ModelAdmin):
+    pass
+
+admin.site.register(models.Label, LabelAdmin)
+
+
+class OptionInline(admin.TabularInline):
+    model = models.Option
+    extra = 1
+
+
+class WidgetSelectAdmin(admin.ModelAdmin):
+    list_display = ['id', 'category', 'name', 'title', 'xsitype']
+    list_filter = ('category',)
+    inlines = (OptionInline,)
+
+    def get_queryset(self, request):
+        return self.model.objects.filter(xsitype='CR')
+
+admin.site.register(models.WidgetSelect, WidgetSelectAdmin)
+
+
+class InputAttributeInline(admin.TabularInline):
+    model = models.Inputattribute
+    extra = 1
+
+
+class ReferenceRangeInline(admin.TabularInline):
+    model = models.Referencerange
+    extra = 1
+
+
+class WidgetInputAdmin(admin.ModelAdmin):
+    list_display = ['id', 'category', 'name', 'title', 'xsitype']
+    inlines = (InputAttributeInline, ReferenceRangeInline)
+
+    def get_queryset(self, request):
+        return self.model.objects.exclude(xsitype='CR')
+
+admin.site.register(models.WidgetInput, WidgetInputAdmin)
+
+
+class RowInline(admin.TabularInline):
+    model = models.Row
+    extra = 1
+
+
+class ColInline(admin.TabularInline):
+    model = models.Col
+    extra = 1
+
+
+class WidgetTableAdmin(admin.ModelAdmin):
+    list_display = ['id', 'category', 'name', 'title']
+    inlines = (RowInline, ColInline)
+
+admin.site.register(models.Table, WidgetTableAdmin)
+
+
+class CellAdmin(admin.ModelAdmin):
+    pass
+
+admin.site.register(models.Cell, CellAdmin)
+
+
 class ArticlehtmlAdmin(admin.ModelAdmin):
     list_display = ['id', 'titulo', 'descripcion']
     search_fields = ['titulo', 'descripcion']
 
 admin.site.register(models.Articlehtml, ArticlehtmlAdmin)
-
-
-class ItemInline(admin.TabularInline):
-    model = models.Item
-    extra = 1
-
-
-class ListAdmin(admin.ModelAdmin):
-    inlines = (ItemInline, )
-
-admin.site.register(models.List, ListAdmin)
 
 
 class SelectOptionInline(admin.TabularInline):

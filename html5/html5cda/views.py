@@ -12,7 +12,7 @@ from urllib.parse import quote
 from datetime import datetime
 import hashlib
 import uuid
-from lxml.html.soupparser import fromstring
+import json
 
 
 @login_required(login_url='/html5dicom/login')
@@ -321,76 +321,50 @@ def authenticate_report(submit, user):
     # parseo submit
     sections = models.Section.objects.filter(plantilla=submit.plantilla)
     for section in sections:
-        sec = models.Sec.objects.create(
-            autenticado=autenticado,
-            #templateuid=section.templateuidroot,
-            idsec=section.idattribute,
-            seccode=section.conceptcode,
-            title=section.selecttitle
-        )
-        if section.article is not None:
-            # replace html5 -> cda
-            sec.text = values_submit['{}textarea'.format(section.idattribute)][0]
-            sec.save()
-        else:
-            subsections = section.get_all_sub_seccion()
-            for subsection in subsections:
-                subsec = models.Subsec.objects.create(
-                    #templateuid=subsection.templateuidroot,
-                    idsubsec=subsection.idattribute,
-                    subseccode=subsection.conceptcode,
-                    title=subsection.selecttitle,
-                    parent_sec=sec.id
-                )
-                if subsection.article is not None:
-                    #replace html5 -> cda
-
-                    subsec.text = values_submit['{}textarea'.format(subsection.idattribute)][0]
-                    subsec.save()
-                else:
-                    subsubsections = subsection.get_all_sub_seccion()
-                    for subsubsection in subsubsections:
-                        subsubsec = models.Subsubsec.objects.create(
-                            #templateuid=subsubsection.templateuidroot,
-                            idsubsubsec=subsubsection.idattribute,
-                            subsubseccode=subsubsection.conceptcode,
-                            title=subsubsection.selecttitle,
-                            parent_subsec=subsec.id
-                        )
-                        if '{}textarea'.format(subsubsection.idattribute) in values_submit:
-                            # replace html5 -> cda
-                            subsubsec.text = values_submit['{}textarea'.format(subsubsection.idattribute)][0]
-                            subsubsec.save()
-                        else:
-                            if values_submit['{}select'.format(subsubsection.idattribute)][0] == 'on' or \
-                                            values_submit['{}select'.format(subsubsection.idattribute)][0] == 'hidden':
-                                # //code[@data-code="366301005"]/@data-displayName
-                                # articlehtml = fromstring(subsubseccion.articlehtml.html)
-                                # articlehtml.xpath('')
-                                entry, entry_created = models.Entry.objects.update_or_create(
-                                    element='',
-                                    elementclasscode='',
-                                    elementmoodcode='',
-                                    templateuid='',
-                                    identry='',
-                                    code='',
-                                    textreferencevalue=''
-                                )
-                                value, value_created = models.Value.objects.update_or_create(
-                                    entry=entry,
-                                    type='',
-                                    code='',
-                                    unit='',
-                                    value='',
-                                    nullflavor=''
-                                )
-                                qualifier, qualifier_created = models.Qualifier.objects.update_or_create(
-                                    entry=entry,
-                                    ordinal='',
-                                    code='',
-                                    valueoriginaltext=''
-                                )
-                                subsubsec.entries.add(entry)
-                                subsubsec.save()
-
+        if values_submit['{}select'.format(section.idattribute)][0] != 'off':
+            sec = models.Sec.objects.create(
+                autenticado=autenticado,
+                idsec=section.idattribute,
+                seccode=section.conceptcode,
+                title=section.selecttitle
+            )
+            if section.article is not None:
+                if section.article.check_xhtml5 is not None:
+                    # parseo xhtml para obtener valores desde el submit
+                    #submit2db(values_submit, section.article.json)
+                    # replace html5 -> cda
+                    #sec.text = values_submit['{}textarea'.format(section.idattribute)][0]
+                    sec.save()
+            else:
+                subsections = section.get_all_sub_seccion()
+                for subsection in subsections:
+                    subsec = models.Subsec.objects.create(
+                        idsubsec=subsection.idattribute,
+                        subseccode=subsection.conceptcode,
+                        title=subsection.selecttitle,
+                        parent_sec=sec.id
+                    )
+                    if subsection.article is not None:
+                        if subsection.article.check_xhtml5 is not None:
+                            # parseo xhtml para obtener valores desde el submit
+                            #subsec.text = values_submit['{}textarea'.format(subsection.idattribute)][0]
+                            subsec.save()
+                    else:
+                        subsubsections = subsection.get_all_sub_seccion()
+                        for subsubsection in subsubsections:
+                            subsubsec = models.Subsubsec.objects.create(
+                                idsubsubsec=subsubsection.idattribute,
+                                subsubseccode=subsubsection.conceptcode,
+                                title=subsubsection.selecttitle,
+                                parent_subsec=subsec.id
+                            )
+                            if subsubsection.article is not None:
+                                if subsubsection.article.check_xhtml5 is not None:
+                                    # parseo xhtml para obtener valores desde el submit
+                                    # subsec.text = values_submit['{}textarea'.format(subsection.idattribute)][0]
+                                    subsubsec.save()
     return
+
+
+def submit2db(submit, article_json, sec, subsec, subsubsec):
+    article_dic = json.loads(article_json)

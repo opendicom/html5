@@ -41,9 +41,8 @@ def user_logout(request, *args, **kwargs):
 def main(request, *args, **kwargs):
     if request.user.is_authenticated:
         url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
-        url_httpdicom_ext = models.Setting.objects.get(key='url_httpdicom_ext').value
         organization = {}
-        for role in models.Role.objects.filter(user=request.user.id).order_by('default'):
+        for role in models.Role.objects.filter(user=request.user.id).order_by('default').reverse():
             if role.institution:
                 if role.institution.organization.short_name in organization:
                     if role.institution.short_name in organization[role.institution.organization.short_name]['institution']:
@@ -168,7 +167,7 @@ def weasis(request, *args, **kwargs):
 
 def stream_response(url_zip):
     r = requests.get(url_zip, stream=True)
-    for chunk in r.iter_content(50, decode_unicode=True):
+    for chunk in r.iter_content(512 * 1024):
         yield chunk
 
 

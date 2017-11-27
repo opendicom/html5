@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from django.db import models
 import json
+from lxml import html
+import re
 
 
 class BigIntegerPKModel(models.Model):
@@ -56,12 +58,13 @@ class Code1(BigIntegerPKModel):
     )
     code = models.ForeignKey('Code', models.DO_NOTHING, blank=True, null=True)
     category = models.CharField(max_length=8, blank=True, null=True, choices=category_choice)
+    text = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = 'code1'
 
     def __str__(self):
-        return '{} ({})'.format(self.code, self.category)
+        return '{} {} ({})'.format(self.text ,self.code, self.category)
 
 
 class Code2(BigIntegerPKModel):
@@ -89,70 +92,24 @@ class Code3(BigIntegerPKModel):
 
 
 class Observation(BigIntegerPKModel):
-    interpretation_choice = (
-        ('B', 'B'), ('D', 'D'), ('U', 'U'), ('W', 'W'),
-        ('<', '<'), ('>', '>'), ('A', 'A'), ('AA', 'AA'),
-        ('HH', 'HH'), ('LL', 'LL'), ('H', 'H'), ('L', 'L'),
-        ('N', 'N'), ('I', 'I'), ('MS', 'MS'), ('R', 'R'),
-        ('S', 'S'), ('VS', 'VS'),
-    )
     sec = models.ForeignKey('Sec', models.DO_NOTHING, blank=True, null=True)
     subsec = models.ForeignKey('Subsec', models.DO_NOTHING, blank=True, null=True)
     subsubsec = models.ForeignKey('Subsubsec', models.DO_NOTHING, blank=True, null=True)
-    tbody = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="tbody")
-    tr = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="tr")
-    td = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="td")
-    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
-    interpretationcode = models.CharField(max_length=2, choices=interpretation_choice, default="B")
-    rel = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="rel")
-    list = models.ForeignKey('List', models.DO_NOTHING, blank=True, null=True)
+    label = models.ForeignKey('Label', models.DO_NOTHING, blank=True, null=True)
+    option = models.ForeignKey('Option', models.DO_NOTHING, blank=True, null=True)
+    col = models.ForeignKey('Col', models.DO_NOTHING, blank=True, null=True)
+    row = models.ForeignKey('Row', models.DO_NOTHING, blank=True, null=True)
+    table = models.ForeignKey('Table', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'observation'
 
 
-class List(BigIntegerPKModel):
-    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
-
-    class Meta:
-        db_table = 'list'
-
-
-class Item(BigIntegerPKModel):
-    selected_choice = (
-        (' selected="selected"', 'selected'),
-        ('', 'none'),
+class Label(BigIntegerPKModel):
+    category_choice = (
+        ('patología', 'patología'),
     )
-    disabled_choice = (
-        (' disabled="disabled"', 'disabled'),
-        ('', 'none'),
-    )
-    list = models.ForeignKey('List', models.DO_NOTHING, blank=True, null=True)
-    number = models.SmallIntegerField(blank=True, null=True)
-    selected = models.CharField(max_length=20, choices=selected_choice, default="")
-    disabled = models.CharField(max_length=20, choices=disabled_choice, default="")
-    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
-
-    class Meta:
-        db_table = 'item'
-
-
-class Referencerange(BigIntegerPKModel):
-    ucum_choice = (
-        ('cm', 'cm'),
-        ('', 'none'),
-    )
-    observation = models.ForeignKey('Observation', models.DO_NOTHING, blank=True, null=True)
-    ucum = models.CharField(max_length=2, choices=ucum_choice, default="")
-    low = models.FloatField(blank=True, null=True)
-    high = models.FloatField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'referencerange'
-
-
-class Value(BigIntegerPKModel):
-    type_choice = (
+    xsitype_choice = (
         ('ED', 'ED'),
         ('BN', 'BN'),
         ('CD', 'CD'),
@@ -162,16 +119,135 @@ class Value(BigIntegerPKModel):
         ('TS', 'TS'),
         ('PQ', 'PQ'),
     )
-    observation = models.ForeignKey('Observation', models.DO_NOTHING, blank=True, null=True)
-    xsitype = models.CharField(max_length=2, choices=type_choice, default="ED")
-    item = models.ForeignKey('Item', models.DO_NOTHING, blank=True, null=True)
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+    category = models.CharField(max_length=9, choices=category_choice)
+    name = models.CharField(max_length=16, blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    xsitype = models.CharField(max_length=4, choices=xsitype_choice)
 
     class Meta:
-        db_table = 'value'
+        db_table = 'label'
+
+    def __str__(self):
+        return '{} {}'.format(self.category, self.name)
+
+    def get_label(self, idsection):
+        xhtml = '<label>'
+        xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
+        xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
+        xhtml += '</label>'
+        return xhtml
+
+    def get_tag(self, idsection):
+        xhtml = ''
+        if self.xsitype == 'CR':
+            xhtml = '<select name="{}.{}" >'.format(idsection, self.id)
+            options = Option.objects.filter(label=self).order_by('number')
+            for option in options:
+                xhtml += '<option value="{}" {} {}>{}</option>'.format(option.id, option.selected,
+                                                                       option.disabled, option.code1.text)
+            xhtml += '</select>'
+            return xhtml
+        else:
+            xhtml = '<input name="{}.{}"'.format(idsection, self.id)
+            if self.xsitype == 'ED':
+                xhtml += ' type="text"'
+            elif self.xsitype == 'BN':
+                xhtml += ' type="checkbox"'
+            elif self.xsitype == 'TS':
+                xhtml += ' type="datetime-local"'
+            elif self.xsitype in 'INT REAL PQ CD':
+                xhtml += ' type="number"'
+                referenceranges = Referencerange.objects.filter(label=self)
+                for referencerange in referenceranges:
+                    xhtml += ' min="{}" max="{}"'.format(referencerange.low, referencerange.high)
+            inputattributes = Inputattribute.objects.filter(label=self)
+            for inputattribute in inputattributes:
+                xhtml += ' {}={}'.format(inputattribute.name, inputattribute.content)
+            xhtml += ' />'
+        return xhtml
+
+    def get_xhtml(self, idsection):
+        xhtml = '{}{}'.format(self.get_label(idsection), self.get_tag(idsection))
+        return xhtml
+
+
+class WidgetSelect(Label):
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Widget Select'
+
+
+    #def get_queryset(self):
+    #    return super(WidgetSelect, self).get_queryset().filter(xsitype='CR')
+
+
+class WidgetInput(Label):
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Widget Input'
+
+    def __str__(self):
+        return '{} {}'.format(self.name, self.xsitype)
+    #def get_queryset(self):
+    #    return super(WidgetInput, self).get_queryset().exclude(xsitype='CR')
+
+
+class Option(BigIntegerPKModel):
+    selected_choice = (
+        (' selected="selected"', 'selected'),
+        (' ', 'none'),
+    )
+    disabled_choice = (
+        (' disabled="disabled"', 'disabled'),
+        (' ', 'none'),
+    )
+    interpretation_choice = (
+        ('B', 'B'), ('D', 'D'), ('U', 'U'), ('W', 'W'),
+        ('<', '<'), ('>', '>'), ('A', 'A'), ('AA', 'AA'),
+        ('HH', 'HH'), ('LL', 'LL'), ('H', 'H'), ('L', 'L'),
+        ('N', 'N'), ('I', 'I'), ('MS', 'MS'), ('R', 'R'),
+        ('S', 'S'), ('VS', 'VS'),
+    )
+    label = models.ForeignKey('Label', models.DO_NOTHING, blank=True, null=True)
+    number = models.SmallIntegerField(blank=True, null=True)
+    selected = models.CharField(max_length=20, choices=selected_choice, default="", blank=True)
+    disabled = models.CharField(max_length=20, choices=disabled_choice, default="", blank=True)
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="code1")
+    rel = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True, related_name="code1_rel")
+    interpretationcode = models.CharField(max_length=2, choices=interpretation_choice, default="B")
+
+    class Meta:
+        db_table = 'option'
+
+
+class Referencerange(BigIntegerPKModel):
+    ucum_choice = (
+        ('cm', 'cm'),
+        ('', 'none'),
+    )
+    label = models.ForeignKey('Label', models.DO_NOTHING, blank=True, null=True)
+    ucum = models.CharField(max_length=2, choices=ucum_choice, default="")
+    low = models.FloatField(blank=True, null=True)
+    high = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'referencerange'
+
+
+class Inputattribute(BigIntegerPKModel):
+    label = models.ForeignKey('Label', models.DO_NOTHING, blank=True, null=True)
+    name = models.CharField(max_length=32, blank=True, null=True)
+    content = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'inputattribute'
 
 
 class Valueattribute(BigIntegerPKModel):
-    value = models.ForeignKey('Value', models.DO_NOTHING, blank=True, null=True)
+    observation = models.ForeignKey('Observation', models.DO_NOTHING, blank=True, null=True)
     content = models.CharField(max_length=255, blank=True, null=True)
     name = models.CharField(max_length=32, blank=True, null=True)
 
@@ -179,12 +255,127 @@ class Valueattribute(BigIntegerPKModel):
         db_table = 'valueattribute'
 
 
-class Valuecontent(BigIntegerPKModel):
-    value = models.ForeignKey('Value', models.DO_NOTHING, blank=True, null=True)
+class Table(BigIntegerPKModel):
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+    category = models.CharField(max_length=1, blank=True, null=True)
+    name = models.CharField(max_length=16, blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'table'
+        verbose_name = 'Widget Table'
+
+    def __str__(self):
+        return '{} {}'.format(self.category, self.name)
+
+    def get_xhtml(self, idsection):
+        xhtml5 = '<table border="1"><thead><tr><th></th>'
+        cols = Col.objects.filter(table=self).order_by('number')
+        for col in cols:
+            xhtml5 += '<td>'
+            if col.label is not None:
+                xhtml5 += col.label.get_label(idsection=idsection)
+            elif col.code1 is not None:
+                xhtml5 += col.get_code1(idsection=idsection)
+            else:
+                xhtml5 += col.content
+            xhtml5 += '</td>'
+        xhtml5 += '</tr></thead><tbody>'
+        rows = Row.objects.filter(table=self).order_by('number')
+        for row in rows:
+            xhtml5 += '<tr>'
+            if row.label is not None:
+                xhtml5 += '<th>{}</th>'.format(row.label.get_label(idsection=idsection))
+            elif row.code1 is not None:
+                xhtml5 += '<th>{}</th>'.format(row.get_code1(idsection=idsection))
+            else:
+                xhtml5 += '<th>{}</th>'.format(row.content)
+            for col in cols:
+                xhtml5 += '<td>'
+                try:
+                    cell = Cell.objects.get(row=row, col=col)
+                    if cell.label is not None:
+                        if row.label is not None or col.label is not None:
+                            xhtml5 += cell.label.get_tag(idsection=idsection)
+                        else:
+                            xhtml5 += cell.label.get_xhtml(idsection=idsection)
+                    elif cell.code1 is not None:
+                        xhtml5 += '<th>{}</th>'.format(cell.get_code1(idsection=idsection))
+                    else:
+                        xhtml5 += cell.content
+                except:
+                    print('Missing cell config')
+                xhtml5 += '</td>'
+            xhtml5 += '</tr>'
+        xhtml5 += '</tbody></table>'
+        return xhtml5
+
+
+class Col(BigIntegerPKModel):
+    table = models.ForeignKey('Table', models.DO_NOTHING, blank=True, null=True)
+    number = models.BigIntegerField(blank=True, null=True)
+    label = models.ForeignKey('Label', models.DO_NOTHING, blank=True, null=True)
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
     content = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
-        db_table = 'valuecontent'
+        db_table = 'col'
+
+    def __str__(self):
+        return '{} {}'.format(self.table, self.number)
+
+    def get_code1(self, idsection):
+        xhtml = '<label>'
+        xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
+        xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
+        xhtml += '</label>'
+        return xhtml
+
+
+class Row(BigIntegerPKModel):
+    table = models.ForeignKey('Table', models.DO_NOTHING, blank=True, null=True)
+    number = models.BigIntegerField(blank=True, null=True)
+    label = models.ForeignKey('Label', models.DO_NOTHING, blank=True, null=True)
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+    content = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'row'
+
+    def __str__(self):
+        return '{} {}'.format(self.table, self.number)
+
+    def get_code1(self, idsection):
+        xhtml = '<label>'
+        xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
+        xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
+        xhtml += '</label>'
+        return xhtml
+
+
+class Cell(BigIntegerPKModel):
+    thtd_choice = (
+        ('th', 'th'),
+        ('td', 'td'),
+    )
+    row = models.ForeignKey('Row', models.DO_NOTHING, blank=True, null=True)
+    col = models.ForeignKey('Col', models.DO_NOTHING, blank=True, null=True)
+    label = models.ForeignKey('Label', models.DO_NOTHING, blank=True, null=True)
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
+    content = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'cell'
+
+    def __str__(self):
+        return 'Table {} row:{} col:{}'.format(self.row.table, self.row.number, self.col.number)
+
+    def get_code1(self, idsection):
+        xhtml = '<label>'
+        xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
+        xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
+        xhtml += '</label>'
+        return xhtml
 
 
 class Scriptelement(BigIntegerPKModel):
@@ -230,7 +421,7 @@ class Footer(BaseHeaderOrFooter):
 class Articlehtml(BigIntegerPKModel):
     titulo = models.CharField(max_length=64, blank=True, null=True)
     descripcion = models.CharField(max_length=256, blank=True, null=True)
-    json = models.TextField(blank=True, null=True)
+    xhtml5 = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'articlehtml'
@@ -239,34 +430,28 @@ class Articlehtml(BigIntegerPKModel):
         return self.titulo
 
     def check_xhtml5(self):
-        if 'xhtml5' in self.json:
+        if 'article' in self.xhtml5:
             return 'YES'
         else:
             return None
 
-    def get_xhtml5(self):
-        return self.json2html5(json.loads(self.json))
+    def get_xhtml5(self, idsection):
+        return self.generate_xhtml5(self.xhtml5, idsection)
 
-    def json2html5(self, json_value):
-        xhtml5 = '<{}'.format(json_value['xhtml5'])
-        for key in json_value:
-            if key not in ('xhtml5', 'cda', 'xsitype', 'array', 'list'):
-                xhtml5 += ' {}={}'.format(key, json_value[key])
-        xhtml5 += '>'
-        if 'list' in json_value:
-            items = Item.objects.filter(list=json_value['list']).order_by('number')
-            for item in items:
-                xhtml5 += '<option value="item/{}" {} {}>{}</option>'.format(item.id,
-                                                                             item.selected,
-                                                                             item.disabled,
-                                                                             item.code1.code.displayname)
-        if 'array' in json_value:
-            for key in json_value['array']:
-                if type(key) == str:
-                    xhtml5 += key
-                else:
-                    xhtml5 += self.json2html5(key)
-        xhtml5 += '</{}>'.format(json_value['xhtml5'])
+    def generate_xhtml5(self, xhtml5, idsection):
+        hrefs = re.findall('<a href="(.+?)"/>', xhtml5)
+        for href in hrefs:
+            if 'label' in href:
+                label = Label.objects.get(id=href.split('/')[-1])
+                #print(label.get_xhtml(idsection=idsection))
+                label_replace = re.compile('<a href="{}"/>'.format(href))
+                xhtml5 = label_replace.sub(label.get_xhtml(idsection=idsection), xhtml5)
+            elif 'table' in href:
+                table = Table.objects.get(id=href.split('/')[-1])
+                #print(table.get_xhtml(idsection=idsection))
+                table_replace = re.compile('<a href="{}"/>'.format(href))
+                xhtml5 = table_replace.sub(table.get_xhtml(idsection=idsection), xhtml5)
+        #print(xhtml5)
         return xhtml5
 
 
@@ -354,6 +539,15 @@ class Section(BigIntegerPKModel):
         for item in Selectoption.objects.filter(section=self).order_by('ordinal'):
             r.append(item)
         return r
+
+    def check_article_xhtml5(self):
+        if self.article is None:
+            return None
+        else:
+            return self.article.check_xhtml5()
+
+    def get_article_xhtml(self):
+        return self.article.get_xhtml5(idsection=self.idattribute)
 
 
 class Selectoption(BigIntegerPKModel):
