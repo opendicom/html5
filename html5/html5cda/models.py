@@ -64,7 +64,20 @@ class Code1(BigIntegerPKModel):
         db_table = 'code1'
 
     def __str__(self):
-        return '{} {} ({})'.format(self.text ,self.code, self.category)
+        return '{} {} ({})'.format(self.text, self.code, self.category)
+
+    def get_cda_format(self, observation=None):
+        xml_cda = '<linkHtml'
+        xml_cda += 'href="data:text/html,%3Cul%3E%3Cli%3E'
+        xml_cda += 'code={}%3C%2Fli%3E%3Cli%3E'.format(self.code.code)
+        xml_cda += 'codeSystem={}%3C%2Fli%3E%3Cli%3E'.format(self.code.codesystem.oid)
+        xml_cda += 'codeSystemName={}%3C%2Fli%3E%3Cli%3E'.format(self.code.codesystem.shortname)
+        xml_cda += 'displayName={}%3C%2Fli%3E%3C%2Ful%3E"'.format(self.code.displayname)
+        if observation is not None:
+            xml_cda += ' id="_{}">{}</linkHtml>'.format(observation.id, self.text)
+        else:
+            xml_cda += '>{}</linkHtml>'.format(self.text)
+        return xml_cda
 
 
 class Code2(BigIntegerPKModel):
@@ -100,6 +113,7 @@ class Observation(BigIntegerPKModel):
     col = models.ForeignKey('Col', models.DO_NOTHING, blank=True, null=True)
     row = models.ForeignKey('Row', models.DO_NOTHING, blank=True, null=True)
     table = models.ForeignKey('Table', models.DO_NOTHING, blank=True, null=True)
+    code1 = models.ForeignKey('Code1', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'observation'
@@ -131,10 +145,11 @@ class Label(BigIntegerPKModel):
     def __str__(self):
         return '{} {}'.format(self.category, self.name)
 
-    def get_label(self, idsection):
+    def get_label(self, idsection, addoption=False):
         xhtml = '<label>'
         xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
-        xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
+        if addoption is True:
+            xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
         xhtml += '</label>'
         return xhtml
 
@@ -168,8 +183,31 @@ class Label(BigIntegerPKModel):
         return xhtml
 
     def get_xhtml(self, idsection):
-        xhtml = '{}{}'.format(self.get_label(idsection), self.get_tag(idsection))
+        if self.xsitype == 'CR':
+            xhtml = '{}{}'.format(self.get_label(idsection, addoption=True), self.get_tag(idsection))
+        else:
+            xhtml = '{}{}'.format(self.get_label(idsection), self.get_tag(idsection))
         return xhtml
+
+    def get_cda_select(self, observation, option, caption=True):
+        xhtml = '<list ID="_{}">'.format(observation.id)
+        if caption is True:
+            xhtml += '<caption>{}</caption>'.format(self.code1.get_cda_format())
+        option = Option.objects.get(id=option)
+        xhtml += '<item>{}</item>'.format(option.code1.get_cda_format())
+        xhtml += '</list>'
+        return xhtml
+
+    def get_cda_input(self, observation, input, caption=True):
+        xhtml = '<list ID="_{}">'.format(observation.id)
+        if caption is True:
+            xhtml += '<caption>{}</caption>'.format(self.code1.get_cda_format())
+        xhtml += '<item>{}</item>'.format(input)
+        xhtml += '</list>'
+        return xhtml
+
+    def get_cda_label(self, observation=None):
+        return self.code1.get_cda_format(observation=observation)
 
 
 class WidgetSelect(Label):
@@ -283,13 +321,14 @@ class Table(BigIntegerPKModel):
         xhtml5 += '</tr></thead><tbody>'
         rows = Row.objects.filter(table=self).order_by('number')
         for row in rows:
-            xhtml5 += '<tr>'
+            xhtml5 += '<tr><th>'
             if row.label is not None:
-                xhtml5 += '<th>{}</th>'.format(row.label.get_label(idsection=idsection))
+                xhtml5 += row.label.get_label(idsection=idsection)
             elif row.code1 is not None:
-                xhtml5 += '<th>{}</th>'.format(row.get_code1(idsection=idsection))
+                xhtml5 += row.get_code1(idsection=idsection)
             else:
-                xhtml5 += '<th>{}</th>'.format(row.content)
+                xhtml5 += row.content
+            xhtml5 += '</th>'
             for col in cols:
                 xhtml5 += '<td>'
                 try:
@@ -300,7 +339,7 @@ class Table(BigIntegerPKModel):
                         else:
                             xhtml5 += cell.label.get_xhtml(idsection=idsection)
                     elif cell.code1 is not None:
-                        xhtml5 += '<th>{}</th>'.format(cell.get_code1(idsection=idsection))
+                        xhtml5 += cell.get_code1(idsection=idsection)
                     else:
                         xhtml5 += cell.content
                 except:
@@ -331,6 +370,13 @@ class Col(BigIntegerPKModel):
         xhtml += '</label>'
         return xhtml
 
+    def get_content_cda(self):
+        xhtml = '<content>{}</content>'.format(self.content)
+        return xhtml
+
+    def get_label_cda(self):
+        return self.code1.get_cda_format()
+
 
 class Row(BigIntegerPKModel):
     table = models.ForeignKey('Table', models.DO_NOTHING, blank=True, null=True)
@@ -351,6 +397,13 @@ class Row(BigIntegerPKModel):
         xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
         xhtml += '</label>'
         return xhtml
+
+    def get_content_cda(self):
+        xhtml = '<content>{}</content>'.format(self.content)
+        return xhtml
+
+    def get_label_cda(self):
+        return self.code1.get_cda_format()
 
 
 class Cell(BigIntegerPKModel):
@@ -375,6 +428,10 @@ class Cell(BigIntegerPKModel):
         xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
         xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
         xhtml += '</label>'
+        return xhtml
+
+    def get_content_cda(self):
+        xhtml = '<content>{}</content>'.format(self.content)
         return xhtml
 
 
@@ -443,15 +500,12 @@ class Articlehtml(BigIntegerPKModel):
         for href in hrefs:
             if 'label' in href:
                 label = Label.objects.get(id=href.split('/')[-1])
-                #print(label.get_xhtml(idsection=idsection))
                 label_replace = re.compile('<a href="{}"/>'.format(href))
                 xhtml5 = label_replace.sub(label.get_xhtml(idsection=idsection), xhtml5)
             elif 'table' in href:
                 table = Table.objects.get(id=href.split('/')[-1])
-                #print(table.get_xhtml(idsection=idsection))
                 table_replace = re.compile('<a href="{}"/>'.format(href))
                 xhtml5 = table_replace.sub(table.get_xhtml(idsection=idsection), xhtml5)
-        #print(xhtml5)
         return xhtml5
 
 

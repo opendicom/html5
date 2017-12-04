@@ -12,7 +12,7 @@ from urllib.parse import quote
 from datetime import datetime
 import hashlib
 import uuid
-import json
+import re
 
 
 @login_required(login_url='/html5dicom/login')
@@ -329,42 +329,182 @@ def authenticate_report(submit, user):
                 title=section.selecttitle
             )
             if section.article is not None:
-                if section.article.check_xhtml5 is not None:
-                    # parseo xhtml para obtener valores desde el submit
-                    #submit2db(values_submit, section.article.json)
-                    # replace html5 -> cda
-                    #sec.text = values_submit['{}textarea'.format(section.idattribute)][0]
+                if section.check_article_xhtml5 is not None:
+                    sec.text = generate_text_observation(section, values_submit, sec=sec)
                     sec.save()
             else:
                 subsections = section.get_all_sub_seccion()
                 for subsection in subsections:
+                    print(subsection[0])
+                    print('subsection {} {}'.format(subsection[0].id, subsection[0].idattribute))
                     subsec = models.Subsec.objects.create(
-                        idsubsec=subsection.idattribute,
-                        subseccode=subsection.conceptcode,
-                        title=subsection.selecttitle,
-                        parent_sec=sec.id
+                        idsubsec=subsection[0].idattribute,
+                        subseccode=subsection[0].conceptcode,
+                        title=subsection[0].selecttitle,
+                        parent_sec=sec
                     )
-                    if subsection.article is not None:
-                        if subsection.article.check_xhtml5 is not None:
-                            # parseo xhtml para obtener valores desde el submit
-                            #subsec.text = values_submit['{}textarea'.format(subsection.idattribute)][0]
+                    if subsection[0].article is not None:
+                        if subsection[0].article.check_xhtml5 is not None:
+                            subsec.text = generate_text_observation(subsection[0], values_submit, subsec=subsec)
                             subsec.save()
                     else:
-                        subsubsections = subsection.get_all_sub_seccion()
+                        subsubsections = subsection[0].get_all_sub_seccion()
                         for subsubsection in subsubsections:
                             subsubsec = models.Subsubsec.objects.create(
-                                idsubsubsec=subsubsection.idattribute,
-                                subsubseccode=subsubsection.conceptcode,
-                                title=subsubsection.selecttitle,
-                                parent_subsec=subsec.id
+                                idsubsubsec=subsubsection[0].idattribute,
+                                subsubseccode=subsubsection[0].conceptcode,
+                                title=subsubsection[0].selecttitle,
+                                parent_subsec=subsec
                             )
-                            if subsubsection.article is not None:
-                                if subsubsection.article.check_xhtml5 is not None:
-                                    # parseo xhtml para obtener valores desde el submit
-                                    # subsec.text = values_submit['{}textarea'.format(subsection.idattribute)][0]
+                            if subsubsection[0].article is not None:
+                                if subsubsection[0].article.check_xhtml5 is not None:
+                                    subsubsec.text = generate_text_observation(subsubsection[0], values_submit, subsubsec=subsubsec)
                                     subsubsec.save()
     return
 
 
-def submit2db(submit, article_json, sec, subsec, subsubsec):
-    article_dic = json.loads(article_json)
+def generate_text_observation(section, values_submit, sec=None, subsec=None, subsubsec=None):
+    text_cda = '<text>'
+    textareas = re.findall("<textarea name='(.+?)'>", section.article.xhtml5)
+    for textarea in textareas:
+        textarea_value = values_submit['{}'.format(textarea)][0]
+        str_replace = re.compile('%3Cp%3E')
+        textarea_value = str_replace.sub('<paragraph>', textarea_value)
+        str_replace = re.compile('%3C%2Fp%3E')
+        textarea_value = str_replace.sub('</paragraph>', textarea_value)
+        str_replace = re.compile('%3Cstrong%3E')
+        textarea_value = str_replace.sub('<content styleCode="Bold">', textarea_value)
+        str_replace = re.compile('%3C%2Fstrong%3E')
+        textarea_value = str_replace.sub('</content>', textarea_value)
+        str_replace = re.compile('%3Cem%3E')
+        textarea_value = str_replace.sub('<content styleCode="Italics">', textarea_value)
+        str_replace = re.compile('%3C%2Fem%3E')
+        textarea_value = str_replace.sub('</content>', textarea_value)
+        str_replace = re.compile('%3Cu%3E')
+        textarea_value = str_replace.sub('<content styleCode="Underline">', textarea_value)
+        str_replace = re.compile('%3C%2Fu%3E')
+        textarea_value = str_replace.sub('</content>', textarea_value)
+        text_cda += textarea_value
+
+
+    hrefs = re.findall('<a href="(.+?)"/>', section.article.xhtml5)
+    for href in hrefs:
+        if 'label' in href:
+            label = models.Label.objects.get(id=href.split('/')[-1])
+            observation = models.Observation.objects.create(label=label)
+            if sec is not None:
+                observation.sec = sec
+            elif subsec is not None:
+                observation.subsec = subsec
+            elif subsubsec is not None:
+                observation.subsubsec = subsubsec
+            if label.xsitype == 'CR':
+                observation.option = values_submit['{}.{}'.format(section.idattribute, label.id)][0]
+                text_cda += label.get_cda_select(option=values_submit['{}.{}'.format(section.idattribute, label.id)][0],
+                                                 observation=observation)
+            else:
+                valueattribute = models.Valueattribute.objects.create(
+                    observation=observation,
+                    name='value',
+                    content=values_submit['{}.{}'.format(section.idattribute, label.id)][0]
+                )
+                text_cda += label.get_cda_input(input=values_submit['{}.{}'.format(section.idattribute, label.id)][0],
+                                                observation=observation)
+            observation.save()
+        elif 'table' in href:
+            table = models.Table.objects.get(id=href.split('/')[-1])
+            cols = models.Col.objects.filter(table=table).order_by('number')
+            text_cda += '<table><thead><tr><th></th>'
+            for col in cols:
+                text_cda += '<td>'
+                if col.label is None and col.code1 is None:
+                    text_cda += col.get_content_cda()
+                else:
+                    observation = models.Observation.objects.create(table=table, col=col)
+                    if sec is not None:
+                        observation.sec = sec
+                    elif subsec is not None:
+                        observation.subsec = subsec
+                    elif subsubsec is not None:
+                        observation.subsubsec = subsubsec
+
+                    if col.label is not None:
+                        observation.label = col.label
+                        text_cda += col.label.get_cda_label(observation=observation)
+                    elif col.code1 is not None:
+                        observation.code1 = col.code1
+                        text_cda += col.code1.get_cda_format(observation=observation)
+                    observation.save()
+                text_cda += '</td>'
+            text_cda += '</tr></thead><tbody>'
+            rows = models.Row.objects.filter(table=table).order_by('number')
+            for row in rows:
+                text_cda += '<tr><th>'
+                if row.label is None and row.code1 is None:
+                    text_cda += row.get_content_cda()
+                else:
+                    observation = models.Observation.objects.create(table=table, row=row)
+                    if sec is not None:
+                        observation.sec = sec
+                    elif subsec is not None:
+                        observation.subsec = subsec
+                    elif subsubsec is not None:
+                        observation.subsubsec = subsubsec
+
+                    if row.label is not None:
+                        observation.label = row.label
+                        text_cda += row.label.get_cda_label(observation=observation)
+                    elif row.code1 is not None:
+                        observation.code1 = row.code1
+                        text_cda += row.code1.get_cda_format(observation=observation)
+                    observation.save()
+                text_cda += '</th>'
+                for col in cols:
+                    text_cda += '<td>'
+                    #try:
+                    cell = models.Cell.objects.get(row=row, col=col)
+                    if cell.label is None and cell.code1 is None:
+                        text_cda += cell.get_content_cda()
+                    else:
+                        observation = models.Observation.objects.create(table=table, row=row, col=col)
+                        if sec is not None:
+                            observation.sec = sec
+                        elif subsec is not None:
+                            observation.subsec = subsec
+                        elif subsubsec is not None:
+                            observation.subsubsec = subsubsec
+
+                        if cell.label is not None:
+                            observation.label = cell.label
+                            observation.save()
+                            if row.label is not None or col.label is not None:
+                                if cell.label.xsitype == 'CR':
+                                    text_cda += cell.label.get_cda_select(
+                                        option=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
+                                        observation=observation,
+                                        caption=False)
+                                else:
+                                    text_cda += cell.label.get_cda_input(
+                                        input=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
+                                        observation=observation,
+                                        caption=False)
+                            else:
+                                if cell.label.xsitype == 'CR':
+                                    text_cda += cell.label.get_cda_select(
+                                        option=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
+                                        observation=observation)
+                                else:
+                                    text_cda += cell.label.get_cda_input(
+                                        input=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
+                                        observation=observation)
+                        elif cell.code1 is not None:
+                            observation.code1 = cell.code1
+                            observation.save()
+                            text_cda += cell.code1.get_cda_format(observation=observation)
+                    #except:
+                    #    print('Missing cell config')
+                    text_cda += '</td>'
+                text_cda += '</tr>'
+            text_cda += '</tbody></table>'
+    text_cda += '</text>'
+    return text_cda
