@@ -7,3 +7,7 @@ html5/html5cda/migrations/
 html5/proxyrest/migrations/
 html5/html5dicom/migrations/
 html5/html5cda/migrations/0001_initial.py
+html5/html5dicom/migrations/0001_initial.py
+html5/html5dicom/migrations/0002_auto_20160929_1950.py
+html5/html5dicom/migrations/0003_role_default.py
+html5/html5dicom/migrations/0004_role_max_rows.py
