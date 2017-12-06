@@ -284,12 +284,14 @@ def save_template(request, *args, **kwargs):
 
 def generate_authenticate_report(request, *args, **kwargs):
     submit = models.Submit.objects.get(id=request.GET.get('report'))
-    authenticate_report(submit, request.user)
-    return HttpResponse('autenticado ok')
+    xml_cda = authenticate_report(submit, request.user)
+    print(xml_cda.encode('utf-8'))
+    return HttpResponse(xml_cda)
 
 
 def authenticate_report(submit, user):
     # registra datos tabla autenticado
+    xml_cda = '<?xml version="1.0" encoding="UTF-8"?>'
     informeuid = '2.25.{}'.format(int(str(uuid.uuid4()).replace('-', ''), 16))
     values_submit = parse_qs(submit.urlparamsrecibido)
     autenticado = models.Autenticado.objects.create(
@@ -319,9 +321,17 @@ def authenticate_report(submit, user):
         solicituduid=''
     )
     # parseo submit
+    xml_cda += '<component><structuredBody>'
     sections = models.Section.objects.filter(plantilla=submit.plantilla)
     for section in sections:
         if values_submit['{}select'.format(section.idattribute)][0] != 'off':
+            xml_cda += '<component><templateId root="1.3.6.1.4.1.23650.7284777653.8482.1"/>'
+            xml_cda += '<section>'
+            xml_cda += '<templateId root="1.2.840.10008.9.2"/>'
+            xml_cda += '<code codeSystem="{}" codeSystemName="{}"'.format(section.conceptcode.codesystem.oid,
+                                                                          section.conceptcode.codesystem.shortname)
+            xml_cda += ' code="{}" displayName="{}"/>'.format(section.conceptcode.code, section.conceptcode.displayname)
+            xml_cda += '<title>{}</title>'.format(section.selecttitle)
             sec = models.Sec.objects.create(
                 autenticado=autenticado,
                 idsec=section.idattribute,
@@ -330,41 +340,77 @@ def authenticate_report(submit, user):
             )
             if section.article is not None:
                 if section.check_article_xhtml5 is not None:
-                    sec.text = generate_text_observation(section, values_submit, sec=sec)
+                    text_section, entries_section = generate_text_observation(section, values_submit, sec=sec)
+                    sec.text = text_section
+                    xml_cda += text_section
+                    xml_cda += entries_section
                     sec.save()
             else:
                 subsections = section.get_all_sub_seccion()
                 for subsection in subsections:
-                    print(subsection[0])
-                    print('subsection {} {}'.format(subsection[0].id, subsection[0].idattribute))
-                    subsec = models.Subsec.objects.create(
-                        idsubsec=subsection[0].idattribute,
-                        subseccode=subsection[0].conceptcode,
-                        title=subsection[0].selecttitle,
-                        parent_sec=sec
-                    )
-                    if subsection[0].article is not None:
-                        if subsection[0].article.check_xhtml5 is not None:
-                            subsec.text = generate_text_observation(subsection[0], values_submit, subsec=subsec)
-                            subsec.save()
-                    else:
-                        subsubsections = subsection[0].get_all_sub_seccion()
-                        for subsubsection in subsubsections:
-                            subsubsec = models.Subsubsec.objects.create(
-                                idsubsubsec=subsubsection[0].idattribute,
-                                subsubseccode=subsubsection[0].conceptcode,
-                                title=subsubsection[0].selecttitle,
-                                parent_subsec=subsec
-                            )
-                            if subsubsection[0].article is not None:
-                                if subsubsection[0].article.check_xhtml5 is not None:
-                                    subsubsec.text = generate_text_observation(subsubsection[0], values_submit, subsubsec=subsubsec)
-                                    subsubsec.save()
-    return
+                    if values_submit['{}select'.format(subsection[0].idattribute)][0] != 'off':
+                        xml_cda += '<component><templateId root="1.3.6.1.4.1.23650.7284777653.8482.1"/>'
+                        xml_cda += '<section>'
+                        xml_cda += '<templateId root="1.2.840.10008.9.2"/>'
+                        xml_cda += '<code codeSystem="{}" codeSystemName="{}"'.format(
+                            subsection[0].conceptcode.codesystem.oid,
+                            subsection[0].conceptcode.codesystem.shortname)
+                        xml_cda += ' code="{}" displayName="{}"/>'.format(subsection[0].conceptcode.code,
+                                                                          subsection[0].conceptcode.displayname)
+                        xml_cda += '<title>{}</title>'.format(subsection[0].selecttitle)
+                        subsec = models.Subsec.objects.create(
+                            idsubsec=subsection[0].idattribute,
+                            subseccode=subsection[0].conceptcode,
+                            title=subsection[0].selecttitle,
+                            parent_sec=sec
+                        )
+                        if subsection[0].article is not None:
+                            if subsection[0].article.check_xhtml5 is not None:
+                                text_section, entries_section = generate_text_observation(subsection[0],
+                                                                                          values_submit,
+                                                                                          subsec=subsec)
+                                subsec.text = text_section
+                                xml_cda += text_section
+                                xml_cda += entries_section
+                                subsec.save()
+                        else:
+                            subsubsections = subsection[0].get_all_sub_seccion()
+                            for subsubsection in subsubsections:
+                                if values_submit['{}select'.format(subsubsection[0].idattribute)][0] != 'off':
+                                    xml_cda += '<component><templateId root="1.3.6.1.4.1.23650.7284777653.8482.1"/>'
+                                    xml_cda += '<section>'
+                                    xml_cda += '<templateId root="1.2.840.10008.9.2"/>'
+                                    xml_cda += '<code codeSystem="{}" codeSystemName="{}"'.format(
+                                        subsubsection[0].conceptcode.codesystem.oid,
+                                        subsubsection[0].conceptcode.codesystem.shortname)
+                                    xml_cda += ' code="{}"'.format(subsubsection[0].conceptcode.code)
+                                    xml_cda += ' displayName="{}"/>'.format(subsubsection[0].conceptcode.displayname)
+                                    xml_cda += '<title>{}</title>'.format(subsubsection[0].selecttitle)
+                                    subsubsec = models.Subsubsec.objects.create(
+                                        idsubsubsec=subsubsection[0].idattribute,
+                                        subsubseccode=subsubsection[0].conceptcode,
+                                        title=subsubsection[0].selecttitle,
+                                        parent_subsec=subsec
+                                    )
+                                    if subsubsection[0].article is not None:
+                                        if subsubsection[0].article.check_xhtml5 is not None:
+                                            text_section, entries_section = generate_text_observation(subsubsection[0],
+                                                                                                      values_submit,
+                                                                                                      subsubsec=subsubsec)
+                                            subsubsec.text = text_section
+                                            xml_cda += text_section
+                                            xml_cda += entries_section
+                                            subsubsec.save()
+                                xml_cda += '</section></component>'
+                        xml_cda += '</section></component>'
+            xml_cda += '</section></component>'
+    xml_cda += '</structuredBody></component>'
+    return xml_cda
 
 
 def generate_text_observation(section, values_submit, sec=None, subsec=None, subsubsec=None):
     text_cda = '<text>'
+    entries_cda = ''
     textareas = re.findall("<textarea name='(.+?)'>", section.article.xhtml5)
     for textarea in textareas:
         textarea_value = values_submit['{}'.format(textarea)][0]
@@ -398,10 +444,14 @@ def generate_text_observation(section, values_submit, sec=None, subsec=None, sub
                 observation.subsec = subsec
             elif subsubsec is not None:
                 observation.subsubsec = subsubsec
+            observation.save()
             if label.xsitype == 'CR':
-                observation.option = values_submit['{}.{}'.format(section.idattribute, label.id)][0]
-                text_cda += label.get_cda_select(option=values_submit['{}.{}'.format(section.idattribute, label.id)][0],
-                                                 observation=observation)
+                option_selectd = models.Option.objects.get(id=values_submit['{}.{}'.format(section.idattribute,
+                                                                                           label.id)][0])
+                observation.option = option_selectd
+                observation.save()
+                text_cda += label.get_cda_select(observation=observation)
+                entries_cda = observation.get_cda_format_select()
             else:
                 valueattribute = models.Valueattribute.objects.create(
                     observation=observation,
@@ -410,7 +460,7 @@ def generate_text_observation(section, values_submit, sec=None, subsec=None, sub
                 )
                 text_cda += label.get_cda_input(input=values_submit['{}.{}'.format(section.idattribute, label.id)][0],
                                                 observation=observation)
-            observation.save()
+                entries_cda = observation.get_cda_format_input()
         elif 'table' in href:
             table = models.Table.objects.get(id=href.split('/')[-1])
             cols = models.Col.objects.filter(table=table).order_by('number')
@@ -427,14 +477,14 @@ def generate_text_observation(section, values_submit, sec=None, subsec=None, sub
                         observation.subsec = subsec
                     elif subsubsec is not None:
                         observation.subsubsec = subsubsec
-
                     if col.label is not None:
                         observation.label = col.label
+                        observation.save()
                         text_cda += col.label.get_cda_label(observation=observation)
                     elif col.code1 is not None:
                         observation.code1 = col.code1
+                        observation.save()
                         text_cda += col.code1.get_cda_format(observation=observation)
-                    observation.save()
                 text_cda += '</td>'
             text_cda += '</tr></thead><tbody>'
             rows = models.Row.objects.filter(table=table).order_by('number')
@@ -461,50 +511,66 @@ def generate_text_observation(section, values_submit, sec=None, subsec=None, sub
                 text_cda += '</th>'
                 for col in cols:
                     text_cda += '<td>'
-                    #try:
-                    cell = models.Cell.objects.get(row=row, col=col)
-                    if cell.label is None and cell.code1 is None:
-                        text_cda += cell.get_content_cda()
-                    else:
-                        observation = models.Observation.objects.create(table=table, row=row, col=col)
-                        if sec is not None:
-                            observation.sec = sec
-                        elif subsec is not None:
-                            observation.subsec = subsec
-                        elif subsubsec is not None:
-                            observation.subsubsec = subsubsec
+                    try:
+                        cell = models.Cell.objects.get(row=row, col=col)
+                        if cell.label is None and cell.code1 is None:
+                            text_cda += cell.get_content_cda()
+                        else:
+                            observation = models.Observation.objects.create(table=table, row=row, col=col)
+                            if sec is not None:
+                                observation.sec = sec
+                            elif subsec is not None:
+                                observation.subsec = subsec
+                            elif subsubsec is not None:
+                                observation.subsubsec = subsubsec
 
-                        if cell.label is not None:
-                            observation.label = cell.label
-                            observation.save()
-                            if row.label is not None or col.label is not None:
-                                if cell.label.xsitype == 'CR':
-                                    text_cda += cell.label.get_cda_select(
-                                        option=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
-                                        observation=observation,
-                                        caption=False)
+                            if cell.label is not None:
+                                observation.label = cell.label
+                                observation.save()
+                                if row.label is not None or col.label is not None:
+                                    if cell.label.xsitype == 'CR':
+                                        option_selectd = models.Option.objects.get(id=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0])
+                                        observation.option = option_selectd
+                                        observation.save()
+                                        text_cda += cell.label.get_cda_select(observation=observation, caption=False)
+                                        entries_cda += observation.get_cda_format_select()
+                                    else:
+                                        valueattribute = models.Valueattribute.objects.create(
+                                            observation=observation,
+                                            name='value',
+                                            content=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0]
+                                        )
+                                        text_cda += cell.label.get_cda_input(
+                                            input=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
+                                            observation=observation,
+                                            caption=False)
+                                        entries_cda += observation.get_cda_format_input()
                                 else:
-                                    text_cda += cell.label.get_cda_input(
-                                        input=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
-                                        observation=observation,
-                                        caption=False)
-                            else:
-                                if cell.label.xsitype == 'CR':
-                                    text_cda += cell.label.get_cda_select(
-                                        option=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
-                                        observation=observation)
-                                else:
-                                    text_cda += cell.label.get_cda_input(
-                                        input=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
-                                        observation=observation)
-                        elif cell.code1 is not None:
-                            observation.code1 = cell.code1
-                            observation.save()
-                            text_cda += cell.code1.get_cda_format(observation=observation)
-                    #except:
-                    #    print('Missing cell config')
+                                    if cell.label.xsitype == 'CR':
+                                        option_selectd = models.Option.objects.get(id=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0])
+                                        observation.option = option_selectd
+                                        observation.save()
+                                        text_cda += cell.label.get_cda_select(observation=observation)
+                                        entries_cda += observation.get_cda_format_select()
+                                    else:
+                                        valueattribute = models.Valueattribute.objects.create(
+                                            observation=observation,
+                                            name='value',
+                                            content=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0]
+                                        )
+                                        text_cda += cell.label.get_cda_input(
+                                            input=values_submit['{}.{}'.format(section.idattribute, cell.label.id)][0],
+                                            observation=observation)
+                                        entries_cda += observation.get_cda_format_input()
+                            elif cell.code1 is not None:
+                                observation.code1 = cell.code1
+                                observation.save()
+                                text_cda += cell.code1.get_cda_format(observation=observation)
+                                entries_cda += observation.get_cda_fomat_code1()
+                    except models.Cell.DoesNotExist:
+                        print('Missing cell config')
                     text_cda += '</td>'
                 text_cda += '</tr>'
             text_cda += '</tbody></table>'
     text_cda += '</text>'
-    return text_cda
+    return text_cda, entries_cda

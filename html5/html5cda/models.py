@@ -68,7 +68,7 @@ class Code1(BigIntegerPKModel):
 
     def get_cda_format(self, observation=None):
         xml_cda = '<linkHtml'
-        xml_cda += 'href="data:text/html,%3Cul%3E%3Cli%3E'
+        xml_cda += ' href="data:text/html,%3Cul%3E%3Cli%3E'
         xml_cda += 'code={}%3C%2Fli%3E%3Cli%3E'.format(self.code.code)
         xml_cda += 'codeSystem={}%3C%2Fli%3E%3Cli%3E'.format(self.code.codesystem.oid)
         xml_cda += 'codeSystemName={}%3C%2Fli%3E%3Cli%3E'.format(self.code.codesystem.shortname)
@@ -118,6 +118,61 @@ class Observation(BigIntegerPKModel):
     class Meta:
         db_table = 'observation'
 
+    def get_cda_fomat_code1(self):
+        xml_cda = '<entry>'
+        xml_cda += ' <observation classCode="OBS" moodCode="EVN">'
+        xml_cda += ' <code code="{}"'.format(self.code1.code.code)
+        xml_cda += ' codeSystem="{}"'.format(self.code1.code.codesystem.oid)
+        xml_cda += ' codeSystemName="{}"'.format(self.code1.code.codesystem.shortname)
+        xml_cda += ' codeSystemVersion="{}"'.format(self.code1.code.codesystem.version)
+        xml_cda += ' displayName="{}" />'.format(self.code1.code.displayname)
+        xml_cda += ' <text><reference value="#_{}"/></text>'.format(self.id)
+        xml_cda += ' </observation>'
+        xml_cda += ' </entry>'
+        return xml_cda
+
+    def get_cda_format_select(self):
+        xml_cda = '<entry>'
+        xml_cda += ' <observation classCode="OBS" moodCode="EVN">'
+        xml_cda += ' <code code="{}"'.format(self.label.code1.code.code)
+        xml_cda += ' codeSystem="{}"'.format(self.label.code1.code.codesystem.oid)
+        xml_cda += ' codeSystemName="{}"'.format(self.label.code1.code.codesystem.shortname)
+        xml_cda += ' codeSystemVersion="{}"'.format(self.label.code1.code.codesystem.version)
+        xml_cda += ' displayName="{}" />'.format(self.label.code1.code.displayname)
+        xml_cda += ' <text><reference value="#_{}"/></text>'.format(self.id)
+        xml_cda += ' <value xsi:type="CR">'
+        xml_cda += ' <name code="{}"'.format(self.option.rel.code.code)
+        xml_cda += ' codeSystem="{}"'.format(self.option.rel.code.codesystem.oid)
+        xml_cda += ' codeSystemName="{}"'.format(self.option.rel.code.codesystem.shortname)
+        xml_cda += ' codeSystemVersion="{}"'.format(self.option.rel.code.codesystem.version)
+        xml_cda += ' displayName="{}" />'.format(self.option.rel.code.displayname)
+        xml_cda += ' <value xsi:type="CD"'
+        xml_cda += ' code="{}"'.format(self.option.code1.code.code)
+        xml_cda += ' codeSystem="{}"'.format(self.option.code1.code.codesystem.oid)
+        xml_cda += ' codeSystemName="{}"'.format(self.option.code1.code.codesystem.shortname)
+        xml_cda += ' codeSystemVersion="{}"'.format(self.option.code1.code.codesystem.version)
+        xml_cda += ' displayName="{}"'.format(self.option.code1.code.displayname)
+        xml_cda += ' ></value>'  # Agregar qualifier o translation
+        xml_cda += ' </value>'
+        xml_cda += ' </observation>'
+        xml_cda += ' </entry>'
+        return xml_cda
+
+    def get_cda_format_input(self):
+        xml_cda = '<entry>'
+        xml_cda += ' <observation classCode="OBS" moodCode="EVN">'
+        xml_cda += ' <code code="{}"'.format(self.label.code1.code.code)
+        xml_cda += ' codeSystem="{}"'.format(self.label.code1.code.codesystem.oid)
+        xml_cda += ' codeSystemName="{}"'.format(self.label.code1.code.codesystem.shortname)
+        xml_cda += ' codeSystemVersion="{}"'.format(self.label.code1.code.codesystem.version)
+        xml_cda += ' displayName="{}" />'.format(self.label.code1.code.displayname)
+        xml_cda += ' <text><reference value="#_{}"/></text>'.format(self.id)
+        val_attr = Valueattribute.objects.get(observation=self)
+        xml_cda += ' <value xsi:type="{}" {}="{}" />'.format(self.label.xsitype, val_attr.name, val_attr.content)
+        xml_cda += ' </observation>'
+        xml_cda += ' </entry>'
+        return xml_cda
+
 
 class Label(BigIntegerPKModel):
     category_choice = (
@@ -145,11 +200,11 @@ class Label(BigIntegerPKModel):
     def __str__(self):
         return '{} {}'.format(self.category, self.name)
 
-    def get_label(self, idsection, addoption=False):
+    def get_label(self, idsection, addrel=False):
         xhtml = '<label>'
         xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
-        if addoption is True:
-            xhtml += '<a href="#" name="option.href.{}.{}"></a>'.format(idsection, self.id)
+        if addrel is True:
+            xhtml += '<a href="#" name="rel.href.{}.{}"></a>'.format(idsection, self.id)
         xhtml += '</label>'
         return xhtml
 
@@ -184,17 +239,16 @@ class Label(BigIntegerPKModel):
 
     def get_xhtml(self, idsection):
         if self.xsitype == 'CR':
-            xhtml = '{}{}'.format(self.get_label(idsection, addoption=True), self.get_tag(idsection))
+            xhtml = '{}{}'.format(self.get_label(idsection, addrel=True), self.get_tag(idsection))
         else:
             xhtml = '{}{}'.format(self.get_label(idsection), self.get_tag(idsection))
         return xhtml
 
-    def get_cda_select(self, observation, option, caption=True):
+    def get_cda_select(self, observation, caption=True):
         xhtml = '<list ID="_{}">'.format(observation.id)
         if caption is True:
-            xhtml += '<caption>{}</caption>'.format(self.code1.get_cda_format())
-        option = Option.objects.get(id=option)
-        xhtml += '<item>{}</item>'.format(option.code1.get_cda_format())
+            xhtml += '<caption>{}{}</caption>'.format(self.code1.get_cda_format(), observation.option.rel.get_cda_format())
+        xhtml += '<item>{}</item>'.format(observation.option.code1.get_cda_format())
         xhtml += '</list>'
         return xhtml
 
@@ -617,9 +671,9 @@ class Selectoption(BigIntegerPKModel):
 
 class Autenticado(BigIntegerPKModel):
     autenticado = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True,
-                                      related_name="autenticado_set")
+                                    related_name="autenticado_set")
     plantilla = models.ForeignKey('Plantilla', models.DO_NOTHING, blank=True, null=True,
-                                    related_name="plantilla")
+                                  related_name="plantilla")
     eiud = models.CharField(max_length=64, blank=True, null=True)
     eaccnum = models.CharField(max_length=16, blank=True, null=True)
     eaccoid = models.CharField(max_length=64, blank=True, null=True)
@@ -646,6 +700,10 @@ class Autenticado(BigIntegerPKModel):
 
     class Meta:
         db_table = 'autenticado'
+
+    def get_cda_format(self):
+        xml_cda = ''
+        pass
 
 
 class Sec(BigIntegerPKModel):
