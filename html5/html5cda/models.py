@@ -202,10 +202,10 @@ class Label(BigIntegerPKModel):
     def __str__(self):
         return '{} {}'.format(self.category, self.name)
 
-    def get_label(self, idsection, addrel=False):
+    def get_label(self, idsection):
         xhtml = '<label>'
         xhtml += '<a href="label/{}/code1/{}?prettyxml">{}</a>'.format(self.id, self.code1.id, self.code1.text)
-        if addrel is True:
+        if self.xsitype == 'CR':
             xhtml += '<a href="#" name="rel.href.{}.{}"></a>'.format(idsection, self.id)
         xhtml += '</label>'
         return xhtml
@@ -240,11 +240,7 @@ class Label(BigIntegerPKModel):
         return xhtml
 
     def get_xhtml(self, idsection):
-        if self.xsitype == 'CR':
-            xhtml = '{}{}'.format(self.get_label(idsection, addrel=True), self.get_tag(idsection))
-        else:
-            xhtml = '{}{}'.format(self.get_label(idsection), self.get_tag(idsection))
-        return xhtml
+        return '{}{}'.format(self.get_label(idsection), self.get_tag(idsection))
 
     def get_cda_select(self, observation, caption=True):
         xhtml = '<list ID="_{}">'.format(observation.id)
