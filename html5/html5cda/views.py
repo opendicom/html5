@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, HttpResponse
 from django.core.urlresolvers import reverse
 from html5cda import models
+from html5dicom.models import Institution
 from django.db.models import Count
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -195,17 +196,14 @@ def save_template(request, *args, **kwargs):
                                               urlencode(post_param, quote_via=quote)
                     submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
                     submit.save()
-
+                    institution = Institution.objects.get(oid=request.POST.get('custodianOID'))
                     firma, firma_created = models.Firma.objects.update_or_create(
                         informe=submit,
                         md5=hashlib.md5(urlencode(post_param, quote_via=quote).encode('utf-8')).hexdigest(),
                         fecha=datetime.now(),
-                        udn=user.username,
-                        uid='',
-                        uoid='',
-                        uname=user.get_full_name(),
-                        iname='',
-                        ioid=request.POST.get('custodianOID')
+                        user=user,
+                        iname=institution.name,
+                        ioid=institution.oid
                     )
                     firmas = models.Firma.objects.filter(informe=submit)
                     if firmas.count() == plantilla.cantidadfirmas:
@@ -249,17 +247,14 @@ def save_template(request, *args, **kwargs):
                                               urlencode(post_param, quote_via=quote)
                     submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
                     submit.save()
-
+                    institution = Institution.objects.get(oid=request.POST.get('custodianOID'))
                     firma, firma_created = models.Firma.objects.update_or_create(
                         informe=submit,
                         md5=hashlib.md5(urlencode(post_param, quote_via=quote).encode('utf-8')).hexdigest(),
                         fecha=datetime.now(),
-                        udn=user.username,
-                        uid='',
-                        uoid='',
-                        uname=user.get_full_name(),
-                        iname='',
-                        ioid=request.POST.get('custodianOID')
+                        user=user,
+                        iname=institution.name,
+                        ioid=institution.oid
                     )
                     firmas = models.Firma.objects.filter(informe=submit)
                     if firmas.count() == plantilla.cantidadfirmas:
@@ -291,7 +286,6 @@ def generate_authenticate_report(request, *args, **kwargs):
 
 def authenticate_report(submit, user):
     # registra datos tabla autenticado
-    xml_cda = '<?xml version="1.0" encoding="UTF-8"?>'
     informeuid = '2.25.{}'.format(int(str(uuid.uuid4()).replace('-', ''), 16))
     values_submit = parse_qs(submit.urlparamsrecibido)
     autenticado = models.Autenticado.objects.create(
@@ -310,7 +304,7 @@ def authenticate_report(submit, user):
         pciudad='',
         pregion='',
         ppais='',
-        efecha=datetime.strptime(values_submit['StudyDate'][0],'%Y%m%d'),
+        efecha=datetime.strptime(values_submit['StudyDate'][0], '%Y%m%d'),
         eid='',
         erealizadoroid='',
         estudio=submit.plantilla.estudio,
@@ -320,12 +314,71 @@ def authenticate_report(submit, user):
         valoracion='',
         solicituduid=''
     )
+    xml_cda = '<?xml version="1.0" encoding="UTF-8"?>'
+    xml_cda += '<ClinicalDocument xmlns="urn:hl7-org:v3">'
+    xml_cda += '<realmCode code="UY"/>'
+    xml_cda += '<typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3"/>'
+    xml_cda += '<templateId root="{}"/>'.format(submit.plantilla.identifier)
+    xml_cda += '<id root="{}"/>'.format(values_submit['StudyIUID'][0])
+
+    xml_cda += '<code code="18748-4" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" ' \
+               'displayName="Diagnóstico imagenológico"/>'
+    xml_cda += '<title>{}</title>'.format(values_submit['StudyDescription'][0])
+
+    xml_cda += '<effectiveTime value="{}"/>'.format(datetime.now().strftime("%Y%m%d%H%M%S"))
+    xml_cda += '<confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25" codeSystemName="HL7" ' \
+               'displayName="normal"/>'
+    xml_cda += '<languageCode code="{}"/>'.format(submit.plantilla.language)
+    xml_cda += '<recordTarget>{}</recordTarget>'.format(autenticado.get_patientRole())
+    signatures = models.Firma.objects.filter(informe=submit)
+    for signature in signatures:
+        xml_cda += signature.get_cda_format()
+    institution = Institution.objects.get(oid=values_submit['custodianOID'][0])
+    xml_cda += '<custodian><assignedCustodian><representedCustodianOrganization>'
+    xml_cda += '<id root="{}"/>'.format(institution.oid)
+    xml_cda += '<name>{}</name>'.format(institution.name)
+    xml_cda += '</representedCustodianOrganization></assignedCustodian></custodian>'
+    xml_cda += '<informationRecipient>'
+    xml_cda += '<intendedRecipient classCode="ASSIGNED">'
+    xml_cda += '<informationRecipient>'
+    xml_cda += '<name>{}</name>'.format(institution.name)
+    xml_cda += '</informationRecipient>'
+    xml_cda += '</intendedRecipient>'
+    xml_cda += '</informationRecipient>'
+    xml_cda += '<inFulfillmentOf><order>'
+    xml_cda += '<id root="{}" extension="{}"/>'.format(values_submit['accessionNumberOID'][0],
+                                                       values_submit['AccessionNumber'][0])
+    xml_cda += '</order></inFulfillmentOf>'
+    xml_cda += '<documentationOf>'
+    xml_cda += '<serviceEvent>'
+    xml_cda += '<id root="{}"/>'.format(values_submit['StudyIUID'][0])
+    xml_cda += '<code code="{}" codeSystem="{}"'.format(submit.plantilla.estudio.code.code,
+                                                        submit.plantilla.estudio.code.codesystem.shortname)
+    xml_cda += ' displayName="{}">'.format(submit.plantilla.estudio.code.displayname)
+    xml_cda += '<translation code="{}" displayName=""/>'.format(submit.plantilla.estudio.modalidad)
+    xml_cda += '</code>'
+    xml_cda += '<effectiveTime>'
+    xml_cda += '<low value="{}"/>'.format(values_submit['StudyDate'][0])
+    xml_cda += '</effectiveTime>'
+    xml_cda += '</serviceEvent>'
+    xml_cda += '</documentationOf>'
+
+    xml_cda += '<componentOf>'
+    xml_cda += '<encompassingEncounter>'
+    xml_cda += '<effectiveTime value="{}"/>'.format(values_submit['StudyDate'][0])
+    xml_cda += '<encounterParticipant typeCode="ATND">'
+    xml_cda += '<assignedEntity>'
+    xml_cda += '<id extension="{}" root="{}"/>'.format(institution.name, institution.oid)
+    xml_cda += '</assignedEntity>'
+    xml_cda += '</encounterParticipant>'
+    xml_cda += '</encompassingEncounter>'
+    xml_cda += '</componentOf>'
     # parseo submit
     xml_cda += '<component><structuredBody>'
     sections = models.Section.objects.filter(plantilla=submit.plantilla)
     for section in sections:
         if values_submit['{}select'.format(section.idattribute)][0] != 'off':
-            xml_cda += '<component><templateId root="1.3.6.1.4.1.23650.7284777653.8482.1"/>'
+            xml_cda += '<component><templateId root="{}"/>'.format(submit.plantilla.identifier)
             xml_cda += '<section>'
             xml_cda += '<templateId root="1.2.840.10008.9.2"/>'
             xml_cda += '<code codeSystem="{}" codeSystemName="{}"'.format(section.conceptcode.codesystem.oid,
@@ -405,6 +458,7 @@ def authenticate_report(submit, user):
                         xml_cda += '</section></component>'
             xml_cda += '</section></component>'
     xml_cda += '</structuredBody></component>'
+    xml_cda += '</ClinicalDocument>'
     return xml_cda
 
 

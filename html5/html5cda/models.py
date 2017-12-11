@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from django.db import models
+from django.contrib.auth.models import User
+from datetime import datetime
 import json
 from lxml import html
 import re
@@ -701,9 +703,33 @@ class Autenticado(BigIntegerPKModel):
     class Meta:
         db_table = 'autenticado'
 
-    def get_cda_format(self):
-        xml_cda = ''
-        pass
+    def get_patientRole(self):
+        xml_cda = '<patientRole>'
+        xml_cda += '<id extension="{}" root="{}"/>'.format(self.pid, self.poid)
+        xml_cda += '<addr>'
+        xml_cda += '<state>{}</state>'.format(self.pregion)
+        xml_cda += '<city>{}</city>'.format(self.pciudad)
+        # xml_cda += '<additionalLocator nullFlavor="NA"/>'
+        xml_cda += '</addr>'
+        xml_cda += '<patient>'
+        last_name, first_name = self.pnombre.split('^')
+        xml_cda += '<name>'
+        xml_cda += '<given>{}</given>'.format(first_name)
+        xml_cda += '<family>{}</family>'.format(last_name)
+        xml_cda += '</name>'
+        if self.psexo == 'M':
+            xml_cda += '<administrativeGenderCode code="1" codeSystem="2.16.858.2.10000675.69600"'
+            xml_cda += ' codeSystemName="UNAOID" displayName="{}"/>'.format(self.psexo)
+        elif self.psexo == 'F':
+            xml_cda += '<administrativeGenderCode code="2" codeSystem="2.16.858.2.10000675.69600"'
+            xml_cda += ' codeSystemName="UNAOID" displayName="{}"/>'.format(self.psexo)
+        else:
+            xml_cda += '<administrativeGenderCode code="9" codeSystem="2.16.858.2.10000675.69600"'
+            xml_cda += ' codeSystemName="UNAOID" displayName="No información"/>'
+        xml_cda += '<birthTime value="{}"/>'.format(self.pnacimiento)
+        xml_cda += '</patient>'
+        xml_cda += '</patientRole>'
+        return xml_cda
 
 
 class Sec(BigIntegerPKModel):
@@ -749,15 +775,29 @@ class Firma(BigIntegerPKModel):
     informe = models.ForeignKey('Submit', models.DO_NOTHING, blank=True, null=True)
     md5 = models.CharField(max_length=45, blank=True, null=True)
     fecha = models.DateTimeField(blank=True, null=True)
-    udn = models.CharField(max_length=64, blank=True, null=True)
-    uid = models.CharField(max_length=16, blank=True, null=True)
-    uoid = models.CharField(max_length=64, blank=True, null=True)
-    uname = models.CharField(max_length=255, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True, null=True)
     iname = models.CharField(max_length=255, blank=True, null=True)
     ioid = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
         db_table = 'firma'
+
+    def get_cda_format(self):
+        xml_cda = '<author><time value="{}"/>'.format(self.fecha.strftime("%Y%m%d%H%M%S"))
+        xml_cda += '<assignedAuthor>'
+        xml_cda += '<id root="{}"/>'.format(self.user.id)
+        xml_cda += '<assignedPerson>'
+        xml_cda += '<name>'
+        xml_cda += '<given>{}</given>'.format(self.user.first_name)
+        xml_cda += '<family>{}</family>'.format(self.user.last_name)
+        xml_cda += '</name>'
+        xml_cda += '</assignedPerson>'
+        xml_cda += '<representedOrganization>'
+        xml_cda += '<id root="{}"/>'.format(self.ioid)
+        xml_cda += '<name>{}</name>'.format(self.iname)
+        xml_cda += '</representedOrganization>'
+        xml_cda += '</assignedAuthor></author>'
+        return xml_cda
 
 
 class Submit(BigIntegerPKModel):
