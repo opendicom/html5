@@ -128,13 +128,15 @@ def get_save_template(request, *args, **kwargs):
     response_save_template = dict()
     try:
         submit = models.Submit.objects.get(eiud=request.GET.get('study_uid'))
-        plantilla = models.Plantilla.objects.get(id=submit.plantilla.id)
-        firmas = models.Firma.objects.filter(informe=submit)
-        if firmas.count() == plantilla.cantidadfirmas:
-            response_save_template = {'url_editor': submit.urlparamsenviado,
-                                      'url_autentication': request.build_absolute_uri(reverse('authenticate_report')) + '?report={}'.format(submit.id)}
+        if submit.listoparaautenticacion == 'SI':
+            response_save_template = {'url_editor': request.build_absolute_uri(reverse('editor')) + '?' +
+                                                    submit.urlparamsrecibido,
+                                      'url_autentication': request.build_absolute_uri(reverse('authenticate_report')) +
+                                                           '?report={}'.format(submit.id)}
         else:
-            response_save_template = {'url_editor': submit.urlparamsenviado, 'url_autentication': ''}
+            response_save_template = {'url_editor': request.build_absolute_uri(reverse('editor')) + '?' +
+                                                    submit.urlparamsrecibido,
+                                      'url_autentication': ''}
     except models.Submit.DoesNotExist:
         response_save_template = {'error': 'Report not save'}
     return JsonResponse(response_save_template)
@@ -146,80 +148,11 @@ def save_template(request, *args, **kwargs):
     if 'csrfmiddlewaretoken' in post_param:
         del post_param['csrfmiddlewaretoken']
     if request.POST.get("guardar"):
-        if 'usuario' in post_param:
-            del post_param['usuario']
-        if 'clave' in post_param:
-            del post_param['clave']
-        if 'guardar' in post_param:
-            del post_param['guardar']
-        submit, created = models.Submit.objects.update_or_create(
-            eiud=request.POST.get('StudyIUID')
-        )
-        submit.plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
-        submit.eaccnum = request.POST.get('AccessionNumber')
-        submit.eaccoid = request.POST.get('accessionNumberOID')
-        submit.listoparaautenticacion = 'NO'
-        submit.urlparamsenviado = request.build_absolute_uri(reverse('editor')) + '?' + \
-                                  urlencode(post_param, quote_via=quote)
-        submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
-        submit.save()
-
-        firmas = models.Firma.objects.filter(informe=submit)
-        if firmas.count() > 0:
-            models.Firma.objects.filter(informe=submit).delete()
-        response_save = {'message': 'Guardado Correctamente'}
-    elif request.POST.get("firmar"):
-        username = ''
-        password = ''
-        if 'usuario' in post_param:
-            username = request.POST.get('usuario')
-        if 'clave' in post_param:
-            password = request.POST.get('clave')
-        if username != '' and password != '':
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                if user.is_active:
-                    if 'usuario' in post_param:
-                        del post_param['usuario']
-                    if 'clave' in post_param:
-                        del post_param['clave']
-                    if 'firmar' in post_param:
-                        del post_param['firmar']
-                    plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
-                    submit, submit_created = models.Submit.objects.update_or_create(
-                        eiud=request.POST.get('StudyIUID')
-                    )
-                    submit.plantilla = plantilla
-                    submit.eaccnum = request.POST.get('AccessionNumber')
-                    submit.eaccoid = request.POST.get('accessionNumberOID')
-                    submit.urlparamsenviado = request.build_absolute_uri(reverse('editor')) + '?' + \
-                                              urlencode(post_param, quote_via=quote)
-                    submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
-                    submit.save()
-                    institution = Institution.objects.get(oid=request.POST.get('custodianOID'))
-                    firma, firma_created = models.Firma.objects.update_or_create(
-                        informe=submit,
-                        md5=hashlib.md5(urlencode(post_param, quote_via=quote).encode('utf-8')).hexdigest(),
-                        fecha=datetime.now(),
-                        user=user,
-                        iname=institution.name,
-                        ioid=institution.oid
-                    )
-                    firmas = models.Firma.objects.filter(informe=submit)
-                    if firmas.count() == plantilla.cantidadfirmas:
-                        submit.listoparaautenticacion = 'SI'
-                    else:
-                        submit.listoparaautenticacion = 'NO'
-                    submit.save()
-                    response_save = {'message': 'Firmado Correctamente'}
-                else:
-                    response_save = {'error': 'Usuario valido, pero no esta activo'}
-            else:
-                response_save = {'error': 'Usuario no valido'}
+        if saveTemplate(request, post_param) is True:
+            response_save = {'message': 'Guardado Correctamente'}
         else:
-            response_save = {'error': 'Debe ingresar usuario y contraseña'}
-
-    elif request.POST.get("firmarAutenticar"):
+            response_save = {'error': 'No fue posible realizar la operacion'}
+    elif request.POST.get("firmar") or request.POST.get("firmarAutenticar"):
         username = ''
         password = ''
         if 'usuario' in post_param:
@@ -230,40 +163,18 @@ def save_template(request, *args, **kwargs):
             user = authenticate(username=username, password=password)
             if user is not None:
                 if user.is_active:
-                    if 'usuario' in post_param:
-                        del post_param['usuario']
-                    if 'clave' in post_param:
-                        del post_param['clave']
-                    if 'firmarAutenticar' in post_param:
-                        del post_param['firmarAutenticar']
-                    plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
-                    submit, submit_created = models.Submit.objects.update_or_create(
-                        eiud=request.POST.get('StudyIUID'),
-                    )
-                    submit.plantilla = plantilla
-                    submit.eaccnum = request.POST.get('AccessionNumber')
-                    submit.eaccoid = request.POST.get('accessionNumberOID')
-                    submit.urlparamsenviado = request.build_absolute_uri(reverse('editor')) + '?' + \
-                                              urlencode(post_param, quote_via=quote)
-                    submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
-                    submit.save()
-                    institution = Institution.objects.get(oid=request.POST.get('custodianOID'))
-                    firma, firma_created = models.Firma.objects.update_or_create(
-                        informe=submit,
-                        md5=hashlib.md5(urlencode(post_param, quote_via=quote).encode('utf-8')).hexdigest(),
-                        fecha=datetime.now(),
-                        user=user,
-                        iname=institution.name,
-                        ioid=institution.oid
-                    )
-                    firmas = models.Firma.objects.filter(informe=submit)
-                    if firmas.count() == plantilla.cantidadfirmas:
-                        submit.listoparaautenticacion = 'SI'
+                    if saveTemplate(request, post_param) is True:
+                        if signTemplate(request, post_param, user) is True:
+                            if request.POST.get("firmarAutenticar"):
+                                submit = models.Submit.objects.get(eiud=request.POST.get('StudyIUID'))
+                                authenticate_report(submit, user)
+                                response_save = {'message': 'Autenticado Correctamente'}
+                            else:
+                                response_save = {'message': 'Firmado Correctamente'}
+                        else:
+                            response_save = {'error': 'No fue posible realizar la operacion'}
                     else:
-                        submit.listoparaautenticacion = 'NO'
-                    submit.save()
-                    # llamar funcion autenticación
-                    response_save = {'message': 'Firmado Correctamente'}
+                        response_save = {'error': 'No fue posible realizar la operacion'}
                 else:
                     response_save = {'error': 'Usuario valido, pero no esta activo'}
             else:
@@ -277,10 +188,58 @@ def save_template(request, *args, **kwargs):
     return JsonResponse(response_save)
 
 
+def saveTemplate(request, post_param):
+    if 'usuario' in post_param:
+        del post_param['usuario']
+    if 'clave' in post_param:
+        del post_param['clave']
+    if 'guardar' in post_param:
+        del post_param['guardar']
+    if 'firmar' in post_param:
+        del post_param['firmar']
+
+    submit, created = models.Submit.objects.update_or_create(
+        eiud=request.POST.get('StudyIUID')
+    )
+    submit.plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
+    submit.eaccnum = request.POST.get('AccessionNumber')
+    submit.eaccoid = request.POST.get('accessionNumberOID')
+    submit.listoparaautenticacion = 'NO'
+    submit.urlparamsenviado = request.build_absolute_uri(reverse('editor')) + '?' + \
+                              urlencode(post_param, quote_via=quote)
+    submit.urlparamsrecibido = urlencode(post_param, quote_via=quote)
+    submit.save()
+
+    firmas = models.Firma.objects.filter(informe=submit)
+    if firmas.count() > 0:
+        models.Firma.objects.filter(informe=submit).delete()
+    return True
+
+
+def signTemplate(request, post_param, user):
+    institution = Institution.objects.get(oid=request.POST.get('custodianOID'))
+    submit = models.Submit.objects.get(eiud=request.POST.get('StudyIUID'))
+    firma, firma_created = models.Firma.objects.update_or_create(
+        informe=submit,
+        md5=hashlib.md5(urlencode(post_param, quote_via=quote).encode('utf-8')).hexdigest(),
+        fecha=datetime.now(),
+        user=user,
+        iname=institution.name,
+        ioid=institution.oid
+    )
+    firmas = models.Firma.objects.filter(informe=submit)
+    plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
+    if firmas.count() == plantilla.cantidadfirmas:
+        submit.listoparaautenticacion = 'SI'
+    else:
+        submit.listoparaautenticacion = 'NO'
+    submit.save()
+    return True
+
+
 def generate_authenticate_report(request, *args, **kwargs):
     submit = models.Submit.objects.get(id=request.GET.get('report'))
     xml_cda = authenticate_report(submit, request.user)
-    print(xml_cda.encode('utf-8'))
     return HttpResponse(xml_cda)
 
 
@@ -459,6 +418,9 @@ def authenticate_report(submit, user):
             xml_cda += '</section></component>'
     xml_cda += '</structuredBody></component>'
     xml_cda += '</ClinicalDocument>'
+    submit.listoparaautenticacion = 'NO'
+    submit.save()
+    models.Firma.objects.filter(informe=submit).delete()
     return xml_cda
 
 
