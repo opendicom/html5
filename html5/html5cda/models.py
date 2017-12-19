@@ -710,8 +710,8 @@ class Autenticado(BigIntegerPKModel):
         xml_cda += '<patient>'
         last_name, first_name = self.pnombre.split('^')
         xml_cda += '<name>'
-        xml_cda += '<given>{}</given>'.format(first_name.replace('>', ' '))
-        xml_cda += '<family>{}</family>'.format(last_name.replace('>', ' '))
+        xml_cda += '<given>{}</given>'.format(first_name)
+        xml_cda += '<family>{}</family>'.format(last_name)
         xml_cda += '</name>'
         if self.psexo == 'M':
             xml_cda += '<administrativeGenderCode code="1" codeSystem="2.16.858.2.10000675.69600"'
