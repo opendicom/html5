@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime
 import json
-from lxml import html
 import re
 
 
@@ -708,7 +707,6 @@ class Autenticado(BigIntegerPKModel):
         # xml_cda += '<additionalLocator nullFlavor="NA"/>'
         xml_cda += '</addr>'
         xml_cda += '<patient>'
-        last_name, first_name = self.pnombre.split('^')
         xml_cda += '<name>'
         if '^' in self.pnombre:
             last_name, first_name = self.pnombre.split('^')
