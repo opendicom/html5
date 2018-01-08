@@ -5,7 +5,9 @@
 
     refreshTableStudy = function(){
         var table = $('#table_study').DataTable()
-        table.draw()
+        $('#new').val('true');
+        table.ajax.reload();
+        $('#new').val('false');
     }
 
     addTableStudy = function (org, inst, oid, role, service, max_rows, patientID){
