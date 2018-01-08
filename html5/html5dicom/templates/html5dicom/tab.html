@@ -73,7 +73,7 @@
                                     if(!data.error){
                                         data_editor = '<a href='+ data.url_editor +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
                                         if (data.url_autentication != ''){
-                                            data_editor += '<a href='+ data.url_autentication +' target="_blank"><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>';
+                                            data_editor += '<a href=# onclick="authenticateStudy(\'' + data.url_autentication + '\')"><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>';
                                         }
                                     }else{
                                         data_editor += 'PatientID=' + full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
@@ -192,6 +192,22 @@
                 $('#date_start, #date_end').change( function() {
                     table.draw();
                 });
+                authenticateStudy = function(url){
+                    $.ajax({
+                        url: url,
+                        type: "GET",
+                        success: function(data, textStatus, jqXHR){
+                            $('#new').val('true');
+                            var table = $('#table_study').DataTable();
+                            table.ajax.reload();
+                            $('#new').val('false');
+                            window.open('data:text/xml,' + encodeURIComponent('<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="#Transform"?><!DOCTYPE document [<!ATTLIST xsl:stylesheet id ID #REQUIRED>]>' + new XMLSerializer().serializeToString(data.documentElement)));
+                        },
+                        error: function (jqXHR, textStatus, errorThrown){
+                            alert('Error al autenticar!');
+                        }
+                    });
+                }
             },
             "fnServerParams": function ( aoData, fnCallback ) {
                 aoData.columns[6].search.value = $('#modalities').val();
