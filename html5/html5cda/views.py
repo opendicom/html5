@@ -14,6 +14,9 @@ from datetime import datetime
 import hashlib
 import uuid
 import re
+import base64
+import requests
+import time
 
 
 @login_required(login_url='/html5dicom/login')
@@ -167,8 +170,8 @@ def save_template(request, *args, **kwargs):
                         if signTemplate(request, post_param, user) is True:
                             if request.POST.get("firmarAutenticar"):
                                 submit = models.Submit.objects.get(eiud=request.POST.get('StudyIUID'))
-                                authenticate_report(submit, user)
-                                response_save = {'message': 'Autenticado Correctamente'}
+                                xml_cda = authenticate_report(submit, user)
+                                response_save = {'message': 'Autenticado Correctamente', 'xml': base64.b64encode(bytes(xml_cda, 'utf-8')).decode("utf-8")}
                             else:
                                 response_save = {'message': 'Firmado Correctamente'}
                         else:
@@ -240,7 +243,7 @@ def signTemplate(request, post_param, user):
 def generate_authenticate_report(request, *args, **kwargs):
     submit = models.Submit.objects.get(id=request.GET.get('report'))
     xml_cda = authenticate_report(submit, request.user)
-    return HttpResponse(xml_cda)
+    return HttpResponse(xml_cda, content_type='text/xml')
 
 
 def authenticate_report(submit, user):
@@ -273,8 +276,7 @@ def authenticate_report(submit, user):
         valoracion='',
         solicituduid=''
     )
-    xml_cda = '<?xml version="1.0" encoding="UTF-8"?>'
-    xml_cda += '<ClinicalDocument xmlns="urn:hl7-org:v3">'
+    xml_cda = '<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
     xml_cda += '<realmCode code="UY"/>'
     xml_cda += '<typeId extension="POCD_HD000040" root="2.16.840.1.113883.1.3"/>'
     xml_cda += '<templateId root="{}"/>'.format(submit.plantilla.identifier)
