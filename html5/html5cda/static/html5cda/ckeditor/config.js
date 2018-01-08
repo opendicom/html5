@@ -38,4 +38,9 @@ CKEDITOR.editorConfig = function( config ) {
 	removePlugins: 'resize';
 	config.autoGrow_minHeight = 50;
 	config.autoGrow_maxHeight = 400;
+	config.entities = false;
+	config.entities_latin = false;
+	config.basicEntities = false;
+    config.entities_greek = false;
+    config.entities_additional = '';
 };
