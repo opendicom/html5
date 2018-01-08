@@ -96,10 +96,13 @@
                                 if (data.error){
                                     alert(data.error)
                                 }else{
-                                    alert(data.message)
-                                    window.opener.refreshTableStudy()
-                                    self.close()
-                                }
+                                    alert(data.message);
+                                    window.open('data:text/xml,' + decodeURIComponent(escape(window.atob( data.xml ))));
+                                    window.opener.refreshTableStudy();
+                                 }
+                            },
+                            complete: function(data) {
+                                self.close();
                             }
                         });
                         $( this ).dialog( "close" );
@@ -185,7 +188,7 @@
                                     <input class="headerDate" name="PatientBirthDate" type="text" readonly value=""/>
                                     sexo:
                                     <input class="headerMod" name="PatientSex" type="text" readonly value=""/>
-                                    apellidos^n.:
+                                    nombre:
                                 </td>
                                 <td class="td2">
                                     <input class="headerName" name="PatientName" type="text" readonly value=""/>
