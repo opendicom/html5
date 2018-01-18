@@ -16,7 +16,6 @@ import uuid
 import re
 import base64
 import requests
-import time
 
 
 @login_required(login_url='/html5dicom/login')
@@ -36,19 +35,45 @@ def editor(request, *args, **kwargs):
             'description': estudio.code.displayname
         }]
     template_list = []
-    for plantilla in models.Plantilla.objects.filter(
-                    Q(estudio__modalidad=modality_filter) | Q(estudio__modalidad='ALL')):
+    plantillas = models.Plantilla.objects.filter(Q(estudio__modalidad=modality_filter) | Q(estudio__modalidad='ALL'))
+    for p in plantillas:
         template_list += [{
-            'id': plantilla.id,
-            'description': plantilla.title
+            'plantilla_id': '{}.-'.format(p.id),
+            'template_id': '',
+            'description': p.title
         }]
+        template = models.Template.objects.filter(plantilla=p, user=request.user)
+        if len(template) > 0:
+            for t in template:
+                template_list += [{
+                    'plantilla_id': '{}.{}'.format(p.id, t.id),
+                    'template_id': t.id,
+                    'description': t.titulo
+                }]
+    signature_list = []
+    try:
+        submit = models.Submit.objects.get(eiud=request.GET.get('StudyIUID'))
+        if submit.listoparaautenticacion == 'SI':
+            signatures = models.Firma.objects.filter(informe_id=submit.id)
+            count_signature = 1
+            for signature in signatures:
+                signature_list += [{
+                    'count_signature': count_signature,
+                    'date_signature': signature.fecha,
+                    'user_signature': signature.user.get_full_name
+                }]
+                count_signature = count_signature + 1
+    except models.Submit.DoesNotExist:
+        signature_list = []
+
     if 'plantilla' in request.GET:
         # edicion de informe
-        secciones = models.Section.objects.filter(plantilla=request.GET['plantilla']).order_by('ordinal')
-        headscripts = models.IntermediateHeadScript.objects.filter(plantilla=request.GET['plantilla'])
-        bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=request.GET['plantilla'])
-        headers = models.IntermediatePlantillaHeader.objects.filter(plantilla=request.GET['plantilla'])
-        footers = models.IntermediatePlantillaFooter.objects.filter(plantilla=request.GET['plantilla'])
+        plantilla, template = request.GET['plantilla'].split('.')
+        secciones = models.Section.objects.filter(plantilla=plantilla).order_by('ordinal')
+        headscripts = models.IntermediateHeadScript.objects.filter(plantilla=plantilla)
+        bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=plantilla)
+        headers = models.IntermediatePlantillaHeader.objects.filter(plantilla=plantilla)
+        footers = models.IntermediatePlantillaFooter.objects.filter(plantilla=plantilla)
         context_user = {'context': {'sections': secciones,
                                     'headscripts': headscripts,
                                     'bodyscripts': bodyscripts,
@@ -80,6 +105,7 @@ def editor(request, *args, **kwargs):
                                 'html_plantilla': html,
                                 'modalidades': modalidades,
                                 'studies_list': studies_list,
+                                'signature_list': signature_list,
                                 'template_list': template_list}
                     }
     return render(request, template_name='html5cda/editor.html', context=context_user)
@@ -102,26 +128,42 @@ def studies_list(request, *args, **kwargs):
 
 def template_list(request, *args, **kwargs):
     template_list = []
-    for plantilla in models.Plantilla.objects.filter( Q(estudio=request.GET['estudio']) | Q(estudio__modalidad='ALL')):
+    plantillas = models.Plantilla.objects.filter(Q(estudio=request.GET['estudio']) | Q(estudio__modalidad='ALL'))
+    for p in plantillas:
         template_list += [{
-            'id': plantilla.id,
-            'description': plantilla.title
+            'plantilla_id': '{}.-'.format(p.id),
+            'template_id': '',
+            'description': p.title
         }]
+        template = models.Template.objects.filter(plantilla=p, user=request.user)
+        if len(template) > 0:
+            for t in template:
+                template_list += [{
+                    'plantilla_id': '{}.{}'.format(p.id, t.id),
+                    'template_id': t.id,
+                    'description': t.titulo
+                }]
     data = {"template_list": template_list}
     return JsonResponse(data)
 
 
 def get_template(request, *args, **kwargs):
-    secciones = models.Section.objects.filter(plantilla=request.GET['template']).order_by('ordinal')
-    headscripts = models.IntermediateHeadScript.objects.filter(plantilla=request.GET['template'])
-    bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=request.GET['template'])
-    headers = models.IntermediatePlantillaHeader.objects.filter(plantilla=request.GET['template'])
-    footers = models.IntermediatePlantillaFooter.objects.filter(plantilla=request.GET['template'])
+    plantilla_id, template_id = request.GET['template'].split('.')
+    secciones = models.Section.objects.filter(plantilla=plantilla_id).order_by('ordinal')
+    headscripts = models.IntermediateHeadScript.objects.filter(plantilla=plantilla_id)
+    bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=plantilla_id)
+    headers = models.IntermediatePlantillaHeader.objects.filter(plantilla=plantilla_id)
+    footers = models.IntermediatePlantillaFooter.objects.filter(plantilla=plantilla_id)
+    if template_id == '-':
+        template = None
+    else:
+        template = models.Template.objects.filter(id=template_id)
     context_user = {'context': {'sections': secciones,
                                 'headscripts': headscripts,
                                 'bodyscripts': bodyscripts,
                                 'headers': headers,
-                                'footers': footers
+                                'footers': footers,
+                                'template': template
                     }}
     html = render_to_string('html5cda/editor_template.html', context_user)
     return HttpResponse(html)
@@ -143,6 +185,67 @@ def get_save_template(request, *args, **kwargs):
     except models.Submit.DoesNotExist:
         response_save_template = {'error': 'Report not save'}
     return JsonResponse(response_save_template)
+
+
+def save_template_user(request, *args, **kwargs):
+    post_param = request.POST.dict()
+    # Clean post_param
+    if 'csrfmiddlewaretoken' in post_param:
+        del post_param['csrfmiddlewaretoken']
+    if 'PatientIDIssuer' in post_param:
+        del post_param['PatientIDIssuer']
+    if 'PatientID' in post_param:
+        del post_param['PatientID']
+    if 'PatientBirthDate' in post_param:
+        del post_param['PatientBirthDate']
+    if 'PatientSex' in post_param:
+        del post_param['PatientSex']
+    if 'PatientName' in post_param:
+        del post_param['PatientName']
+    if 'StudyIUID' in post_param:
+        del post_param['StudyIUID']
+    if 'accessionNumberOID' in post_param:
+        del post_param['accessionNumberOID']
+    if 'custodianOID' in post_param:
+        del post_param['custodianOID']
+    if 'AccessionNumber' in post_param:
+        del post_param['AccessionNumber']
+    if 'StudyDate' in post_param:
+        del post_param['StudyDate']
+    if 'Modality' in post_param:
+        del post_param['Modality']
+    if 'StudyDescription' in post_param:
+        del post_param['StudyDescription']
+    if 'templateID' in post_param:
+        del post_param['templateID']
+    if 'modalidad' in post_param:
+        del post_param['modalidad']
+    if 'estudio' in post_param:
+        del post_param['estudio']
+    if 'title' in post_param:
+        del post_param['title']
+    if 'plantilla' in post_param:
+        del post_param['plantilla']
+
+    plantilla, template = request.POST.get('plantilla').split('.')
+    template, template_created = models.Template.objects.update_or_create(
+        plantilla=models.Plantilla.objects.get(id=plantilla),
+        user=request.user,
+        titulo=request.POST.get('title')
+    )
+    template.urlparams = urlencode(post_param, quote_via=quote)
+    template.save()
+    response_save = dict()
+    response_save = {'message': 'Guardado correctamente'}
+    return JsonResponse(response_save)
+
+
+def delete_template_user(request, *args, **kwargs):
+    print('delete template id {}'.format(request.POST.get('template')))
+    models.Template.objects.filter(id=request.POST.get('template')).delete()
+    response_save = dict()
+    response_save = {'message': 'Borrado correctamente'}
+    return JsonResponse(response_save)
 
 
 def save_template(request, *args, **kwargs):
@@ -167,11 +270,15 @@ def save_template(request, *args, **kwargs):
             if user is not None:
                 if user.is_active:
                     if saveTemplate(request, post_param) is True:
-                        if signTemplate(request, post_param, user) is True:
+                        sign, listoautenticacion = signTemplate(request, post_param, user)
+                        if sign is True:
                             if request.POST.get("firmarAutenticar"):
-                                submit = models.Submit.objects.get(eiud=request.POST.get('StudyIUID'))
-                                xml_cda = authenticate_report(submit, user)
-                                response_save = {'message': 'Autenticado Correctamente', 'xml': base64.b64encode(bytes(xml_cda, 'utf-8')).decode("utf-8")}
+                                if listoautenticacion == 'SI':
+                                    submit = models.Submit.objects.get(eiud=request.POST.get('StudyIUID'))
+                                    xml_cda = authenticate_report(submit, user)
+                                    response_save = {'message': 'Autenticado Correctamente', 'xml': base64.b64encode(bytes(xml_cda, 'utf-8')).decode("utf-8")}
+                                else:
+                                    response_save = {'error': 'Firmado Correctamente, faltan firmas para poder realizar autenticacion!'}
                             else:
                                 response_save = {'message': 'Firmado Correctamente'}
                         else:
@@ -204,7 +311,8 @@ def saveTemplate(request, post_param):
     submit, created = models.Submit.objects.update_or_create(
         eiud=request.POST.get('StudyIUID')
     )
-    submit.plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
+    plantilla, template = request.POST.get('plantilla').split('.')
+    submit.plantilla = models.Plantilla.objects.get(id=plantilla)
     submit.eaccnum = request.POST.get('AccessionNumber')
     submit.eaccoid = request.POST.get('accessionNumberOID')
     submit.listoparaautenticacion = 'NO'
@@ -231,13 +339,14 @@ def signTemplate(request, post_param, user):
         ioid=institution.oid
     )
     firmas = models.Firma.objects.filter(informe=submit)
-    plantilla = models.Plantilla.objects.get(id=request.POST.get('plantilla'))
+    plantilla, template = request.POST.get('plantilla').split('.')
+    plantilla = models.Plantilla.objects.get(id=plantilla)
     if firmas.count() == plantilla.cantidadfirmas:
         submit.listoparaautenticacion = 'SI'
     else:
         submit.listoparaautenticacion = 'NO'
     submit.save()
-    return True
+    return True, submit.listoparaautenticacion
 
 
 def generate_authenticate_report(request, *args, **kwargs):
@@ -420,9 +529,567 @@ def authenticate_report(submit, user):
             xml_cda += '</section></component>'
     xml_cda += '</structuredBody></component>'
     xml_cda += '</ClinicalDocument>'
+
+    xml_preffix = '<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="#Transform"?><!DOCTYPE document [<!ATTLIST xsl:stylesheet id ID #REQUIRED>]>'
+    xml_preffix += '<dscd'
+    xml_preffix += ' xmlns:cda="urn:hl7-org:v3"'
+    xml_preffix += ' xmlns:sdtc="urn:hl7-org:sdtc"'
+    xml_preffix += ' xmlns:scd="urn:salud.uy/2014/signed-clinical-document"'
+    xml_preffix += ' ><SignedClinicalDocument'
+    xml_preffix += ' xmlns="urn:salud.uy/2014/signed-clinical-document"'
+    xml_preffix += ' >'
+
+    xml_suffix = '</SignedClinicalDocument> '
+    xml_suffix += '<xsl:stylesheet '
+    xml_suffix += 'id="Transform" '
+    xml_suffix += 'version="1.0" '
+    xml_suffix += 'xmlns:xsl="http://www.w3.org/1999/XSL/Transform" '
+    xml_suffix += 'xmlns:cda="urn:hl7-org:v3" '
+    xml_suffix += 'xmlns:scd="urn:salud.uy/2014/signed-clinical-document" '
+    xml_suffix += 'xmlns:sdtc="urn:hl7-org:sdtc" '
+    xml_suffix += 'xmlns:xhtml="http://www.w3.org/1999/xhtml" '
+    xml_suffix += 'xmlns="http://www.w3.org/1999/xhtml" '
+    xml_suffix += '> '
+    xml_suffix += '<xsl:variable name="cda" select="dscd/scd:SignedClinicalDocument/cda:ClinicalDocument"/> '
+    xml_suffix += '<xsl:template match="/"> '
+    xml_suffix += '<html> '
+    xml_suffix += '<head> '
+    xml_suffix += '<title> '
+    xml_suffix += '<xsl:value-of select="$cda/cda:title/text()"/> '
+    xml_suffix += '</title> '
+    xml_suffix += '<style type="text/css"> '
+    xml_suffix += 'body { '
+    xml_suffix += 'color: #003366; '
+    xml_suffix += 'background-color: #FFFFFF; '
+    xml_suffix += 'font-family: Verdana, Tahoma, sans-serif; '
+    xml_suffix += 'font-size: 13px; '
+    xml_suffix += '} '
+    xml_suffix += 'pre { '
+    xml_suffix += 'font-family: Verdana, Tahoma, '
+    xml_suffix += 'sans-serif; '
+    xml_suffix += '} '
+    xml_suffix += 'h2 { '
+    xml_suffix += 'font-size: 17pt; '
+    xml_suffix += 'font-weight: bold; '
+    xml_suffix += 'text-align: center; '
+    xml_suffix += '} '
+    xml_suffix += 'h3 { '
+    xml_suffix += 'font-size: 14pt; '
+    xml_suffix += 'font-weight: bold; '
+    xml_suffix += 'margin-bottom: 0; '
+    xml_suffix += 'padding-bottom: '
+    xml_suffix += '0; '
+    xml_suffix += '} '
+    xml_suffix += 'table { '
+    xml_suffix += 'width: 768px; '
+    xml_suffix += '} '
+    xml_suffix += 'dt { '
+    xml_suffix += 'float: left; '
+    xml_suffix += 'clear: left; '
+    xml_suffix += 'width: 200px; '
+    xml_suffix += 'text-align: left; '
+    xml_suffix += 'font-weight: bold; '
+    xml_suffix += 'color: green; '
+    xml_suffix += '} '
+    xml_suffix += 'dt:after '
+    xml_suffix += '{ '
+    xml_suffix += 'content: ":"; '
+    xml_suffix += '} '
+    xml_suffix += 'dd { '
+    xml_suffix += 'margin: 0 0 0 210px; '
+    xml_suffix += 'padding: 0 0 0.5em 0; '
+    xml_suffix += '} '
+    xml_suffix += 'section '
+    xml_suffix += '{ '
+    xml_suffix += 'margin: 0 0 0 0; '
+    xml_suffix += 'padding: 0 0 0 0; '
+    xml_suffix += '} '
+    xml_suffix += 'p { '
+    xml_suffix += 'margin: 0 0 0 0; '
+    xml_suffix += 'padding: 0 0 0 '
+    xml_suffix += '0; '
+    xml_suffix += '}</style> '
+    xml_suffix += '</head> '
+    xml_suffix += '<body> '
+    xml_suffix += '<h2> '
+    xml_suffix += '<img> '
+    xml_suffix += '<xsl:attribute name="src"> '
+    xml_suffix += '<xsl:value-of select="/dscd/cita/iRealizadora/@logoData"/> '
+    xml_suffix += '</xsl:attribute> '
+    xml_suffix += '</img> '
+    xml_suffix += '<xsl:text> </xsl:text> '
+    xml_suffix += '<xsl:value-of select="/dscd/cita/iRealizadora/@nombre"/> '
+    xml_suffix += '<xsl:text>Informe imagenológico</xsl:text> '
+    xml_suffix += '</h2> '
+    xml_suffix += '<hr/> '
+    xml_suffix += '<table> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Paciente: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:call-template name="getPersonName"> '
+    xml_suffix += '<xsl:with-param name="personName" '
+    xml_suffix += 'select="$cda/cda:recordTarget/cda:patientRole/cda:patient"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:text> </xsl:text> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Identificación del Paciente: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:call-template name="getExtension"> '
+    xml_suffix += '<xsl:with-param name="oidPersona" '
+    xml_suffix += 'select="$cda/cda:recordTarget/cda:patientRole/cda:id/@extension" '
+    xml_suffix += '/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Fecha de Nacimiento: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:variable name="B" '
+    xml_suffix += 'select="$cda/cda:recordTarget/cda:patientRole/cda:patient/cda:birthTime/@value"/> '
+    xml_suffix += '<xsl:variable name="S" '
+    xml_suffix += 'select="$cda/cda:componentOf/cda:encompassingEncounter/cda:effectiveTime/@value"/> '
+    xml_suffix += '<xsl:call-template name="formatDate"> '
+    xml_suffix += '<xsl:with-param name="date" select="$B"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:text> (</xsl:text> '
+    xml_suffix += '<xsl:variable name="BY" select="substring($B, 1, 4)"/> '
+    xml_suffix += '<xsl:variable name="SY" select="substring($S, 1, 4)"/> '
+    xml_suffix += '<xsl:variable name="Y" select="$SY - $BY"/> '
+    xml_suffix += '<xsl:variable name="BM" select="substring($B, 5, 2)"/> '
+    xml_suffix += '<xsl:variable name="SM" select="substring($S, 5, 2)"/> '
+    xml_suffix += '<xsl:variable name="M" select="$SM - $BM"/> '
+    xml_suffix += '<xsl:variable name="YM" select="($Y * 12) + $M"/> '
+    xml_suffix += '<xsl:choose> '
+    xml_suffix += '<xsl:when test="$YM > 24"> '
+    xml_suffix += '<xsl:value-of select="$Y"/> '
+    xml_suffix += '<xsl:text> años</xsl:text> '
+    xml_suffix += '</xsl:when> '
+    xml_suffix += '<xsl:when test="$YM > 2"> '
+    xml_suffix += '<xsl:value-of select="$YM"/> '
+    xml_suffix += '<xsl:text> meses</xsl:text> '
+    xml_suffix += '</xsl:when> '
+    xml_suffix += '<xsl:otherwise> '
+    xml_suffix += '<xsl:text>menos de 3 meses</xsl:text> '
+    xml_suffix += '</xsl:otherwise> '
+    xml_suffix += '</xsl:choose> '
+    xml_suffix += '<xsl:text>)</xsl:text> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Sexo: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of '
+    xml_suffix += 'select="$cda/cda:recordTarget/cda:patientRole/cda:patient/cda:administrativeGenderCode/@displayName" '
+    xml_suffix += '/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Departamento: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of '
+    xml_suffix += 'select="normalize-space($cda/cda:recordTarget/cda:patientRole/cda:addr/cda:state/text())" '
+    xml_suffix += '/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Ciudad: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of '
+    xml_suffix += 'select="normalize-space($cda/cda:recordTarget/cda:patientRole/cda:addr/cda:city/text())" '
+    xml_suffix += '/> '
+    xml_suffix += '</b> '
+    xml_suffix += '<xsl:if '
+    xml_suffix += 'test="$cda/cda:recordTarget/cda:patientRole/cda:addr/cda:additionalLocator/text() != \'\'"> '
+    xml_suffix += '<xsl:text> (</xsl:text> '
+    xml_suffix += '<xsl:value-of '
+    xml_suffix += 'select="normalize-space($cda/cda:recordTarget/cda:patientRole/cda:addr/cda:additionalLocator/text())"/> '
+    xml_suffix += '<xsl:text>)</xsl:text> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Institución solicitante: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of select="/dscd/cita/iSolicitante/@nombre"/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Médico solicitante: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of select="/dscd/cita/pSolicitante/@nombre"/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Fecha estudio: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:call-template name="formatDate"> '
+    xml_suffix += '<xsl:with-param name="date" '
+    xml_suffix += 'select="$cda/cda:componentOf/cda:encompassingEncounter/cda:effectiveTime/@value" '
+    xml_suffix += '/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Servicio: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of '
+    xml_suffix += 'select="substring-after(\'$cda/cda:componentOf/cda:encompassingEncounter/cda:encounterParticipant/cda:assignedEntity/cda:id/@extension\',\'^\')" '
+    xml_suffix += '/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Estudio: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of '
+    xml_suffix += 'select="$cda/cda:documentationOf/cda:serviceEvent/cda:code/@displayName" '
+    xml_suffix += '/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Número acceso: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of '
+    xml_suffix += 'select = "$cda/cda:component/cda:structuredBody/cda:component/cda:section/cda:component/cda:section/cda:entry/cda:act/cda:code/cda:qualifier/cda:value/cda:originalText/text()" '
+    xml_suffix += '/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '<tr> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Prioridad: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of select="/dscd/cita/@prioridad"/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '<td> '
+    xml_suffix += '<xsl:text>Origen: </xsl:text> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:value-of select="/dscd/cita/@internacion"/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</td> '
+    xml_suffix += '</tr> '
+    xml_suffix += '</table> '
+    xml_suffix += '<hr/> '
+    xml_suffix += '<xsl:apply-templates select="$cda/cda:component[1]/cda:structuredBody[1]/cda:component/cda:section"/> '
+    xml_suffix += '<p> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</p> '
+    xml_suffix += '<p> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</p> '
+    xml_suffix += '<p> '
+    xml_suffix += '<xsl:call-template name="formatDate"> '
+    xml_suffix += '<xsl:with-param name="date" select="$cda/cda:effectiveTime/@value"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:call-template name="formatTime"> '
+    xml_suffix += '<xsl:with-param name="date" select="$cda/cda:effectiveTime/@value"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:text> firmado por Médico</xsl:text> '
+    xml_suffix += '<xsl:variable name="cdaProfesional1" '
+    xml_suffix += 'select="$cda/cda:author[1]/cda:assignedAuthor/cda:assignedPerson"/> '
+    xml_suffix += '<xsl:if test="$cdaProfesional1"> '
+    xml_suffix += '<xsl:call-template name="getPersonName"> '
+    xml_suffix += '<xsl:with-param name="personName" select="$cdaProfesional1"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:variable name="cdaProfesional1org" '
+    xml_suffix += 'select="$cda/cda:author[1]/cda:assignedAuthor/cda:representedOrganization/cda:name/text()"/> '
+    xml_suffix += '<xsl:if test="$cdaProfesional1org != \'\'"> '
+    xml_suffix += '<xsl:text>, </xsl:text> '
+    xml_suffix += '<xsl:value-of select="$cdaProfesional1org"/> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '<xsl:variable name="cdaProfesional2" '
+    xml_suffix += 'select="$cda/cda:ClinicalDocument/cda:author[2]/cda:assignedAuthor/cda:assignedPerson"/> '
+    xml_suffix += '<xsl:if test="$cdaProfesional2"> '
+    xml_suffix += '<xsl:text> | </xsl:text> '
+    xml_suffix += '<xsl:call-template name="getPersonName"> '
+    xml_suffix += '<xsl:with-param name="personName" select="$cdaProfesional2"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:variable name="cdaProfesional2org" '
+    xml_suffix += 'select="$cda/cda:author[2]/cda:assignedAuthor/cda:representedOrganization/cda:name/text()"/> '
+    xml_suffix += '<xsl:if test="$cdaProfesional2org != \'\'"> '
+    xml_suffix += '<xsl:text>, </xsl:text> '
+    xml_suffix += '<xsl:value-of select="$cdaProfesional2org"/> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '<xsl:variable name="cdaProfesional3" '
+    xml_suffix += 'select="$cda/cda:author[3]/cda:assignedAuthor/cda:assignedPerson"/> '
+    xml_suffix += '<xsl:if test="$cdaProfesional3"> '
+    xml_suffix += '<xsl:text> | </xsl:text> '
+    xml_suffix += '<xsl:call-template name="getPersonName"> '
+    xml_suffix += '<xsl:with-param name="personName" select="$cdaProfesional3"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:variable name="cdaProfesional3org" '
+    xml_suffix += 'select="$cda/cda:author[3]/cda:assignedAuthor/cda:representedOrganization/cda:name/text()"/> '
+    xml_suffix += '<xsl:if test="$cdaProfesional3org != \'\'"> '
+    xml_suffix += '<xsl:text>, </xsl:text> '
+    xml_suffix += '<xsl:value-of select="$cdaProfesional3org"/> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</p> '
+    xml_suffix += '<hr/> '
+    xml_suffix += '<p> '
+    xml_suffix += '<xsl:value-of select="/dscd/sdtc:signatureTEXT/sdtc:thumbnail/text()"/> '
+    xml_suffix += '</p> '
+    xml_suffix += '</body> '
+    xml_suffix += '</html> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template name="getPersonName"> '
+    xml_suffix += '<xsl:param name="personName"/> '
+    xml_suffix += '<xsl:for-each select="$personName/cda:name/*"> '
+    xml_suffix += '<xsl:text> </xsl:text> '
+    xml_suffix += '<xsl:value-of select="."/> '
+    xml_suffix += '</xsl:for-each> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template name="getExtension"> '
+    xml_suffix += '<xsl:param name="oidPersona"/> '
+    xml_suffix += '<xsl:choose> '
+    xml_suffix += '<xsl:when test="contains($oidPersona, \'.\')"> '
+    xml_suffix += '<xsl:call-template name="getExtension"> '
+    xml_suffix += '<xsl:with-param name="oidPersona" select="substring-after($oidPersona, \'.\')"/> '
+    xml_suffix += '</xsl:call-template> '
+    xml_suffix += '</xsl:when> '
+    xml_suffix += '<xsl:otherwise> '
+    xml_suffix += '<xsl:value-of select="$oidPersona"/> '
+    xml_suffix += '</xsl:otherwise> '
+    xml_suffix += '</xsl:choose> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template name="formatDate"> '
+    xml_suffix += '<xsl:param name="date"/> '
+    xml_suffix += '<xsl:if test="$date != \'\'"> '
+    xml_suffix += '<xsl:value-of select="substring($date, 1, 4)"/> '
+    xml_suffix += '<xsl:text>-</xsl:text> '
+    xml_suffix += '<xsl:value-of select="substring($date, 5, 2)"/> '
+    xml_suffix += '<xsl:text>-</xsl:text> '
+    xml_suffix += '<xsl:value-of select="substring($date, 7, 2)"/> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template name="formatTime"> '
+    xml_suffix += '<xsl:param name="date"/> '
+    xml_suffix += '<xsl:if test="$date != \'\'"> '
+    xml_suffix += '<xsl:text>T</xsl:text> '
+    xml_suffix += '<xsl:value-of select="substring($date, 9, 2)"/> '
+    xml_suffix += '<xsl:text>:</xsl:text> '
+    xml_suffix += '<xsl:value-of select="substring($date, 11, 2)"/> '
+    xml_suffix += '<xsl:text>:</xsl:text> '
+    xml_suffix += '<xsl:value-of select="substring($date, 13, 2)"/> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template match="cda:section"> '
+    xml_suffix += '<xsl:if test="1=1"> '
+    xml_suffix += '<h3> '
+    xml_suffix += '<xsl:value-of select="cda:title/text()"/> '
+    xml_suffix += '</h3> '
+    xml_suffix += '<section> '
+    xml_suffix += '<xsl:apply-templates select="cda:entry" mode="pre"/> '
+    xml_suffix += '<xsl:apply-templates select="cda:text"/> '
+    xml_suffix += '<xsl:apply-templates select="cda:component/cda:section"/> '
+    xml_suffix += '<xsl:apply-templates select="cda:entry" mode="post"/> '
+    xml_suffix += '</section> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template match="cda:text"> '
+    xml_suffix += '<xsl:apply-templates select="*"/> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:linkHtml"> '
+    xml_suffix += '<xsl:element name="a"> '
+    xml_suffix += '<xsl:attribute name="href"><xsl:value-of select="@href"/></xsl:attribute> '
+    xml_suffix += '<xsl:value-of select="text()"/> '
+    xml_suffix += '</xsl:element> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:table"> '
+    xml_suffix += '<table border="1"> '
+    xml_suffix += '<xsl:apply-templates select="*"/> '
+    xml_suffix += '</table> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:thead"> '
+    xml_suffix += '<thead border="1"> '
+    xml_suffix += '<xsl:apply-templates select="*"/> '
+    xml_suffix += '</thead> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:tbody"> '
+    xml_suffix += '<tbody border="1"> '
+    xml_suffix += '<xsl:apply-templates select="*"/> '
+    xml_suffix += '</tbody> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:tr"> '
+    xml_suffix += '<tr border="1"> '
+    xml_suffix += '<xsl:apply-templates select="*"/> '
+    xml_suffix += '</tr> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:th"> '
+    xml_suffix += '<th border="1"> '
+    xml_suffix += '<xsl:apply-templates select="*"/> '
+    xml_suffix += '</th> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:td"> '
+    xml_suffix += '<td border="1"> '
+    xml_suffix += '<xsl:apply-templates select="*"/> '
+    xml_suffix += '</td> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += ' '
+    xml_suffix += ' '
+    xml_suffix += '<xsl:template match="cda:br"> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template match="cda:paragraph"> '
+    xml_suffix += '<p> '
+    xml_suffix += '<xsl:apply-templates select="cda:content | text()"/> '
+    xml_suffix += '</p> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template match="text()"> '
+    xml_suffix += '<xsl:value-of select="."/> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template match="cda:content"> '
+    xml_suffix += '<xsl:choose> '
+    xml_suffix += '<xsl:when test="@styleCode = \'Italics\'"> '
+    xml_suffix += '<i> '
+    xml_suffix += '<xsl:apply-templates select="cda:content | text()"/> '
+    xml_suffix += '</i> '
+    xml_suffix += '</xsl:when> '
+    xml_suffix += '<xsl:when test="@styleCode = \'Bold\'"> '
+    xml_suffix += '<b> '
+    xml_suffix += '<xsl:apply-templates select="cda:content | text()"/> '
+    xml_suffix += '</b> '
+    xml_suffix += '</xsl:when> '
+    xml_suffix += '</xsl:choose> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template match="cda:entry" mode="pre"> '
+    xml_suffix += '<xsl:if '
+    xml_suffix += 'test="contains(\' 129716005 129717001 129718006 129719003 111351 111352 111353 \', concat(\' \', cda:observation/cda:code/@code, \'  \'))"> '
+    xml_suffix += '<xsl:value-of select="cda:observation/cda:code/@displayName"/> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '<xsl:template match="cda:entry" mode="post"> '
+    xml_suffix += '<xsl:if '
+    xml_suffix += 'test="not(contains(\' 129716005 129717001 129718006 129719003 111351 111352 111353 \', concat(\' \',cda:observation/cda:code/@ code, \' \')))"> '
+    xml_suffix += '<xsl:choose> '
+    xml_suffix += '<xsl:when test="cda:observation/cda:value/cda:qualifier"> '
+    xml_suffix += '<xsl:value-of select="cda:observation/cda:value/cda:qualifier/@displayName"/> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</xsl:when> '
+    xml_suffix += '<xsl:when test="cda:observation/cda:value"> '
+    xml_suffix += '<xsl:value-of select="cda:observation/cda:value/@displayName"/> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</xsl:when> '
+    xml_suffix += '<xsl:otherwise> '
+    xml_suffix += '<xsl:value-of select="cda:observation/cda:code/@displayName"/> '
+    xml_suffix += '<br/> '
+    xml_suffix += '</xsl:otherwise> '
+    xml_suffix += '</xsl:choose> '
+    xml_suffix += '</xsl:if> '
+    xml_suffix += '</xsl:template> '
+    xml_suffix += '</xsl:stylesheet> '
+    xml_suffix += '</dscd> '
+
+    xml_cda = xml_preffix + xml_cda + xml_suffix
+    xml_cda_base64 = base64.b64encode(bytes(xml_cda, 'utf-8'))
+    seriesuid = '2.25.{}'.format(int(str(uuid.uuid4()).replace('-', ''), 16))
+    xml_dcm = '<?xml version="1.0" encoding="UTF-8"?>'
+    xml_dcm += '<NativeDicomModel xml-space="preserved">'
+    xml_dcm += '<DicomAttribute keyword="FileMetaInformationVersion" tag="00020001" vr="OB"><InlineBinary>AAE=</InlineBinary></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="MediaStorageSOPClassUID" tag="00020002" vr="UI"><Value number="1">1.2.840.10008.5.1.4.1.1.104.2</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="MediaStorageSOPInstanceUID" tag="00020003" vr="UI"><Value number="1">{}</Value></DicomAttribute>'.format(
+        informeuid)
+    xml_dcm += '<DicomAttribute keyword="TransferSyntaxUID" tag="00020010" vr="UI"><Value number="1">1.2.840.10008.1.2</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="ImplementationClassUID" tag="00020012" vr="UI"><Value number="1">2.16.858.0.2.9.62.0.1.0.217215590012</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="ImplementationVersionName" tag="00020013" vr="SH"><Value number="1">JESROS OPENDICOM</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="SpecificCharacterSet" tag="00080005" vr="CS"><Value number="1">ISO_IR 100</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="SOPClassUID" tag="00080016" vr="UI"><Value number="1">1.2.840.10008.5.1.4.1.1.104.2</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="SOPInstanceUID" tag="00080018" vr="UI"><Value number="1">{}</Value></DicomAttribute>'.format(
+        informeuid)
+    xml_dcm += '<DicomAttribute keyword="TimezoneOffsetFromUTC" tag="00080201" vr="SH"><Value number="1">-0300</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="PatientName" tag="00100010" vr="PN"><PersonName number="1"><Alphabetic><FamilyName>{}</FamilyName></Alphabetic></PersonName></DicomAttribute>'.format(
+        values_submit['PatientName'][0])
+    xml_dcm += '<DicomAttribute keyword="PatientID" tag="00100020" vr="LO"><Value number="1">{}</Value></DicomAttribute>'.format(
+        values_submit['PatientID'][0])
+    xml_dcm += '<DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO"><Value number="1">{}</Value></DicomAttribute>'.format(
+        values_submit['PatientIDIssuer'][0])
+    xml_dcm += '<DicomAttribute keyword="PatientBirthDate" tag="00100030" vr="DA"><Value number="1">{}</Value></DicomAttribute>'.format(
+        values_submit['PatientBirthDate'][0])
+    xml_dcm += '<DicomAttribute keyword="PatientSex" tag="00100040" vr="CS"><Value number="1">{}</Value></DicomAttribute>'.format(
+        values_submit['PatientSex'][0])
+    xml_dcm += '<DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI"><Value number="1">{}</Value></DicomAttribute>'.format(
+        values_submit['StudyIUID'][0])
+    xml_dcm += '<DicomAttribute keyword="Modality" tag="00080060" vr="CS"><Value number="1">DOC</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI"><Value number="1">{}</Value></DicomAttribute>'.format(
+        seriesuid)
+    xml_dcm += '<DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS"><Value number="1">-16</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="SeriesDescription" tag="0008103E" vr="LO"><Value number="1">ClinicalDocument</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="SeriesDate" tag="00080021" vr="DA"><Value number="1">{}</Value></DicomAttribute>'.format(
+        datetime.now().strftime("%Y%m%d"))
+    xml_dcm += '<DicomAttribute keyword="SeriesTime" tag="00080031" vr="TM"><Value number="1">{}</Value></DicomAttribute>'.format(
+        datetime.now().strftime("%H%M%S"))
+    xml_dcm += '<DicomAttribute keyword="PerformedProcedureStepStartDate" tag="00400244" vr="DA"><Value number="1">{}</Value></DicomAttribute>'.format(
+        datetime.now().strftime("%Y%m%d"))
+    xml_dcm += '<DicomAttribute keyword="PerformedProcedureStepStartTime" tag="00400245" vr="TM"><Value number="1">{}</Value></DicomAttribute>'.format(
+        datetime.now().strftime("%H%M%S"))
+    xml_dcm += '<DicomAttribute keyword="Manufacturer" tag="00080070" vr="LO"><Value number="1">opendicom (Jesros SA)</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="InstitutionAddress" tag="00080081" vr="ST"><Value number="1">Agesic, Torre Ejecutiva Torre Sur, Liniers 1324, Montevideo, Uruguay</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="SoftwareVersions" tag="00181020" vr="LO"><Value number="1">2.0</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="ConversionType" tag="00080064" vr="CS"><Value number="1">WSD</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="InstanceNumber" tag="00200013" vr="IS"><Value number="1">1</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="ContentDate" tag="00080023" vr="DA"><Value number="1">{}</Value></DicomAttribute>'.format(
+        datetime.now().strftime("%Y%m%d"))
+    xml_dcm += '<DicomAttribute keyword="ContentTime" tag="00080033" vr="TM"><Value number="1">{}</Value></DicomAttribute>'.format(
+        datetime.now().strftime("%H%M%S"))
+    xml_dcm += '<DicomAttribute keyword="AcquisitionDateTime" tag="0008002A" vr="DT"><Value number="1">{}{}</Value></DicomAttribute>'.format(
+        datetime.now().strftime("%Y%m%d"), datetime.now().strftime("%H%M%S"))
+    xml_dcm += '<DicomAttribute keyword="BurnedInAnnotation" tag="00280301" vr="CS"><Value number="1">YES</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="DocumentTitle" tag="00420010" vr="ST"><Value number="1">INFORME IMAGENOLOGIGO</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="HL7InstanceIdentifier" tag="0040E001" vr="ST"><Value number="1">{}</Value></DicomAttribute>'.format(
+        autenticado.id)
+    xml_dcm += '<DicomAttribute keyword="MIMETypeOfEncapsulatedDocument" tag="00420012" vr="LO"><Value number="1">text/xml</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="EncapsulatedDocument" tag="00420011" vr="OB"><InlineBinary>{}</InlineBinary></DicomAttribute>'.format(
+        xml_cda_base64.decode("utf-8"))
+    xml_dcm += '</NativeDicomModel>'
+
     submit.listoparaautenticacion = 'NO'
     submit.save()
     models.Firma.objects.filter(informe=submit).delete()
+
+    url = 'http://190.64.48.21:8080/dcm4chee-arc/aets/DCM4CHEE/rs/studies'
+    headers = {'Content-Type': 'multipart/related;type=application/dicom+xml; boundary=myboundary;'}
+    data = '\r\n--myboundary\r\nContent-Type: application/dicom+xml; transfer-syntax=1.2.840.10008.1.2.1\r\n\r\n{}\r\n--myboundary--'.format(
+        xml_dcm)
+    requests.post(url, headers=headers, data=data)
+    requests.get(url + '?0020000D=' + values_submit['StudyIUID'][0])
     return xml_cda
 
 

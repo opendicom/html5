@@ -599,6 +599,16 @@ class Plantilla(BigIntegerPKModel):
         return self.title
 
 
+class Template(BigIntegerPKModel):
+    plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING)
+    user = models.ForeignKey(User, models.DO_NOTHING)
+    titulo = models.CharField(max_length=255, blank=True, null=True)
+    urlparams = models.TextField()
+
+    class Meta:
+        db_table = 'template'
+
+
 class Plantillagruposldap(BigIntegerPKModel):
     plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING, blank=True, null=True)
     gdn = models.CharField(max_length=255, blank=True, null=True)

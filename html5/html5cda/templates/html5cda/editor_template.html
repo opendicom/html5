@@ -65,3 +65,24 @@
 {% for bodyscript in context.bodyscripts %}
     {{ bodyscript.script.html|safe }}
 {% endfor %}
+<script type="text/javascript">
+        var params = '{{ context.template.0.urlparams|safe }}'.split("&");
+        for (var i=0; i<params.length; i++)
+        {
+            duo = params[i].split("=");
+            if ((duo.length == 2) && (duo[0].length > 0) && (duo[1].length > 0))
+            {
+                o=document.getElementsByName(duo[0])[0];
+                o.value = decodeURIComponent(duo[1]);
+                /* checkbox with id is linked with input hidden with name*/
+                if ((o.type == "hidden") && (duo[1]==="true"))
+                {
+                    document.getElementById(duo[0]).checked = true;
+                }
+                if ((o.type == "select-one") && (o.onchange != null))
+                {
+                    propagate(o);
+                }
+            }
+        }
+</script>

@@ -63,7 +63,8 @@
                     "targets": 2,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        if(data != '*' && role == 'Radiologo'){
+                        //if(data != '*' && role == 'Radiologo'){
+                        if(role == 'Radiologo'){
                             var data_editor = '';
                             $.ajax({
                                 url: "{% url 'get_save_template' %}?study_uid=" + full[16] ,

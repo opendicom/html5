@@ -34,6 +34,36 @@
                     $( "#dialog-firmar" ).dialog( "open" );
                 }else if (this.name == 'firmarAutenticar'){
                     $( "#dialog-firmarAutenticar" ).dialog( "open" );
+                }else if (this.name == 'crearPlantilla'){
+                    if ($('#templateID').val() != '' ){
+                        $('#title_crearPlantilla').val($("#plantilla").find(':selected').text());
+                    }else{
+                        $('#title_crearPlantilla').val('');
+                    }
+                    $( "#dialog-crearPlantilla" ).dialog( "open" );
+                }else if (this.name == 'borrarPlantilla'){
+                    if ($('#templateID').val() != '' ){
+                        var actionurl = '{% url 'delete_template_user' %}';
+                        var form_data = 'template=' +  $('#templateID').val() + '&csrfmiddlewaretoken=' + $('[name="csrfmiddlewaretoken"]').val();
+                        $.ajax({
+                            url: actionurl,
+                            type: 'post',
+                            data: form_data,
+                            success: function(data) {
+                                if (data.error){
+                                    alert(data.error)
+                                }else{
+                                    alert(data.message)
+                                    window.opener.refreshTableStudy()
+                                    self.close()
+                                }
+                            }
+                        });
+                    }else{
+                        alert('No es posible borrar, no es un template!!');
+                    }
+                }else if (this.name == 'cerrarPantalla'){
+                    self.close();
                 }
             });
 
@@ -106,6 +136,48 @@
                             }
                         });
                         $( this ).dialog( "close" );
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+                close: function() {
+                    $( this ).dialog( "close" );
+                }
+            });
+
+            $("#dialog-crearPlantilla").dialog({
+                autoOpen: false,
+                height: 160,
+                width: 200,
+                modal: true,
+                buttons: {
+                    "Aceptar": function() {
+                        if($('#title_crearPlantilla').val() != ''){
+                            for ( instance in CKEDITOR.instances )
+                                CKEDITOR.instances[instance].updateElement();
+
+                            var actionurl = '{% url 'save_template_user' %}';
+                            var form_data = $("#editor").serialize();
+                            form_data = form_data + '&' + $('#form-crearPlantilla').serialize();
+                            $.ajax({
+                                url: actionurl,
+                                type: 'post',
+                                data: form_data,
+                                success: function(data) {
+                                    if (data.error){
+                                        alert(data.error)
+                                    }else{
+                                        alert(data.message)
+                                        window.opener.refreshTableStudy()
+                                        self.close()
+                                    }
+                                }
+                            });
+                            $( this ).dialog( "close" );
+                        }else{
+                            alert('Debe ingresar titulo template!!');
+                        }
                     },
                     Cancel: function() {
                         $( this ).dialog( "close" );
@@ -219,7 +291,7 @@
                         </table>
                     </header>
                     <header>
-                        <input type="hidden" name="templateID" value="1.2.3"/>
+                        <input type="hidden" id="templateID" name="templateID" value=""/>
                         <table>
                             <tr>
                                 <td class="td1">
@@ -246,7 +318,7 @@
                                 <td class="td2">
                                     <select name="plantilla" id="plantilla">
                                         {% for template in context.template_list %}
-                                            <option value="{{template.id}}"
+                                            <option value="{{template.plantilla_id}}"  data-template="{{template.template_id}}"
                                                 {% if request.GET.StudyDescription == template.description %} selected
                                                 {% endif %}
                                             >{{template.description}}</option>
@@ -288,7 +360,7 @@
                                                 $('#plantilla').empty();
                                                 for(var item in data.template_list){
                                                     var options = '';
-                                                    options = '<option value="' + data.template_list[item].id + '">' + data.template_list[item].description + '</option>';
+                                                    options = '<option value="' + data.template_list[item].plantilla_id + '" data-template="' + data.template_list[item].template_id + '">' + data.template_list[item].description + '</option>';
                                                     $('#plantilla').append(options);
                                                 }
                                                 $("#plantilla").trigger('change');
@@ -300,6 +372,7 @@
                                     })
                                     $("#plantilla").change(function() {
                                         $('#editor_template').html('');
+                                        $("#templateID").val($("#plantilla").find(':selected').data('template'));
                                         $.ajax({
                                             url: '{% url 'get_template' %}',
                                             data: 'template=' + $("#plantilla").val(),
@@ -332,6 +405,36 @@
                                                         $( "#dialog-firmar" ).dialog( "open" );
                                                     }else if (this.name == 'firmarAutenticar'){
                                                         $( "#dialog-firmarAutenticar" ).dialog( "open" );
+                                                    }else if (this.name == 'crearPlantilla'){
+                                                        if ($('#templateID').val() != '' ){
+                                                            $('#title_crearPlantilla').val($("#plantilla").find(':selected').text());
+                                                        }else{
+                                                            $('#title_crearPlantilla').val('');
+                                                        }
+                                                        $( "#dialog-crearPlantilla" ).dialog( "open" );
+                                                    }else if (this.name == 'borrarPlantilla'){
+                                                        if ($('#templateID').val() != '' ){
+                                                            var actionurl = '{% url 'delete_template_user' %}';
+                                                            var form_data = 'template=' +  $('#templateID').val() + '&csrfmiddlewaretoken=' + $('[name="csrfmiddlewaretoken"]').val();
+                                                            $.ajax({
+                                                                url: actionurl,
+                                                                type: 'post',
+                                                                data: form_data,
+                                                                success: function(data) {
+                                                                    if (data.error){
+                                                                        alert(data.error)
+                                                                    }else{
+                                                                        alert(data.message)
+                                                                        window.opener.refreshTableStudy()
+                                                                        self.close()
+                                                                    }
+                                                                }
+                                                            });
+                                                        }else{
+                                                            alert('No es posible borrar, no es un template!!');
+                                                        }
+                                                    }else if (this.name == 'cerrarPantalla'){
+                                                        self.close();
                                                     }
                                                 });
                                             },
@@ -345,6 +448,9 @@
                             </tr>
                         </table>
                     </header>
+                    {% for signature in context.signature_list %}
+                        <p><strong>Firma {{signature.count_signature}} : {{signature.date_signature}} - {{signature.user_signature}}</strong></p>
+                    {% endfor %}
                     <div id="editor_template">
                         {{context.html_plantilla|safe}}
                     </div>
@@ -386,6 +492,11 @@
         <input type="text" name="usuario"  id="usuario_firmarautenticar" value="{{ request.user }}" readonly><br>
         <input type="password" name="clave" id="clave_firmarautenticar" value="" placeholder="Contraseña">
         </fieldset>
+    </form>
+</div>
+<div id="dialog-crearPlantilla" title="Crear plantilla">
+    <form id="form-crearPlantilla">
+        <input type="text" name="title"  id="title_crearPlantilla" placeholder="Titulo" value="" >
     </form>
 </div>
 {% endblock %}

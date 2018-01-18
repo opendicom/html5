@@ -7,7 +7,9 @@ urlpatterns = [
     url(r'^ajax/studies_list', views.studies_list, name='studies_list'),
     url(r'^ajax/template_list', views.template_list, name='template_list'),
     url(r'^ajax/get_template', views.get_template, name='get_template'),
-    url(r'^save_template', views.save_template, name='save_template'),
+    url(r'^save_template$', views.save_template, name='save_template'),
     url(r'^get_save_template', views.get_save_template, name='get_save_template'),
+    url(r'^save_template_user$', views.save_template_user, name='save_template_user'),
+    url(r'^delete_template_user$', views.delete_template_user, name='delete_template_user'),
     url(r'^authenticate_report', views.generate_authenticate_report, name='authenticate_report'),
 ]
