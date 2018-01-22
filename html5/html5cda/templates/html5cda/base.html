@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Editor</title>
+  <!-- Support for mobile touch devices -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1, minimal-ui">
+
+  <!-- CSS -->
+
+  <!-- Font awesome CSS for tool icons -->
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+  <!-- Bootstrap CSS -->
+  {% load staticfiles %}
+  <link href='{% static "html5cda/cornerstone/lib/bootstrap.min.css" %}' rel="stylesheet">
+
+  <!-- UI CSS -->
+  <link href='{% static "html5cda/cornerstone/lib/jquery-ui.min.css" %}' rel="stylesheet">
+
+  <!-- Cornerstone Base CSS -->
+  <link href='{% static "html5cda/cornerstone/lib/cornerstone.min.css" %}' rel="stylesheet">
+
+  <!-- Cornerstone Demo CSS -->
+  <link href='{% static "html5cda/cornerstone/css/cornerstoneDemo.css" %}' rel="stylesheet">
+
+  <link href='{% static "html5cda/ckeditor/template.css" %}' rel="stylesheet">
+
+  <!-- Include JQuery -->
+  <script src='{% static "html5cda/cornerstone/lib/jquery.min.js" %}'></script>
+
+  <!-- Include JQuery UI for drag/drop -->
+  <script src='{% static "html5cda/cornerstone/lib/jquery-ui.min.js" %}'></script>
+  <script>
+    $.ajax({
+      url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid={{request.GET.StudyIUID}}&custodianOID={{request.GET.custodianOID}}",
+      type: "GET",
+      cache: false,
+      async: false,
+      success: function(data, textStatus, jqXHR){
+        sessionStorage.setItem('json_estudio', JSON.stringify(data));
+      },
+      error: function (jqXHR, textStatus, errorThrown){
+        console.log('Error ' + jqXHR);
+      }
+    });
+  </script>
+  {% block extra_head %}
+  {% endblock %}
+</head>
+
+<body>
+  <div id="wrap">
+
+    <!-- Nav bar
+    <nav class="myNav navbar navbar-default" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="https://github.com/chafey/cornerstone">Cornerstone</a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a id="help" href="#" class="button hidden-xs">Help</a></li>
+          <li><a id="about" href="#" class="button hidden-xs">About</a></li>
+        </ul>
+      </div>
+    </nav>-->
+
+    <!-- <div class='main'>
+      <ul id="tabs" class="nav nav-tabs" >
+      </ul>
+
+      <div id="tabContent" class="tab-content">
+      </div> -->
+    {% block content %}
+    {% endblock %}
+
+  </div>
+</div>
+
+<!-- Javascripts -->
+
+<!-- Include JQuery Hammerjs adapter for mobile touch-->
+<script src='{% static "html5cda/cornerstone/lib/hammer.min.js" %}'></script>
+
+<!-- Include Bootstrap js -->
+<script src='{% static "html5cda/cornerstone/lib/bootstrap.min.js" %}'></script>
+
+<!-- include the cornerstone library -->
+<script src='{% static "html5cda/cornerstone/lib/cornerstone.js" %}'></script>
+
+<!-- include the cornerstone library -->
+<script src='{% static "html5cda/cornerstone/lib/cornerstoneMath.js" %}'></script>
+
+<!-- include the cornerstone tools library -->
+<script src='{% static "html5cda/cornerstone/lib/cornerstoneTools.js" %}'></script>
+
+<!-- include the cornerstoneWADOImageLoader library -->
+<script src='{% static "html5cda/cornerstone/lib/cornerstoneWADOImageLoader.js" %}'></script>
+
+<!-- include the cornerstoneWebImageLoader library -->
+<script src='{% static "html5cda/cornerstone/lib/cornerstoneWebImageLoader.js" %}'></script>
+
+<!-- include the dicomParser library -->
+<script src='{% static "html5cda/cornerstone/lib/dicomParser.js" %}'></script>
+
+<!-- include cornerstoneDemo.js -->
+<script src='{% static "html5cda/cornerstone/js/setupViewport.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/displayThumbnail.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/loadThumbnail.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/loadStudy.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/setupButtons.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/disableAllTools.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/forEachViewport.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/imageViewer.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/loadTemplate.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/setupViewportOverlays.js" %}'></script>
+<script src='{% static "html5cda/cornerstone/js/cornerstoneDemo.js" %}'></script>
+</body>
+</html>

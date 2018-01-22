@@ -1,10 +1,502 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Editor de informes</title>
-</head>
-<body>
+{% extends 'html5cda/base.html' %}
+{% block extra_head %}
+    {% load staticfiles %}
+    <script src='{% static "html5cda/jqueryui/jquery-ui.min.js" %}'></script>
+    <link href='{% static "html5cda/jqueryui/jquery-ui.min.css" %}' rel="stylesheet">
+    <link href='{% static "html5cda/jqueryui/jquery-ui.theme.min.css" %}' rel="stylesheet">
+{% endblock %}
+{% block content%}
+    <script>
+        $(function(){
+            $( "button" ).on( "click", function() {
+                if (this.name == 'guardar'){
+                    for ( instance in CKEDITOR.instances )
+                        CKEDITOR.instances[instance].updateElement();
 
-</body>
-</html>
+                    var actionurl = '{% url 'save_template' %}';
+                    var form_data = $("#editor").serialize();
+                    form_data = form_data + '&'+ this.name + '=' + this.name
+                    $.ajax({
+                        url: actionurl,
+                        type: 'post',
+                        data: form_data,
+                        success: function(data) {
+                            if (data.error){
+                                alert(data.error)
+                            }else{
+                                alert(data.message)
+                                window.opener.refreshTableStudy()
+                                self.close()
+                            }
+                        }
+                    });
+                }else if (this.name == 'firmar'){
+                    $( "#dialog-firmar" ).dialog( "open" );
+                }else if (this.name == 'firmarAutenticar'){
+                    $( "#dialog-firmarAutenticar" ).dialog( "open" );
+                }else if (this.name == 'crearPlantilla'){
+                    if ($('#templateID').val() != '' ){
+                        $('#title_crearPlantilla').val($("#plantilla").find(':selected').text());
+                    }else{
+                        $('#title_crearPlantilla').val('');
+                    }
+                    $( "#dialog-crearPlantilla" ).dialog( "open" );
+                }else if (this.name == 'borrarPlantilla'){
+                    if ($('#templateID').val() != '' ){
+                        var actionurl = '{% url 'delete_template_user' %}';
+                        var form_data = 'template=' +  $('#templateID').val() + '&csrfmiddlewaretoken=' + $('[name="csrfmiddlewaretoken"]').val();
+                        $.ajax({
+                            url: actionurl,
+                            type: 'post',
+                            data: form_data,
+                            success: function(data) {
+                                if (data.error){
+                                    alert(data.error)
+                                }else{
+                                    alert(data.message)
+                                    window.opener.refreshTableStudy()
+                                    self.close()
+                                }
+                            }
+                        });
+                    }else{
+                        alert('No es posible borrar, no es un template!!');
+                    }
+                }else if (this.name == 'cerrarPantalla'){
+                    self.close();
+                }
+            });
+
+            $("#dialog-firmar").dialog({
+                autoOpen: false,
+                height: 160,
+                width: 200,
+                modal: true,
+                buttons: {
+                    "Aceptar": function() {
+                        for ( instance in CKEDITOR.instances )
+                            CKEDITOR.instances[instance].updateElement();
+
+                        var actionurl = '{% url 'save_template' %}';
+                        var form_data = $("#editor").serialize();
+                        form_data = form_data + '&firmar=firmar&' + $('#form-firmar').serialize();
+                        $.ajax({
+                            url: actionurl,
+                            type: 'post',
+                            data: form_data,
+                            success: function(data) {
+                                if (data.error){
+                                    alert(data.error)
+                                }else{
+                                    alert(data.message)
+                                    window.opener.refreshTableStudy()
+                                    self.close()
+                                }
+                            }
+                        });
+                        $( this ).dialog( "close" );
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+                close: function() {
+                    $( this ).dialog( "close" );
+                }
+            });
+
+            $("#dialog-firmarAutenticar").dialog({
+                autoOpen: false,
+                height: 160,
+                width: 200,
+                modal: true,
+                buttons: {
+                    "Aceptar": function() {
+                        for ( instance in CKEDITOR.instances )
+                            CKEDITOR.instances[instance].updateElement();
+
+                        var actionurl = '{% url 'save_template' %}';
+                        var form_data = $("#editor").serialize();
+                        form_data = form_data + '&firmarAutenticar=firmarAutenticar&' + $('#form-firmarAutenticar').serialize();
+                        $.ajax({
+                            url: actionurl,
+                            type: 'post',
+                            data: form_data,
+                            success: function(data) {
+                                if (data.error){
+                                    alert(data.error)
+                                }else{
+                                    alert(data.message);
+                                    window.open('data:text/xml,' + decodeURIComponent(escape(window.atob( data.xml ))));
+                                    window.opener.refreshTableStudy();
+                                 }
+                            },
+                            complete: function(data) {
+                                self.close();
+                            }
+                        });
+                        $( this ).dialog( "close" );
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+                close: function() {
+                    $( this ).dialog( "close" );
+                }
+            });
+
+            $("#dialog-crearPlantilla").dialog({
+                autoOpen: false,
+                height: 160,
+                width: 200,
+                modal: true,
+                buttons: {
+                    "Aceptar": function() {
+                        if($('#title_crearPlantilla').val() != ''){
+                            for ( instance in CKEDITOR.instances )
+                                CKEDITOR.instances[instance].updateElement();
+
+                            var actionurl = '{% url 'save_template_user' %}';
+                            var form_data = $("#editor").serialize();
+                            form_data = form_data + '&' + $('#form-crearPlantilla').serialize();
+                            $.ajax({
+                                url: actionurl,
+                                type: 'post',
+                                data: form_data,
+                                success: function(data) {
+                                    if (data.error){
+                                        alert(data.error)
+                                    }else{
+                                        alert(data.message)
+                                        window.opener.refreshTableStudy()
+                                        self.close()
+                                    }
+                                }
+                            });
+                            $( this ).dialog( "close" );
+                        }else{
+                            alert('Debe ingresar titulo template!!');
+                        }
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+                close: function() {
+                    $( this ).dialog( "close" );
+                }
+            });
+        });
+    </script>
+    <div id="studyViewerTemplate" class="tab-pane active" style="height:100%">
+
+    <div class="studyContainer" style="height:100%;">
+        <div class="studyRow row" style="height:100%">
+
+            <!-- Thumbnails -->
+            <div class="thumbnailSelector">
+                <div class="thumbnails list-group">
+                </div>
+            </div>
+            <!-- Viewer -->
+            <div class="viewer hidden">
+                <!-- Toolbar -->
+                <div class="text-center" >
+                    <div class="btn-group">
+                        <!-- WW/WL -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="WW/WC"><span class="fa fa-sun-o"></span></button>
+                        <!-- Invert -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Invert"><span class="fa fa-adjust"></span></button>
+                        <!-- Zoom -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Zoom"><span class="fa fa-search"></span></button>
+                        <!-- Pan -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Pan"><span class="fa fa-arrows"></span></button>
+                        <!-- Stack scroll -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Stack Scroll"><span class="fa fa-bars"></span></button>
+                        <!-- Length measurement -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Length Measurement"><span class="fa fa-arrows-v"></span></button>
+                        <!-- Angle measurement -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Angle Measurement"><span class="fa fa-angle-left"></span></button>
+                        <!-- Pixel probe -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Pixel Probe"><span class="fa fa-dot-circle-o"></span></button>
+                        <!-- Elliptical ROI -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Elliptical ROI"><span class="fa fa-circle-o"></span></button>
+                        <!-- Rectangle ROI -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Rectangle ROI"><span class="fa fa-square-o"></span></button>
+                        <!-- Play clip -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Play Clip"><span class="fa fa-play"></span></button>
+                        <!-- Stop clip -->
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Stop Clip"><span class="fa fa-stop"></span></button>
+                        <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-container='body' data-toggle="dropdown" aria-expanded="false" data-placement="top" title="Layout"><span class="fa fa-th-large"></span></button>
+                        <ul class="pull-right dropdown-menu choose-layout" role="menu">
+                            <li><a href="#">1x1</a></li>
+                            <li><a href="#">2x1</a></li>
+                            <li><a href="#">1x2</a></li>
+                            <li><a href="#">2x2</a></li>
+                        </ul>
+                        <button type="button" class="btn btn-sm btn-default" data-container='body' data-toggle="tooltip" data-placement="bottom" title="Exit"><span class="fa fa-close"></span></button>
+                    </div>
+                </div>
+
+                <!-- Viewer -->
+                <div class="imageViewer">
+
+                </div>
+            </div>
+            <!-- Editor -->
+            <div class="editor">
+                <form id='editor' >
+                    {% csrf_token %}
+                    <header>
+                        <input type="hidden" name="PatientIDIssuer" value=""/>
+                        <table>
+                            <tr>
+                                <td class="td1">
+                                    PACIENTE id:
+                                    <input class="headerId" name="PatientID" type="text" readonly value=""/>
+                                    <button name="PatientInfo" type="submit" title="más información demográfica sobre el paciente"> más info </button>
+                                    nacido:
+                                    <input class="headerDate" name="PatientBirthDate" type="text" readonly value=""/>
+                                    sexo:
+                                    <input class="headerMod" name="PatientSex" type="text" readonly value=""/>
+                                    nombre:
+                                </td>
+                                <td class="td2">
+                                    <input class="headerName" name="PatientName" type="text" readonly value=""/>
+                                </td>
+                            </tr>
+                        </table>
+                    </header>
+                    <header>
+                        <input type="hidden" name="StudyIUID" value=""/>
+                        <input type="hidden" name="accessionNumberOID" value=""/>
+                        <input type="hidden" name="custodianOID" value=""/>
+                        <table>
+                            <tr>
+                                <td class="td1">
+                                    ESTUDIO an:
+                                    <input class="headerId" name="AccessionNumber" type="text" readonly/>
+                                    <button name="StudyInfo" type="submit" title="más información sobre el estudio">más info</button>
+                                    fecha :
+                                    <input class="headerDate" name="StudyDate" type="text" readonly title="fecha estudio"/>
+                                    mod.:
+                                    <input class="headerMod" name="Modality" type="text" readonly/>
+                                    descripción:
+                                </td>
+                                <td class="td2">
+                                    <input class="headerName" name="StudyDescription" type="text" value=""/>
+                                </td>
+                            </tr>
+                        </table>
+                    </header>
+                    <header>
+                        <input type="hidden" id="templateID" name="templateID" value=""/>
+                        <table>
+                            <tr>
+                                <td class="td1">
+                                    PLANTILLA:
+                                    <select name="modalidad" id="modalidad">
+                                        {% for modalidad in context.modalidades %}
+                                            <option value="{{modalidad.modalidad}}"
+                                                {% if request.GET.Modality == modalidad.modalidad %} selected
+                                                {% endif %}
+                                            >{{modalidad.modalidad}}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <select name="estudio" id="estudio">
+                                        {% for study in context.studies_list %}
+                                            <option value="{{study.id}}"
+                                                {% if request.GET.StudyDescription == study.description %} selected
+                                                {% endif %}
+                                            >{{study.description}}</option>
+                                        {% endfor %}
+                                        <!-- <option value="code^codeSystem^codeSystemName">displayNameProcedimiento</option> -->
+                                    </select>
+                                    <!--copiar displayNameProcedimiento seleccionado en descripción-->
+                                </td>
+                                <td class="td2">
+                                    <select name="plantilla" id="plantilla">
+                                        {% for template in context.template_list %}
+                                            <option value="{{template.plantilla_id}}"  data-template="{{template.template_id}}"
+                                                {% if request.GET.StudyDescription == template.description %} selected
+                                                {% endif %}
+                                            >{{template.description}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <script type="text/javascript">
+                                    $("#modalidad").change(function() {
+                                        $('#editor_template').html('');
+                                        $.ajax({
+                                            url: '{% url 'studies_list' %}',
+                                            data: 'modalidad=' + $("#modalidad").val(),
+                                            type: 'get',
+                                            success: function(data) {
+                                                $('#estudio').empty();
+                                                for(var item in data.studies_list){
+                                                    var options = '';
+                                                    if(data.studies_list[item].description == '{{ request.GET.StudyDescription }}'){
+                                                        options = '<option value="' + data.studies_list[item].id + '" selected="selected">' + data.studies_list[item].description + '</option>';
+                                                    }else{
+                                                        options = '<option value="' + data.studies_list[item].id + '">' + data.studies_list[item].description + '</option>';
+                                                    }
+                                                    $('#estudio').append(options);
+                                                }
+                                                $("#estudio").trigger('change');
+                                            },
+                                            failure: function(data) {
+                                                console.info('Error get studies_list');
+                                            }
+                                        });
+                                    })
+                                    $("#estudio").change(function() {
+                                        $('#editor_template').html('');
+                                        $.ajax({
+                                            url: '{% url 'template_list' %}',
+                                            data: 'estudio=' + $("#estudio").val(),
+                                            type: 'get',
+                                            success: function(data) {
+                                                $('#plantilla').empty();
+                                                for(var item in data.template_list){
+                                                    var options = '';
+                                                    options = '<option value="' + data.template_list[item].plantilla_id + '" data-template="' + data.template_list[item].template_id + '">' + data.template_list[item].description + '</option>';
+                                                    $('#plantilla').append(options);
+                                                }
+                                                $("#plantilla").trigger('change');
+                                            },
+                                            failure: function(data) {
+                                                console.info('Error get template_list');
+                                            }
+                                        });
+                                    })
+                                    $("#plantilla").change(function() {
+                                        $('#editor_template').html('');
+                                        $("#templateID").val($("#plantilla").find(':selected').data('template'));
+                                        $.ajax({
+                                            url: '{% url 'get_template' %}',
+                                            data: 'template=' + $("#plantilla").val(),
+                                            type: 'get',
+                                            success: function(data) {
+                                                $('#editor_template').html(data);
+                                                $( "button" ).on( "click", function() {
+                                                    if (this.name == 'guardar'){
+                                                        for ( instance in CKEDITOR.instances )
+                                                            CKEDITOR.instances[instance].updateElement();
+
+                                                        var actionurl = '{% url 'save_template' %}';
+                                                        var form_data = $("#editor").serialize();
+                                                        form_data = form_data + '&'+ this.name + '=' + this.name
+                                                        $.ajax({
+                                                            url: actionurl,
+                                                            type: 'post',
+                                                            data: form_data,
+                                                            success: function(data) {
+                                                                if (data.error){
+                                                                    alert(data.error)
+                                                                }else{
+                                                                    alert(data.message)
+                                                                    window.opener.refreshTableStudy()
+                                                                    self.close()
+                                                                }
+                                                            }
+                                                        });
+                                                    }else if (this.name == 'firmar'){
+                                                        $( "#dialog-firmar" ).dialog( "open" );
+                                                    }else if (this.name == 'firmarAutenticar'){
+                                                        $( "#dialog-firmarAutenticar" ).dialog( "open" );
+                                                    }else if (this.name == 'crearPlantilla'){
+                                                        if ($('#templateID').val() != '' ){
+                                                            $('#title_crearPlantilla').val($("#plantilla").find(':selected').text());
+                                                        }else{
+                                                            $('#title_crearPlantilla').val('');
+                                                        }
+                                                        $( "#dialog-crearPlantilla" ).dialog( "open" );
+                                                    }else if (this.name == 'borrarPlantilla'){
+                                                        if ($('#templateID').val() != '' ){
+                                                            var actionurl = '{% url 'delete_template_user' %}';
+                                                            var form_data = 'template=' +  $('#templateID').val() + '&csrfmiddlewaretoken=' + $('[name="csrfmiddlewaretoken"]').val();
+                                                            $.ajax({
+                                                                url: actionurl,
+                                                                type: 'post',
+                                                                data: form_data,
+                                                                success: function(data) {
+                                                                    if (data.error){
+                                                                        alert(data.error)
+                                                                    }else{
+                                                                        alert(data.message)
+                                                                        window.opener.refreshTableStudy()
+                                                                        self.close()
+                                                                    }
+                                                                }
+                                                            });
+                                                        }else{
+                                                            alert('No es posible borrar, no es un template!!');
+                                                        }
+                                                    }else if (this.name == 'cerrarPantalla'){
+                                                        self.close();
+                                                    }
+                                                });
+                                            },
+                                            failure: function(data) {
+                                                console.info('Error get template');
+                                            }
+                                        });
+                                    })
+                                    //$("#modalidad").trigger('change');
+                                </script>
+                            </tr>
+                        </table>
+                    </header>
+                    {% for signature in context.signature_list %}
+                        <p><strong>Firma {{signature.count_signature}} : {{signature.date_signature}} - {{signature.user_signature}}</strong></p>
+                    {% endfor %}
+                    <div id="editor_template">
+                        {{context.html_plantilla|safe}}
+                    </div>
+            </form>
+                <script type="text/javascript">
+                    var params = location.search.substr(1).split("&");
+                    for (var i=0; i<params.length; i++)
+                    {
+                        duo = params[i].split("=");
+                        if ((duo.length == 2) && (duo[0].length > 0) && (duo[1].length > 0))
+                        {
+                            o=document.getElementsByName(duo[0])[0];
+                            o.value = decodeURIComponent(duo[1]);
+                            /* checkbox with id is linked with input hidden with name*/
+                            if ((o.type == "hidden") && (duo[1]==="true"))
+                            {
+                                document.getElementById(duo[0]).checked = true;
+                            }
+                            if ((o.type == "select-one") && (o.onchange != null))
+                            {
+                                propagate(o);
+                            }
+                        }
+                    }
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="dialog-firmar" title="Ingrese su clave">
+    <form id="form-firmar">
+        <input type="text" name="usuario"  id="usuario_firmar" value="{{ request.user }}" readonly><br>
+        <input type="password" name="clave" id="clave_firmar" value="" placeholder="Contraseña">
+        </fieldset>
+    </form>
+</div>
+<div id="dialog-firmarAutenticar" title="Ingrese su clave">
+    <form id="form-firmarAutenticar">
+        <input type="text" name="usuario"  id="usuario_firmarautenticar" value="{{ request.user }}" readonly><br>
+        <input type="password" name="clave" id="clave_firmarautenticar" value="" placeholder="Contraseña">
+        </fieldset>
+    </form>
+</div>
+<div id="dialog-crearPlantilla" title="Crear plantilla">
+    <form id="form-crearPlantilla">
+        <input type="text" name="title"  id="title_crearPlantilla" placeholder="Titulo" value="" >
+    </form>
+</div>
+{% endblock %}

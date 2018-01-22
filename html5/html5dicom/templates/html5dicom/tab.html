@@ -2,6 +2,14 @@
 <div class="container-fluid" id="table-container">
 </div>
 <script>
+
+    refreshTableStudy = function(){
+        var table = $('#table_study').DataTable()
+        $('#new').val('true');
+        table.ajax.reload();
+        $('#new').val('false');
+    }
+
     addTableStudy = function (org, inst, oid, role, service, max_rows, patientID){
         $("#table-container").empty();
         var service_arr = service.split(',');
@@ -55,8 +63,40 @@
                     "targets": 2,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        if(data != '*' && role == 'Radiologo'){
-                            return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
+                        //if(data != '*' && role == 'Radiologo'){
+                        if(role == 'Radiologo'){
+                            var data_editor = '';
+                            $.ajax({
+                                url: "{% url 'get_save_template' %}?study_uid=" + full[16] ,
+                                type: "GET",
+                                async: false,
+                                success: function(data, textStatus, jqXHR){
+                                    if(!data.error){
+                                        data_editor = '<a href='+ data.url_editor +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
+                                        if (data.url_autentication != ''){
+                                            data_editor += '<a href=# onclick="authenticateStudy(\'' + data.url_autentication + '\')"><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>';
+                                        }
+                                    }else{
+                                        data_editor += 'PatientID=' + full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
+                                        data_editor += '&PatientIDIssuer=' + full[10]
+                                        data_editor += '&PatientName=' + full[4]
+                                        data_editor += '&PatientSex=' + full[12]
+                                        data_editor += '&PatientBirthDate=' + full[11]
+                                        data_editor += '&AccessionNumber=' + full[13]
+                                        data_editor += '&accessionNumberOID=' + full[14]
+                                        data_editor += '&StudyDate=' + full[5]
+                                        data_editor += '&StudyDescription=' + full[7]
+                                        data_editor += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','')
+                                        data_editor += '&StudyIUID=' + full[16]
+                                        data_editor += '&custodianOID=' + oid
+                                        data_editor = '<a href={% url 'editor' %}?'+ encodeURI(data_editor) +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown){
+                                    console.log('Error ' + jqXHR);
+                                }
+                            });
+                            return  data_editor;
                         }else{
                             return '';
                         }
@@ -153,11 +193,28 @@
                 $('#date_start, #date_end').change( function() {
                     table.draw();
                 });
-
+                authenticateStudy = function(url){
+                    $.ajax({
+                        url: url,
+                        type: "GET",
+                        success: function(data, textStatus, jqXHR){
+                            $('#new').val('true');
+                            var table = $('#table_study').DataTable();
+                            table.ajax.reload();
+                            $('#new').val('false');
+                            window.open('data:text/xml,' + encodeURIComponent('<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="#Transform"?><!DOCTYPE document [<!ATTLIST xsl:stylesheet id ID #REQUIRED>]>' + new XMLSerializer().serializeToString(data.documentElement)));
+                        },
+                        error: function (jqXHR, textStatus, errorThrown){
+                            alert('Error al autenticar!');
+                        }
+                    });
+                }
             },
             "fnServerParams": function ( aoData, fnCallback ) {
                 aoData.columns[6].search.value = $('#modalities').val();
-                aoData.columns[3].search.value = patientID;
+                if (patientID != '') {
+                    aoData.columns[3].search.value = patientID;
+                }
                 if($('#date_start').val() === undefined){
                     var currenDate = new Date();
                     var initDate = new Date();
@@ -244,6 +301,7 @@
                         var options_download = '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'osirix' %}?requestType=SERIES&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}&custodianOID='+ oid +'\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         options_download += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=SERIES&study_uid=' + study_uid +'&series_uid='+ data +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         options_download += '<a class="btn btn-default btn-xs" href="#" onclick="open_cornerstone(\'SERIES\',\'' + accession_number + '\',\'' + study_uid + '\',\''+ data +'\',\''+ oid +'\')"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-warning btn-xs" href="{% url 'osirix' %}?requestType=SERIES&study_uid=' + study_uid + '&series_uid='+ data +'&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span></a>';
                         return options_download;
                     }
                 },
@@ -294,6 +352,7 @@
                 var options_toolbar = '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX</a>';
                 options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
                 options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
+                options_toolbar += '<a class="btn btn-warning" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span> Download</a>';
                 $("div.toolbarseries").append(options_toolbar);
                 open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
                     var url_ajax = '';

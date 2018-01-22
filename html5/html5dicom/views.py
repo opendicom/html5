@@ -8,7 +8,6 @@ from django.contrib.sessions.models import Session
 from django.conf import settings
 from html5dicom import models
 import requests
-import json
 
 
 def user_login(request, *args, **kwargs):
@@ -42,9 +41,8 @@ def user_logout(request, *args, **kwargs):
 def main(request, *args, **kwargs):
     if request.user.is_authenticated:
         url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
-        # url_httpdicom_ext = models.Setting.objects.get(key='url_httpdicom_ext').value
         organization = {}
-        for role in models.Role.objects.filter(user=request.user.id).order_by('default'):
+        for role in models.Role.objects.filter(user=request.user.id).order_by('default').reverse():
             if role.institution:
                 if role.institution.organization.short_name in organization:
                     if role.institution.short_name in organization[role.institution.organization.short_name]['institution']:
@@ -153,7 +151,6 @@ def main(request, *args, **kwargs):
 @login_required(login_url='/html5dicom/login')
 def weasis(request, *args, **kwargs):
     url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
-    jnlp_text = ''
     jnlp_file = open(settings.STATIC_ROOT + 'html5dicom/weasis/weasis.jnlp', 'r')
     jnlp_text = jnlp_file.read()
     jnlp_file.close()
@@ -183,6 +180,11 @@ def osirix(request, *args, **kwargs):
             if request.GET['requestType'] == 'STUDY':
                 url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + \
                           request.GET['study_uid']
+                # Valida accession number
+                #if request.GET['accession_no'] == '':
+                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
+                #else:
+                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
                 r = StreamingHttpResponse(stream_response(url_zip))
                 r['Content-Disposition'] = "attachment; filename=dcm.zip"
                 return r

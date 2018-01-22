@@ -1,0 +1,88 @@
+{% for headscript in context.headscripts %}
+    {{ headscript.script.html|safe }}
+{% endfor %}
+{% for header in context.headers %}
+    {{ header.header.html|safe }}
+{% endfor %}
+{% for section in context.sections %}
+    <section id="{{ section.idattribute }}" {%if section.sectionclass is not None %} class="{{section.classattribute}}" {% endif %}>
+        <select class="{{ section.selectclass }}"
+                name="{{ section.selectname }}"
+                title="{{ section.selecttitle }}"
+                onchange="{{ section.selectonchange }}">
+            {% for selectoption in section.get_all_selectopcion %}
+                <option value="{{ selectoption.value }}" {% if selectoption.selected == True %} selected {% endif %}>{{ selectoption.text }}</option>
+            {% endfor %}
+        </select>
+        <input class="displayNoneArticleNone" id="{{ section.idattribute }}selectoff" type="checkbox" name="{{ section.idattribute }}selectoff" value="off" onchange="invisibility(this)"/>
+        <input class="displayNoneArticleNone" id="{{ section.idattribute }}selecthidden" type="checkbox" name="{{ section.idattribute }}selecthidden" value="hidden"/>
+        {% if section.check_article_xhtml5 is None %}
+            <article>
+            {% for subsection in section.get_all_sub_seccion %}
+                <section id="{{subsection.0.idattribute}}" {%if subsection.0.classattribute is not None %} class="{{subsection.0.classattribute}}" {% endif %}>
+                    <select class="{{subsection.0.selectclass}}"
+                            name="{{subsection.0.selectname}}"
+                            title="{{ subsection.0.selecttitle }}"
+                            onchange="{{subsection.0.selectonchange}}">
+                        {% for selectoption in subsection.0.get_all_selectopcion %}
+                            <option value="{{ selectoption.value }}" {% if selectoption.selected == True %} selected {% endif %}>{{ selectoption.text }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="displayNoneArticleNone" id="{{ subsection.0.idattribute }}selectoff" type="checkbox" name="{{ subsection.0.idattribute }}selectoff" value="off" onchange="invisibility(this)"/>
+                    <input class="displayNoneArticleNone" id="{{ subsection.0.idattribute }}selecthidden" type="checkbox" name="{{ subsection.0.idattribute }}selecthidden" value="hidden"/>
+                    {% if subsection.0.check_article_xhtml5 is None %}
+                        <article>
+                        {% for subsubsection in subsection.0.get_all_sub_seccion %}
+                            <section id="{{subsubsection.0.idattribute}}" {%if subsubsection.0.classattribute is not None %} class="{{subsubsection.0.classattribute}}" {% endif %}>
+                                <select class="{{subsubsection.0.selectclass}}"
+                                        name="{{subsubsection.0.selectname}}"
+                                        title="{{ subsubsection.0.selecttitle }}"
+                                        onchange="{{subsubsection.0.selectonchange}}">
+                                    {% for selectoption in subsubsection.0.get_all_selectopcion %}
+                                        <option value="{{ selectoption.value }}" {% if selectoption.selected == True %} selected {% endif %}>{{ selectoption.text }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input class="displayNoneArticleNone" id="{{ subsubsection.0.idattribute }}selectoff" type="checkbox" name="{{ subsubsection.0.idattribute }}selectoff" value="off" onchange="invisibility(this)"/>
+                                <input class="displayNoneArticleNone" id="{{ subsubsection.0.idattribute }}selecthidden" type="checkbox" name="{{ subsubsection.0.idattribute }}selecthidden" value="hidden"/>
+                                {{ subsubsection.0.get_article_xhtml|safe }}
+                            </section>
+                        {% endfor %}
+                        </article>
+                    {% else %}
+                        {{ subsection.0.get_article_xhtml|safe }}
+                    {% endif %}
+                </section>
+            {% endfor %}
+            </article>
+        {% else %}
+            {{ section.get_article_xhtml|safe }}
+        {% endif %}
+    </section>
+{% endfor %}
+{% for footer in context.footers %}
+    {{ footer.footer.html|safe }}
+{% endfor %}
+{% for bodyscript in context.bodyscripts %}
+    {{ bodyscript.script.html|safe }}
+{% endfor %}
+<script type="text/javascript">
+        var params = '{{ context.template.0.urlparams|safe }}'.split("&");
+        for (var i=0; i<params.length; i++)
+        {
+            duo = params[i].split("=");
+            if ((duo.length == 2) && (duo[0].length > 0) && (duo[1].length > 0))
+            {
+                o=document.getElementsByName(duo[0])[0];
+                o.value = decodeURIComponent(duo[1]);
+                /* checkbox with id is linked with input hidden with name*/
+                if ((o.type == "hidden") && (duo[1]==="true"))
+                {
+                    document.getElementById(duo[0]).checked = true;
+                }
+                if ((o.type == "select-one") && (o.onchange != null))
+                {
+                    propagate(o);
+                }
+            }
+        }
+</script>
