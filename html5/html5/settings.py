@@ -127,7 +127,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/Users/claudiobaeza/Desarrollos/Opendicom/html5/html5/html5dicom/static/'
+STATIC_ROOT = '/Users/Shared/html5/html5/html5dicom/static/'
 
 SESSION_COOKIE_AGE = 1200
 SESSION_SAVE_EVERY_REQUEST = True
