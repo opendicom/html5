@@ -86,7 +86,7 @@
                                         data_editor += '&accessionNumberOID=' + full[14]
                                         data_editor += '&StudyDate=' + full[5]
                                         data_editor += '&StudyDescription=' + full[7]
-                                        data_editor += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','')
+                                        data_editor += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','').replace('OT\\','').replace('DOC\\','')
                                         data_editor += '&StudyIUID=' + full[16]
                                         data_editor += '&custodianOID=' + oid
                                         data_editor = '<a href={% url 'editor' %}?'+ encodeURI(data_editor) +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
