@@ -35,7 +35,7 @@ def editor(request, *args, **kwargs):
             'description': estudio.code.displayname
         }]
     template_list = []
-    plantillas = models.Plantilla.objects.filter(Q(estudio__modalidad=modality_filter) | Q(estudio__modalidad='ALL'))
+    plantillas = models.Plantilla.objects.filter(Q(estudio__modalidad=modality_filter) | Q(estudio=None))
     for p in plantillas:
         template_list += [{
             'plantilla_id': '{}.-'.format(p.id),
@@ -87,7 +87,7 @@ def editor(request, *args, **kwargs):
             plantilla = models.Plantilla.objects.get(estudio__modalidad=request.GET['Modality'],
                                                      estudio__code__displayname=request.GET['StudyDescription'])
         except models.Plantilla.DoesNotExist:
-            plantilla = models.Plantilla.objects.get(estudio__modalidad='ALL')
+            plantilla = models.Plantilla.objects.get(estudio=None)
         secciones = models.Section.objects.filter(plantilla=plantilla).order_by('ordinal')
         headscripts = models.IntermediateHeadScript.objects.filter(plantilla=plantilla)
         bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=plantilla)
@@ -128,7 +128,7 @@ def studies_list(request, *args, **kwargs):
 
 def template_list(request, *args, **kwargs):
     template_list = []
-    plantillas = models.Plantilla.objects.filter(Q(estudio=request.GET['estudio']) | Q(estudio__modalidad='ALL'))
+    plantillas = models.Plantilla.objects.filter(Q(estudio=request.GET['estudio']) | Q(estudio=None))
     for p in plantillas:
         template_list += [{
             'plantilla_id': '{}.-'.format(p.id),
