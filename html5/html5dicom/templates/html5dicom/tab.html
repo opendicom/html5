@@ -1,6 +1,16 @@
 {% load staticfiles %}
 <div class="container-fluid" id="table-container">
 </div>
+<style>
+    .TitleClassPatient .ui-dialog-titlebar {
+          background:green;
+    }
+
+    .TitleClassSeries .ui-dialog-titlebar {
+          background:#ec971f;
+          border-color:#d58512;
+    }
+</style>
 <script>
 
     refreshTableStudy = function(){
@@ -250,6 +260,7 @@
         });
         $('#dialog-series').dialog({
             autoOpen: false,
+            dialogClass: 'TitleClassSeries',
             height: $(window).height(),
             width: $(window).width(),
             modal: true,
@@ -265,6 +276,7 @@
         });
         $('#dialog-patient').dialog({
             autoOpen: false,
+            dialogClass: 'TitleClassPatient',
             height: $(window).height(),
             width: $(window).width(),
             modal: true,
@@ -280,7 +292,7 @@
         });
     }
     showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description, accession_number, study_uid, oid, org, inst){
-        $('#dialog-series').dialog('option', 'title', 'Paciente (' + pat_id +') '+ name_id +'. Detalle del estudio (' + accession_number + ') '+ study_description);
+        $('#dialog-series').dialog('option', 'title', '(' + pat_id +') '+ name_id +' / (' + accession_number + ') '+ study_description);
         $('#dialog-series').dialog( "open" );
         $('#table_series thead th').each( function () {
             var title = $('#table_series tfoot th').eq( $(this).index() ).text();
@@ -399,7 +411,7 @@
     }
     showTablePatient = function(url, oid, org, inst){
         $('button').trigger('blur');
-        $('#dialog-patient').dialog('option', 'title', 'Estudios de un paciente');
+        $('#dialog-patient').dialog('option', 'title', 'Paciente');
         $('#dialog-patient').dialog( "open" );
         $('#table_patient thead th').each( function () {
             var title = $('#table_patient tfoot th').eq( $(this).index() ).text();
