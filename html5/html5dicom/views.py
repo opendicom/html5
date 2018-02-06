@@ -1,6 +1,9 @@
 from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import SESSION_KEY
@@ -16,9 +19,17 @@ def user_login(request, *args, **kwargs):
         password = request.POST['password']
         user = authenticate(username=username, password=password)
         if user is not None:
+            login(request, user)
             if user.is_active:
-                login(request, user)
-                return HttpResponseRedirect('/html5dicom/main')
+                try:
+                    ucp = models.UserChangePassword.objects.get(user=user)
+                    changepassword=ucp.changepassword
+                except models.UserChangePassword.DoesNotExist:
+                    changepassword=False
+                if changepassword:
+                    return HttpResponseRedirect('/html5dicom/password')
+                else:
+                    return HttpResponseRedirect('/html5dicom/main')
             else:
                 return render(request, template_name='html5dicom/login.html')
         else:
@@ -40,7 +51,36 @@ def user_logout(request, *args, **kwargs):
 @login_required(login_url='/html5dicom/login')
 def main(request, *args, **kwargs):
     if request.user.is_authenticated:
+        try:
+            ucp = models.UserChangePassword.objects.get(user=request.user)
+            changepassword = ucp.changepassword
+        except models.UserChangePassword.DoesNotExist:
+            changepassword = False
+        if changepassword:
+            return HttpResponseRedirect('/html5dicom/password')
         url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
+        try:
+            role_patient = models.Role.objects.get(user=request.user, name='pac')
+            url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role_patient.institution.organization.short_name
+            oid_org = requests.get(url_httpdicom_req)
+            url_httpdicom_req += '/aets/' + role_patient.institution.short_name
+            oid_inst = requests.get(url_httpdicom_req)
+            organization = {}
+            organization.update({
+                "patientID": request.user.username,
+                "name": role_patient.institution.organization.short_name,
+                "oid": oid_org.json()[0],
+                "institution": {
+                    'name': role_patient.institution.short_name,
+                    'aet': role_patient.institution.short_name,
+                    'oid': oid_inst.json()[0]
+                }
+            })
+            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
+            return render(request, template_name='html5dicom/patient_main.html', context=context_user)
+        except models.Role.DoesNotExist:
+            pass
+
         organization = {}
         for role in models.Role.objects.filter(user=request.user.id).order_by('default').reverse():
             if role.institution:
@@ -227,3 +267,27 @@ def wado(request, *args, **kwargs):
             raise PermissionDenied
     else:
         return HttpResponse('Error', status=400)
+
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            try:
+                ucp = models.UserChangePassword.objects.get(user=user)
+                ucp.changepassword=False
+                ucp.save()
+            except models.UserChangePassword.DoesNotExist:
+                pass
+            messages.success(request, 'Su contraseña fue actualizada correctamente!')
+            return redirect('logout')
+        else:
+            messages.error(request, 'Favor revisar la informacion ingresada.')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'html5dicom/change_password.html', {
+        'form': form
+    })

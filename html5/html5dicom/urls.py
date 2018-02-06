@@ -10,4 +10,5 @@ urlpatterns = [
     url(r'^wado$', views.wado, name='wado'),
     url(r'^dcm.zip$', views.osirix, name='osirix'),
     url(r'^cornerstone$', views.cornerstone, name='cornerstone'),
+    url(r'^password$', views.change_password, name='change_password'),
 ]

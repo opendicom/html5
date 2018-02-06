@@ -62,6 +62,7 @@ class Role(BaseModel):
         ('cat', 'Catalogador'),
         ('reg', 'Registrador'),
         ('res', 'Rest'),
+        ('pac', 'Paciente'),
     )
     name = models.CharField(max_length=3, choices=role_choices)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
@@ -86,3 +87,10 @@ class Alternate(BaseModel):
 class Setting(BaseModel):
     key = models.CharField(max_length=20, blank=False, null=False)
     value = models.CharField(max_length=255, blank=False, null=False)
+
+
+class UserChangePassword(models.Model):
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, primary_key=True)
+    changepassword = models.BooleanField(default=False, blank=False, null=False)
+    create_date = models.DateTimeField(auto_now_add=True)
+    last_update = models.DateTimeField(auto_now=True)

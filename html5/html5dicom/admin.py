@@ -38,3 +38,9 @@ class SettingAdmin(admin.ModelAdmin):
     list_display = ('key', 'value')
 
 admin.site.register(models.Setting, SettingAdmin)
+
+
+class UserChangePasswordAdmin(admin.ModelAdmin):
+    list_display = ('user', 'changepassword', 'create_date', 'last_update')
+
+admin.site.register(models.UserChangePassword, UserChangePasswordAdmin)
