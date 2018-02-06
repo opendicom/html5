@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'html5.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'html5_bcbsu',
+        'NAME': 'html5',
         'USER': 'html5',
         'PASSWORD': 'html5',
         'HOST': '',                 # Empty for localhost
@@ -128,7 +128,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/Users/claudiobaeza/Desarrollos/Opendicom/html5/html5/html5dicom/static/'
+STATIC_ROOT = '/Users/Shared/html5/html5/html5dicom/static/'
 
 SESSION_COOKIE_AGE = 1200
 SESSION_SAVE_EVERY_REQUEST = True
