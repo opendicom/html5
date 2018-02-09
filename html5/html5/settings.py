@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'html5dicom',
     'html5cda',
     'proxyrest',
+    'accounts',
     'rest_framework_swagger',
     'widget_tweaks',
 ]
