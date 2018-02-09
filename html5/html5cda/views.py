@@ -359,6 +359,9 @@ def authenticate_report(submit, user):
     # registra datos tabla autenticado
     informeuid = '2.25.{}'.format(int(str(uuid.uuid4()).replace('-', ''), 16))
     values_submit = parse_qs(submit.urlparamsrecibido)
+    if 'estudio' in values_submit:
+        estudio = models.Estudio.objects.get(id=values_submit['estudio'][0])
+
     autenticado = models.Autenticado.objects.create(
         plantilla=submit.plantilla,
         eiud=submit.eiud,
@@ -378,7 +381,7 @@ def authenticate_report(submit, user):
         efecha=datetime.strptime(values_submit['StudyDate'][0], '%Y%m%d'),
         eid='',
         erealizadoroid='',
-        estudio=submit.plantilla.estudio,
+        estudio=estudio,
         informetitulo='',
         informeuid=informeuid,
         custodianoid=values_submit['custodianOID'][0],
@@ -422,10 +425,10 @@ def authenticate_report(submit, user):
     xml_cda += '<documentationOf>'
     xml_cda += '<serviceEvent>'
     xml_cda += '<id root="{}"/>'.format(values_submit['StudyIUID'][0])
-    xml_cda += '<code code="{}" codeSystem="{}"'.format(submit.plantilla.estudio.code.code,
-                                                        submit.plantilla.estudio.code.codesystem.shortname)
-    xml_cda += ' displayName="{}">'.format(submit.plantilla.estudio.code.displayname)
-    xml_cda += '<translation code="{}" displayName=""/>'.format(submit.plantilla.estudio.modalidad)
+    xml_cda += '<code code="{}" codeSystem="{}"'.format(estudio.code.code,
+                                                        estudio.code.codesystem.shortname)
+    xml_cda += ' displayName="{}">'.format(estudio.code.displayname)
+    xml_cda += '<translation code="{}" displayName=""/>'.format(estudio.modalidad)
     xml_cda += '</code>'
     xml_cda += '<effectiveTime>'
     xml_cda += '<low value="{}"/>'.format(values_submit['StudyDate'][0])
