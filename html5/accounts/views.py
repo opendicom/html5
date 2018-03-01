@@ -15,7 +15,7 @@ class UserCreate(APIView):
         if serializer.is_valid():
             user = serializer.save()
             if user:
-                UserChangePassword.objects.create(user=user, changepassword=True)
+                # UserChangePassword.objects.create(user=user, changepassword=True)
                 institution = Institution.objects.get(short_name=request.data['institution'])
                 Role.objects.create(name='pac', user=user, institution=institution, max_rows=1000)
                 return Response({'status': 'created'}, status=status.HTTP_201_CREATED)
