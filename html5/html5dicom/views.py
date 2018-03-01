@@ -65,11 +65,16 @@ def main(request, *args, **kwargs):
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + role_patient.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
+            try:
+                config_toolbar = models.Setting.objects.get(key='toolbar_patient').value
+            except models.Setting.DoesNotExist:
+                config_toolbar = 'full'
             organization = {}
             organization.update({
                 "patientID": request.user.username,
                 "name": role_patient.institution.organization.short_name,
                 "oid": oid_org.json()[0],
+                "config_toolbar": config_toolbar,
                 "institution": {
                     'name': role_patient.institution.short_name,
                     'aet': role_patient.institution.short_name,

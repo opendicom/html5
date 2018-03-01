@@ -30,7 +30,7 @@
         var patientID = organization.patientID;
         var service = 'Todos';
         var max_rows = 100;
-        addTableStudy(org, inst, oid, 'Medico', service, max_rows, patientID);
+        addTableStudy(org, inst, oid, 'Medico', service, max_rows, patientID, organization.config_toolbar);
 
         $.datepicker.regional['es'] = {
             closeText: 'Cerrar',
