@@ -5,14 +5,18 @@ from proxyrest.models import TokenAccessPatient, SessionRest
 
 class TokenAccessPatientSerializer(serializers.ModelSerializer):
     token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessPatient.objects.all())])
-    patientid = serializers.CharField()
+    PatientID = serializers.CharField()
+    IssuerOfPatientID = serializers.CharField(required=False, default='', allow_blank=True)
+    IssuerOfPatientIDQualifiers = serializers.JSONField(required=False, default='')
     start_date = serializers.DateTimeField
     expiration_date = serializers.DateTimeField
     role_id = serializers.IntegerField()
 
     def create(self, validated_data):
         token = TokenAccessPatient.objects.create(token=validated_data['token'],
-                                                  patientid=validated_data['patientid'],
+                                                  PatientID=validated_data['PatientID'],
+                                                  IssuerOfPatientID=validated_data['IssuerOfPatientID'],
+                                                  IssuerOfPatientIDQualifiers=validated_data['IssuerOfPatientIDQualifiers'],
                                                   start_date=validated_data['start_date'],
                                                   expiration_date=validated_data['expiration_date'],
                                                   role_id=validated_data['role_id'])
@@ -20,7 +24,7 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TokenAccessPatient
-        fields = ('token', 'patientid', 'start_date', 'expiration_date', 'role_id')
+        fields = ('token', 'PatientID', 'IssuerOfPatientID', 'IssuerOfPatientIDQualifiers', 'start_date', 'expiration_date', 'role_id')
 
 
 class SessionRestSerializer(serializers.ModelSerializer):

@@ -201,7 +201,7 @@ def study_web(request, *args, **kwargs):
 
 @api_view(['POST'])
 def token_access_patient(request, *args, **kwargs):
-    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'patientid' in request.data:
+    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'PatientID' in request.data:
         try:
             institution = Institution.objects.get(short_name=request.data.get('institution'))
         except Institution.DoesNotExist:
@@ -216,7 +216,9 @@ def token_access_patient(request, *args, **kwargs):
             login(request, user)
             serializer = TokenAccessPatientSerializer(data={
                 'token': request.session._session_key,
-                'patientid': request.data.get('patientid'),
+                'PatientID': request.data.get('PatientID'),
+                'IssuerOfPatientID': request.data.get('IssuerOfPatientID', ''),
+                'IssuerOfPatientIDQualifiers': request.data.get('IssuerOfPatientIDQualifiers', ''),
                 'start_date': timezone.now(),
                 'expiration_date': timezone.now() + timezone.timedelta(minutes=5),
                 'role_id': role.id
