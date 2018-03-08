@@ -181,7 +181,7 @@ def study_web(request, *args, **kwargs):
             oid_inst = requests.get(url_httpdicom_req)
             organization = {}
             organization.update({
-                "patientID": tokenaccesspatient.patientid,
+                "patientID": tokenaccesspatient.PatientID,
                 "name": tokenaccesspatient.role.institution.organization.short_name,
                 "oid": oid_org.json()[0],
                 "institution": {
