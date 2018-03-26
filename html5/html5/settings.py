@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'html5.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'html5_bcbsu',
+        'NAME': 'html5',
         'USER': 'html5',
         'PASSWORD': 'html5',
         'HOST': '',                 # Empty for localhost

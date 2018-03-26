@@ -30,12 +30,9 @@
         });
         $('#org_select').on('change', function() {
            load_inst();
-           $('#inst_select').trigger("change");
-           $('.selectpicker').selectpicker('refresh');
         });
         $('#inst_select').on('change', function() {
            load_rol();
-           $('.selectpicker').selectpicker('refresh');
         });
         $('#rol_select').on('change', function() {
            var oid = organization[$('#org_select').val()].institution[$('#inst_select').val()].oid;
