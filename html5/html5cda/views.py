@@ -1087,7 +1087,7 @@ def authenticate_report(submit, user):
     submit.save()
     models.Firma.objects.filter(informe=submit).delete()
 
-    url = 'http://127.0.0.1:8080/dcm4chee-arc/aets/DCM4CHEE/rs/studies'
+    url = 'http://127.0.0.1:8080/dcm4chee-arc/aets/{}/rs/studies'.format(institution.short_name)
     headers = {'Content-Type': 'multipart/related;type=application/dicom+xml; boundary=myboundary;'}
     data = '\r\n--myboundary\r\nContent-Type: application/dicom+xml; transfer-syntax=1.2.840.10008.1.2.1\r\n\r\n{}\r\n--myboundary--'.format(
         xml_dcm)
