@@ -600,6 +600,8 @@ class Plantilla(BigIntegerPKModel):
 
 
 class Template(BigIntegerPKModel):
+    modalidad = models.CharField(max_length=5, blank=True, null=True)
+    estudio = models.ForeignKey(Estudio, models.DO_NOTHING, blank=True, null=True)
     plantilla = models.ForeignKey(Plantilla, models.DO_NOTHING)
     user = models.ForeignKey(User, models.DO_NOTHING)
     titulo = models.CharField(max_length=255, blank=True, null=True)

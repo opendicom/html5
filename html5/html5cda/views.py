@@ -21,35 +21,45 @@ import requests
 @login_required(login_url='/html5dicom/login')
 def editor(request, *args, **kwargs):
     modality_filter = ''
+    estudio_filter = ''
     if 'modalidad' in request.GET:
         modality_filter = request.GET['modalidad']
     else:
         modality_filter = request.GET['Modality']
+    if 'estudio' in request.GET:
+        estudio_filter = request.GET['estudio']
+    else:
+        estudio_filter = 0
     html = ''
     modalidades = models.Estudio.objects.values('modalidad').annotate(Count('modalidad')) \
         .order_by('modalidad')
     studies_list = []
     for estudio in models.Estudio.objects.filter(modalidad=modality_filter):
+        if estudio_filter == 0 and estudio.code.displayname == request.GET['StudyDescription']:
+            estudio_filter = estudio.id
         studies_list += [{
             'id': estudio.id,
             'description': estudio.code.displayname
         }]
+    if estudio_filter == 0 and len(studies_list) > 0:
+        estudio_filter = studies_list[0]['id']
     template_list = []
-    plantillas = models.Plantilla.objects.filter(Q(estudio__modalidad=modality_filter) | Q(estudio=None))
+    plantillas = models.Plantilla.objects.filter(Q(estudio=estudio_filter) | Q(estudio=None))
     for p in plantillas:
         template_list += [{
             'plantilla_id': '{}.-'.format(p.id),
             'template_id': '',
             'description': p.title
         }]
-        template = models.Template.objects.filter(plantilla=p, user=request.user)
-        if len(template) > 0:
-            for t in template:
-                template_list += [{
-                    'plantilla_id': '{}.{}'.format(p.id, t.id),
-                    'template_id': t.id,
-                    'description': t.titulo
-                }]
+
+    template = models.Template.objects.filter(estudio=estudio_filter, user=request.user)
+    if len(template) > 0:
+        for t in template:
+            template_list += [{
+                'plantilla_id': '{}.{}'.format(t.plantilla_id, t.id),
+                'template_id': t.id,
+                'description': t.titulo
+            }]
     signature_list = []
     try:
         submit = models.Submit.objects.get(eiud=request.GET.get('StudyIUID'))
@@ -135,14 +145,14 @@ def template_list(request, *args, **kwargs):
             'template_id': '',
             'description': p.title
         }]
-        template = models.Template.objects.filter(plantilla=p, user=request.user)
-        if len(template) > 0:
-            for t in template:
-                template_list += [{
-                    'plantilla_id': '{}.{}'.format(p.id, t.id),
-                    'template_id': t.id,
-                    'description': t.titulo
-                }]
+    template = models.Template.objects.filter(estudio=request.GET['estudio'], user=request.user)
+    if len(template) > 0:
+        for t in template:
+            template_list += [{
+                'plantilla_id': '{}.{}'.format(t.plantilla_id, t.id),
+                'template_id': t.id,
+                'description': t.titulo
+            }]
     data = {"template_list": template_list}
     return JsonResponse(data)
 
@@ -229,6 +239,8 @@ def save_template_user(request, *args, **kwargs):
 
     plantilla, template = request.POST.get('plantilla').split('.')
     template, template_created = models.Template.objects.update_or_create(
+        modalidad=request.POST.get('modalidad'),
+        estudio_id=request.POST.get('estudio'),
         plantilla=models.Plantilla.objects.get(id=plantilla),
         user=request.user,
         titulo=request.POST.get('title')
