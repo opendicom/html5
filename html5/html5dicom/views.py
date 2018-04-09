@@ -189,7 +189,12 @@ def main(request, *args, **kwargs):
                                 }
                             }
                     })
-        context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
+        user_viewer = ''
+        try:
+            user_viewer = models.UserViewerSettings.objects.get(user=request.user).viewer
+        except models.UserViewerSettings.DoesNotExist:
+            user_viewer = ''
+        context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'], 'user_viewer': user_viewer}
         return render(request, template_name='html5dicom/main.html', context=context_user)
 
 
@@ -247,7 +252,7 @@ def osirix(request, *args, **kwargs):
 
 def cornerstone(request, *args, **kwargs):
     url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
-    base_url = request.META['wsgi.url_scheme']+ '://' + request.META['HTTP_HOST']
+    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
         url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
     elif request.GET['requestType'] == 'SERIES':
@@ -274,6 +279,7 @@ def wado(request, *args, **kwargs):
         return HttpResponse('Error', status=400)
 
 
+@login_required(login_url='/html5dicom/login')
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)

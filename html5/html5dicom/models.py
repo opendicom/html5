@@ -94,3 +94,14 @@ class UserChangePassword(models.Model):
     changepassword = models.BooleanField(default=False, blank=False, null=False)
     create_date = models.DateTimeField(auto_now_add=True)
     last_update = models.DateTimeField(auto_now=True)
+
+
+class UserViewerSettings(BaseModel):
+    viewer_choices = (
+        ('htm', 'HTML5'),
+        ('dow', 'Download'),
+        ('osi', 'Osirix'),
+        ('wea', 'Weasis'),
+    )
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING, unique=True)
+    viewer = models.CharField(max_length=3, choices=viewer_choices, blank=True, null=True)

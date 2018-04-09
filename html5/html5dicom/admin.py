@@ -44,3 +44,9 @@ class UserChangePasswordAdmin(admin.ModelAdmin):
     list_display = ('user', 'changepassword', 'create_date', 'last_update')
 
 admin.site.register(models.UserChangePassword, UserChangePasswordAdmin)
+
+
+class UserViewerSettingsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'viewer')
+
+admin.site.register(models.UserViewerSettings, UserViewerSettingsAdmin)
