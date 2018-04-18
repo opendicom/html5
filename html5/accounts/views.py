@@ -2,21 +2,26 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from accounts.serializers import UserSerializer
-from html5dicom.models import UserChangePassword, Role, Institution
+from html5dicom.models import UserChangePassword, UserViewerSettings, Role, Institution
+from django.contrib.auth.models import User
 
 
 class UserCreate(APIView):
-    """
-    Creates the user.
-    """
 
     def post(self, request, format='json'):
-        serializer = UserSerializer(data=request.data)
+        try:
+            user = User.objects.get(username=request.data['username'])
+            serializer = UserSerializer(instance=user,  data=request.data)
+        except User.DoesNotExist:
+            serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
-                # UserChangePassword.objects.create(user=user, changepassword=True)
+                UserChangePassword.objects.update_or_create(user=user, changepassword=False)
+                UserViewerSettings.objects.update_or_create(user=user, viewer='htm')
                 institution = Institution.objects.get(short_name=request.data['institution'])
-                Role.objects.create(name='pac', user=user, institution=institution, max_rows=1000)
+                role, create = Role.objects.update_or_create(name='pac', user=user, institution=institution)
+                role.max_rows = 1000
+                role.save()
                 return Response({'status': 'created'}, status=status.HTTP_201_CREATED)
         return Response({'status': 'error', 'description': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
