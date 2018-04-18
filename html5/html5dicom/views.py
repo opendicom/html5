@@ -83,7 +83,13 @@ def main(request, *args, **kwargs):
                     'oid': oid_inst.json()[0]
                 }
             })
-            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
+            user_viewer = ''
+            try:
+                user_viewer = models.UserViewerSettings.objects.get(user=request.user).viewer
+            except models.UserViewerSettings.DoesNotExist:
+                user_viewer = ''
+            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
+                            'user_viewer': user_viewer}
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         except models.Role.DoesNotExist:
             pass

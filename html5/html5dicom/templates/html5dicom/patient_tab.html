@@ -2,6 +2,35 @@
 <div class="container-fluid" id="table-container">
 </div>
 <script>
+    open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
+        var url_ajax = '';
+        if(requestType == 'STUDY'){
+            $.ajax({
+                url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
+                type: "GET",
+                success: function(data, textStatus, jqXHR){
+                    sessionStorage.setItem('json_estudio', JSON.stringify(data));
+                    window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                },
+                error: function (jqXHR, textStatus, errorThrown){
+                    console.log('Error ' + jqXHR);
+                }
+            });
+        }else if(requestType == 'SERIES'){
+            $.ajax({
+                url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,
+                type: "GET",
+                success: function(data, textStatus, jqXHR){
+                    sessionStorage.setItem('json_estudio', JSON.stringify(data));
+                    window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                },
+                error: function (jqXHR, textStatus, errorThrown){
+                    console.log('Error ' + jqXHR);
+                }
+            });
+        }
+    }
+
     addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar){
         $("#table-container").empty();
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
@@ -31,11 +60,17 @@
                     "targets": 2,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        if(data != '*' && role == 'Radiologo'){
-                            return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
-                        }else{
-                            return '';
-                        }
+                        data_cell = ''
+                        {% if user_viewer == 'htm' %}
+                            data_cell = '<a class="btn btn-default btn-xs" href="#" onclick="open_cornerstone(\'STUDY\',\'' + full[13] + '\',\'' + full[16] + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        {% elif user_viewer == 'dow' %}
+                            data_cell = '<a class="btn btn-warning btn-xs" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + full[16] + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span></a>';
+                        {% elif user_viewer == 'osi' %}
+                            data_cell = '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&study_uid=' + full[16] + '&session={{ request.session.session_key}}&custodianOID='+ oid +'\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        {% elif user_viewer == 'wea' %}
+                            data_cell = '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + full[16] +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        {% endif %}
+                        return  data_cell;
                     }
                 },
   	            {
@@ -276,35 +311,6 @@
                 options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
                 options_toolbar += '<a class="btn btn-warning" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span> Download</a>';
                 $("div.toolbarseries").append(options_toolbar);
-                open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
-                    var url_ajax = '';
-                    if(requestType == 'STUDY'){
-                        $.ajax({
-                            url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
-                            type: "GET",
-                            success: function(data, textStatus, jqXHR){
-                                sessionStorage.setItem('json_estudio', JSON.stringify(data));
-                                window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
-                            },
-                            error: function (jqXHR, textStatus, errorThrown){
-                                console.log('Error ' + jqXHR);
-                            }
-                        });
-                    }else if(requestType == 'SERIES'){
-                        $.ajax({
-                            url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,
-                            type: "GET",
-                            success: function(data, textStatus, jqXHR){
-                                sessionStorage.setItem('json_estudio', JSON.stringify(data));
-                                window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
-                            },
-                            error: function (jqXHR, textStatus, errorThrown){
-                                console.log('Error ' + jqXHR);
-                            }
-                        });
-                    }
-
-                }
             }
         });
         table_series.columns().eq( 0 ).each( function ( colIdx ) {
