@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
     <ol class="breadcrumb my-4">
-        <li class="breadcrumb-item active">Cambio de contraseña</li>
+        <li class="breadcrumb-item active">Configuración de Visor</li>
     </ol>
     <div class="row">
         <div class="col-lg-4 col-md-6 col-sm-8">
@@ -26,7 +26,6 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-
                 {% for field in form %}
                     <div class="form-group">
                         {{ field.label_tag }}
@@ -43,7 +42,7 @@
                         {% endif %}
                     </div>
                 {% endfor %}
-                <button type="submit" class="btn btn-success btn-block">Acualizar clave</button>
+                <button type="submit" class="btn btn-success btn-block">Guardar</button>
             </form>
         </div>
     </div>

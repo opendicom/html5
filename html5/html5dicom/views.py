@@ -10,6 +10,8 @@ from django.contrib.auth import SESSION_KEY
 from django.contrib.sessions.models import Session
 from django.conf import settings
 from html5dicom import models
+from html5dicom.forms import UserViewerSettingsForm
+from html5dicom.models import UserViewerSettings
 import requests
 
 
@@ -300,5 +302,27 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
 
     return render(request, 'html5dicom/change_password.html', {
+        'form': form
+    })
+
+
+@login_required(login_url='/html5dicom/login')
+def viewer_settings(request):
+    try:
+        userviewersettings = UserViewerSettings.objects.get(user=request.user)
+    except models.UserViewerSettings.DoesNotExist:
+        userviewersettings = UserViewerSettings.objects.create(user=request.user)
+        userviewersettings.save()
+    if request.method == 'POST':
+        form = UserViewerSettingsForm(instance=userviewersettings, data=request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configuración actualizada correctamente!')
+        else:
+            messages.error(request, 'Error al guardar')
+    else:
+        form = UserViewerSettingsForm(instance=userviewersettings)
+
+    return render(request, 'html5dicom/viewer_settings.html', {
         'form': form
     })
