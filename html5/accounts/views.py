@@ -17,10 +17,13 @@ class UserCreate(APIView):
         if serializer.is_valid():
             user = serializer.save()
             if user:
-                UserChangePassword.objects.update_or_create(user=user, changepassword=False)
-                UserViewerSettings.objects.update_or_create(user=user, viewer='htm')
+                userviewersettings, create_settings = UserViewerSettings.objects.update_or_create(user=user)
+                if create_settings:
+                    userviewersettings.viewer = 'htm'
+                    userviewersettings.save()
                 institution = Institution.objects.get(short_name=request.data['institution'])
-                role, create = Role.objects.update_or_create(name='pac', user=user, institution=institution)
+                role, create_role = Role.objects.update_or_create(name='pac', user=user)
+                role.institution = institution
                 role.max_rows = 1000
                 role.save()
                 return Response({'status': 'created'}, status=status.HTTP_201_CREATED)
