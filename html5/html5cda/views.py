@@ -16,6 +16,7 @@ import uuid
 import re
 import base64
 import requests
+from django.contrib.auth.models import User
 
 
 @login_required(login_url='/html5dicom/login')
@@ -1105,6 +1106,8 @@ def authenticate_report(submit, user):
         xml_dcm)
     requests.post(url, headers=headers, data=data)
     requests.get(url + '?0020000D=' + values_submit['StudyIUID'][0])
+    # Active user patient
+    User.objects.filter(username=values_submit['PatientID'][0]).update(is_active=True)
     return xml_cda
 
 
@@ -1131,7 +1134,6 @@ def generate_text_observation(section, values_submit, sec=None, subsec=None, sub
         str_replace = re.compile('</u>')
         textarea_value = str_replace.sub('</content>', textarea_value)
         text_cda += textarea_value
-
 
     hrefs = re.findall('<a href="(.+?)"/>', section.article.xhtml5)
     for href in hrefs:
