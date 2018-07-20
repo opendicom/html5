@@ -52,15 +52,9 @@ class Service(BaseModel):
 class Role(BaseModel):
     role_choices = (
         ('rad', 'Radiologo'),
+        ('sol', 'Solicitante'),
         ('aut', 'Autenticador'),
         ('med', 'Medico'),
-        ('hab', 'Habilitador'),
-        ('ree', 'Reemplazador'),
-        ('tec', 'Tecnico'),
-        ('esp', 'Especialista'),
-        ('adm', 'Administrador'),
-        ('cat', 'Catalogador'),
-        ('reg', 'Registrador'),
         ('res', 'Rest'),
         ('pac', 'Paciente'),
     )
