@@ -98,7 +98,7 @@ def editor(request, *args, **kwargs):
             plantilla = models.Plantilla.objects.get(estudio__modalidad=request.GET['Modality'],
                                                      estudio__code__displayname=request.GET['StudyDescription'])
         except models.Plantilla.DoesNotExist:
-            plantilla = models.Plantilla.objects.get(estudio=None)
+            plantilla = models.Plantilla.objects.get(estudio=None, title='Texto Libre')
         secciones = models.Section.objects.filter(plantilla=plantilla).order_by('ordinal')
         headscripts = models.IntermediateHeadScript.objects.filter(plantilla=plantilla)
         bodyscripts = models.IntermediateBodyScript.objects.filter(plantilla=plantilla)
@@ -623,7 +623,7 @@ def authenticate_report(submit, user):
     xml_suffix += 'p { '
     xml_suffix += 'margin: 0 0 0 0; '
     xml_suffix += 'padding: 0 0 0 '
-    xml_suffix += '0; '
+    xml_suffix += '0; text-align: justify;'
     xml_suffix += '}</style> '
     xml_suffix += '</head> '
     xml_suffix += '<body> '
@@ -985,7 +985,7 @@ def authenticate_report(submit, user):
     xml_suffix += '</xsl:template> '
     xml_suffix += '<xsl:template match="cda:paragraph"> '
     xml_suffix += '<p> '
-    xml_suffix += '<xsl:apply-templates select="cda:content | text()"/> '
+    xml_suffix += '<xsl:apply-templates select="cda:content | text() | cda:br"/> '
     xml_suffix += '</p> '
     xml_suffix += '</xsl:template> '
     xml_suffix += '<xsl:template match="text()"> '
@@ -995,12 +995,12 @@ def authenticate_report(submit, user):
     xml_suffix += '<xsl:choose> '
     xml_suffix += '<xsl:when test="@styleCode = \'Italics\'"> '
     xml_suffix += '<i> '
-    xml_suffix += '<xsl:apply-templates select="cda:content | text()"/> '
+    xml_suffix += '<xsl:apply-templates select="cda:content | text() | cda:br"/> '
     xml_suffix += '</i> '
     xml_suffix += '</xsl:when> '
     xml_suffix += '<xsl:when test="@styleCode = \'Bold\'"> '
     xml_suffix += '<b> '
-    xml_suffix += '<xsl:apply-templates select="cda:content | text()"/> '
+    xml_suffix += '<xsl:apply-templates select="cda:content | text() | cda:br"/> '
     xml_suffix += '</b> '
     xml_suffix += '</xsl:when> '
     xml_suffix += '</xsl:choose> '
@@ -1099,12 +1099,11 @@ def authenticate_report(submit, user):
     submit.listoparaautenticacion = 'NO'
     submit.save()
     models.Firma.objects.filter(informe=submit).delete()
-
     url = 'http://127.0.0.1:8080/dcm4chee-arc/aets/{}/rs/studies'.format(institution.short_name)
     headers = {'Content-Type': 'multipart/related;type=application/dicom+xml; boundary=myboundary;'}
     data = '\r\n--myboundary\r\nContent-Type: application/dicom+xml; transfer-syntax=1.2.840.10008.1.2.1\r\n\r\n{}\r\n--myboundary--'.format(
         xml_dcm)
-    requests.post(url, headers=headers, data=data)
+    requests.post(url, headers=headers, data=data.encode('utf-8'))
     requests.get(url + '?0020000D=' + values_submit['StudyIUID'][0])
     # Active user patient
     User.objects.filter(username=values_submit['PatientID'][0]).update(is_active=True)
