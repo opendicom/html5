@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from proxyrest.models import TokenAccessPatient, SessionRest
+from proxyrest.models import TokenAccessPatient, TokenAccessStudy, SessionRest
 
 
 class TokenAccessPatientSerializer(serializers.ModelSerializer):
@@ -25,6 +25,26 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = TokenAccessPatient
         fields = ('token', 'PatientID', 'IssuerOfPatientID', 'IssuerOfPatientIDQualifiers', 'start_date', 'expiration_date', 'role_id')
+
+
+class TokenAccessStudySerializer(serializers.ModelSerializer):
+    token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessStudy.objects.all())])
+    study_iuid = serializers.CharField()
+    start_date = serializers.DateTimeField
+    expiration_date = serializers.DateTimeField
+    role_id = serializers.IntegerField()
+
+    def create(self, validated_data):
+        token = TokenAccessStudy.objects.create(token=validated_data['token'],
+                                                study_iui=validated_data['study_iuid'],
+                                                start_date=validated_data['start_date'],
+                                                expiration_date=validated_data['expiration_date'],
+                                                role_id=validated_data['role_id'])
+        return token
+
+    class Meta:
+        model = TokenAccessPatient
+        fields = ('token', 'study_iuid', 'start_date', 'expiration_date', 'role_id')
 
 
 class SessionRestSerializer(serializers.ModelSerializer):

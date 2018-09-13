@@ -20,3 +20,14 @@ class TokenAccessPatient(models.Model):
 
     class Meta:
         unique_together = ('token', 'PatientID'),
+
+
+class TokenAccessStudy(models.Model):
+    token = models.CharField(max_length=32, primary_key=True)
+    study_iuid = models.CharField(max_length=255)
+    start_date = models.DateTimeField()
+    expiration_date = models.DateTimeField()
+    role = models.ForeignKey(Role, on_delete=models.DO_NOTHING)
+
+    class Meta:
+        unique_together = ('token', 'study_iuid'),
