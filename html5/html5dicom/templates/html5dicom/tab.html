@@ -400,8 +400,8 @@
             initComplete: function(){
                 var options_toolbar = '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX</a>';
                 options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
-                options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
-                options_toolbar += '<a class="btn btn-warning" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span> Download</a>';
+                options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span> Ver estudio</a>';
+                options_toolbar += '<a class="btn btn-warning" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span> Descargar</a>';
                 $("div.toolbarseries").append(options_toolbar);
             }
         });

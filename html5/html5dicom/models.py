@@ -73,6 +73,13 @@ class Role(BaseModel):
         unique_together = (('name', 'user', 'service'), ('name', 'user', 'institution'))
 
 
+class RoleType(models.Model):
+    id = models.BigAutoField(max_length=3, primary_key=True)
+    create_date = models.DateTimeField(auto_now_add=True)
+    last_update = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=3, blank=False, null=False)
+
+
 class Alternate(BaseModel):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     role = models.ForeignKey(Role, on_delete=models.DO_NOTHING)
@@ -92,8 +99,8 @@ class UserChangePassword(models.Model):
 
 class UserViewerSettings(BaseModel):
     viewer_choices = (
-        ('htm', 'HTML5'),
-        ('dow', 'Download'),
+        ('htm', 'Ver estudio'),
+        ('dow', 'Descargar'),
         ('osi', 'Osirix'),
         ('wea', 'Weasis'),
     )
