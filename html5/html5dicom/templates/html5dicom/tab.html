@@ -95,7 +95,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',`'+ full[4] +'`,\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
@@ -109,6 +109,7 @@
                                 url: "{% url 'get_save_template' %}?study_uid=" + full[16] ,
                                 type: "GET",
                                 async: false,
+                                dataType: "json",
                                 success: function(data, textStatus, jqXHR){
                                     if(!data.error){
                                         data_cell = '<a href='+ data.url_editor +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
@@ -437,7 +438,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',`'+ full[4] +'`,\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
