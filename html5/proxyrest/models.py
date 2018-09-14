@@ -14,6 +14,7 @@ class TokenAccessPatient(models.Model):
     PatientID = models.CharField(max_length=20)
     IssuerOfPatientID = models.CharField(max_length=64, blank=True, null=True)
     IssuerOfPatientIDQualifiers = models.TextField(blank=True, null=True)
+    SeriesSelection = models.TextField(blank=True, null=True)
     start_date = models.DateTimeField()
     expiration_date = models.DateTimeField()
     role = models.ForeignKey(Role, on_delete=models.DO_NOTHING)

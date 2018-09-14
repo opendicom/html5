@@ -219,6 +219,7 @@ def token_access_patient(request, *args, **kwargs):
                 'PatientID': request.data.get('PatientID'),
                 'IssuerOfPatientID': request.data.get('IssuerOfPatientID', ''),
                 'IssuerOfPatientIDQualifiers': request.data.get('IssuerOfPatientIDQualifiers', ''),
+                'SeriesSelection': request.data.get('SeriesSelection', ''),
                 'start_date': timezone.now(),
                 'expiration_date': timezone.now() + timezone.timedelta(minutes=5),
                 'role_id': role.id

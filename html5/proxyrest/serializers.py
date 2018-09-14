@@ -8,6 +8,7 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
     PatientID = serializers.CharField()
     IssuerOfPatientID = serializers.CharField(required=False, default='', allow_blank=True)
     IssuerOfPatientIDQualifiers = serializers.JSONField(required=False, default='')
+    SeriesSelection = serializers.JSONField(required=False, default='')
     start_date = serializers.DateTimeField
     expiration_date = serializers.DateTimeField
     role_id = serializers.IntegerField()
@@ -17,6 +18,7 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
                                                   PatientID=validated_data['PatientID'],
                                                   IssuerOfPatientID=validated_data['IssuerOfPatientID'],
                                                   IssuerOfPatientIDQualifiers=validated_data['IssuerOfPatientIDQualifiers'],
+                                                  SeriesSelection=validated_data['SeriesSelection'],
                                                   start_date=validated_data['start_date'],
                                                   expiration_date=validated_data['expiration_date'],
                                                   role_id=validated_data['role_id'])
@@ -24,7 +26,7 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TokenAccessPatient
-        fields = ('token', 'PatientID', 'IssuerOfPatientID', 'IssuerOfPatientIDQualifiers', 'start_date', 'expiration_date', 'role_id')
+        fields = ('token', 'PatientID', 'IssuerOfPatientID', 'IssuerOfPatientIDQualifiers', 'SeriesSelection', 'start_date', 'expiration_date', 'role_id')
 
 
 class TokenAccessStudySerializer(serializers.ModelSerializer):
