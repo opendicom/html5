@@ -81,7 +81,7 @@ def validate_session_expired(sessionrest):
         return False
 
 
-def validate_token_expired(tokenaccesspatient):
+def validate_token_patient_expired(tokenaccesspatient):
     if tokenaccesspatient.expiration_date >= timezone.now():
         tokenaccesspatient.expiration_date = timezone.now() + timezone.timedelta(minutes=5)
         tokenaccesspatient.save()
@@ -173,7 +173,7 @@ def study_web(request, *args, **kwargs):
             tokenaccesspatient = TokenAccessPatient.objects.get(token=kwargs.get('token'))
         except TokenAccessPatient.DoesNotExist:
             return HttpResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
-        if validate_token_expired(tokenaccesspatient):
+        if validate_token_patient_expired(tokenaccesspatient):
             url_httpdicom = Setting.objects.get(key='url_httpdicom').value
             url_httpdicom_req = url_httpdicom + '/custodians/titles/' + tokenaccesspatient.role.institution.organization.short_name
             oid_org = requests.get(url_httpdicom_req)
@@ -219,8 +219,43 @@ def token_access_patient(request, *args, **kwargs):
                 'PatientID': request.data.get('PatientID'),
                 'IssuerOfPatientID': request.data.get('IssuerOfPatientID', ''),
                 'IssuerOfPatientIDQualifiers': request.data.get('IssuerOfPatientIDQualifiers', ''),
+                'SeriesSelection': request.data.get('SeriesSelection', ''),
                 'start_date': timezone.now(),
                 'expiration_date': timezone.now() + timezone.timedelta(minutes=5),
+                'role_id': role.id
+            })
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'invalid data'}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response({'error': 'invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        return Response({'error': 'missing params'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def token_access_study(request, *args, **kwargs):
+    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'study_iuid' in request.data:
+        try:
+            institution = Institution.objects.get(short_name=request.data.get('institution'))
+        except Institution.DoesNotExist:
+            return Response({'error': 'institution does not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+        user = authenticate(username=request.data.get('user'), password=request.data.get('password'))
+        if user:
+            try:
+                role = Role.objects.get(user=user, institution=institution, name='res')
+            except Role.DoesNotExist:
+                return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
+                                status=status.HTTP_401_UNAUTHORIZED)
+            login(request, user)
+            serializer = TokenAccessPatientSerializer(data={
+                'token': request.session._session_key,
+                'study_iuid': request.data.get('study_iuid'),
+                'start_date': timezone.now(),
+                'expiration_date': timezone.now() + timezone.timedelta(days=365),
                 'role_id': role.id
             })
 

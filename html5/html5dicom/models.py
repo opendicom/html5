@@ -52,15 +52,9 @@ class Service(BaseModel):
 class Role(BaseModel):
     role_choices = (
         ('rad', 'Radiologo'),
+        ('sol', 'Solicitante'),
         ('aut', 'Autenticador'),
         ('med', 'Medico'),
-        ('hab', 'Habilitador'),
-        ('ree', 'Reemplazador'),
-        ('tec', 'Tecnico'),
-        ('esp', 'Especialista'),
-        ('adm', 'Administrador'),
-        ('cat', 'Catalogador'),
-        ('reg', 'Registrador'),
         ('res', 'Rest'),
         ('pac', 'Paciente'),
     )
@@ -77,6 +71,13 @@ class Role(BaseModel):
 
     class Meta:
         unique_together = (('name', 'user', 'service'), ('name', 'user', 'institution'))
+
+
+class RoleType(models.Model):
+    id = models.BigAutoField(max_length=3, primary_key=True)
+    create_date = models.DateTimeField(auto_now_add=True)
+    last_update = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=3, blank=False, null=False)
 
 
 class Alternate(BaseModel):
@@ -98,8 +99,8 @@ class UserChangePassword(models.Model):
 
 class UserViewerSettings(BaseModel):
     viewer_choices = (
-        ('htm', 'HTML5'),
-        ('dow', 'Download'),
+        ('htm', 'Ver estudio'),
+        ('dow', 'Descargar'),
         ('osi', 'Osirix'),
         ('wea', 'Weasis'),
     )
