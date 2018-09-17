@@ -38,7 +38,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         token = TokenAccessStudy.objects.create(token=validated_data['token'],
-                                                study_iui=validated_data['study_iuid'],
+                                                study_iuid=validated_data['study_iuid'],
                                                 start_date=validated_data['start_date'],
                                                 expiration_date=validated_data['expiration_date'],
                                                 role_id=validated_data['role_id'])
