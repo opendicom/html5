@@ -9,7 +9,7 @@ import requests
 import uuid
 from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
 from html5dicom.models import Institution, Role, Setting
-from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer
+from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer, TokenAccessStudySerializer
 from django.contrib.sessions.backends.db import SessionStore
 
 
@@ -297,7 +297,7 @@ def token_access_study(request, *args, **kwargs):
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
             login(request, user)
-            serializer = TokenAccessPatientSerializer(data={
+            serializer = TokenAccessStudySerializer(data={
                 'token': request.session._session_key,
                 'study_iuid': request.data.get('study_iuid'),
                 'start_date': timezone.now(),
