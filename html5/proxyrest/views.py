@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import requests
 import uuid
-from proxyrest.models import SessionRest, TokenAccessPatient
+from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
 from html5dicom.models import Institution, Role, Setting
 from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer
 from django.contrib.sessions.backends.db import SessionStore
@@ -92,6 +92,17 @@ def validate_token_patient_expired(tokenaccesspatient):
         return False
 
 
+def validate_token_study_expired(tokenaccessstuy):
+    if tokenaccessstuy.expiration_date >= timezone.now():
+        tokenaccessstuy.expiration_date = timezone.now() + timezone.timedelta(minutes=5)
+        tokenaccessstuy.save()
+        return True
+    else:
+        SessionStore(session_key=tokenaccessstuy.token).delete()
+        tokenaccessstuy.delete()
+        return False
+
+
 @api_view(['GET'])
 def rest_qido(request, *args, **kwargs):
     if 'HTTP_AUTHORIZATION' in request.META:
@@ -169,33 +180,67 @@ def rest_wado(request, *args, **kwargs):
 
 def study_web(request, *args, **kwargs):
     if 'token' in kwargs:
+        type_token = ''
         try:
             tokenaccesspatient = TokenAccessPatient.objects.get(token=kwargs.get('token'))
+            type_token = 'patient'
         except TokenAccessPatient.DoesNotExist:
-            return HttpResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
-        if validate_token_patient_expired(tokenaccesspatient):
-            url_httpdicom = Setting.objects.get(key='url_httpdicom').value
-            url_httpdicom_req = url_httpdicom + '/custodians/titles/' + tokenaccesspatient.role.institution.organization.short_name
-            oid_org = requests.get(url_httpdicom_req)
-            url_httpdicom_req += '/aets/' + tokenaccesspatient.role.institution.short_name
-            oid_inst = requests.get(url_httpdicom_req)
-            organization = {}
-            organization.update({
-                "patientID": tokenaccesspatient.PatientID,
-                "SeriesSelection": tokenaccesspatient.SeriesSelection,
-                "name": tokenaccesspatient.role.institution.organization.short_name,
-                "oid": oid_org.json()[0],
-                "institution": {
-                    'name': tokenaccesspatient.role.institution.short_name,
-                    'aet': tokenaccesspatient.role.institution.short_name,
-                    'oid': oid_inst.json()[0]
-                }
-            })
-            request.session = SessionStore(session_key=kwargs.get('token'))
-            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
-            return render(request, template_name='html5dicom/patient_main.html', context=context_user)
-        else:
-            return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            try:
+                tokenaccessstudy = TokenAccessStudy.objects.get(token=kwargs.get('token'))
+                type_token = 'study'
+            except TokenAccessStudy.DoesNotExist:
+                return HttpResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if type_token == 'patient':
+            if validate_token_patient_expired(tokenaccesspatient):
+                url_httpdicom = Setting.objects.get(key='url_httpdicom').value
+                url_httpdicom_req = url_httpdicom + '/custodians/titles/' + tokenaccesspatient.role.institution.organization.short_name
+                oid_org = requests.get(url_httpdicom_req)
+                url_httpdicom_req += '/aets/' + tokenaccesspatient.role.institution.short_name
+                oid_inst = requests.get(url_httpdicom_req)
+                organization = {}
+                organization.update({
+                    "patientID": tokenaccesspatient.PatientID,
+                    "SeriesSelection": tokenaccesspatient.SeriesSelection,
+                    "StudyIUID": "",
+                    "name": tokenaccesspatient.role.institution.organization.short_name,
+                    "oid": oid_org.json()[0],
+                    "institution": {
+                        'name': tokenaccesspatient.role.institution.short_name,
+                        'aet': tokenaccesspatient.role.institution.short_name,
+                        'oid': oid_inst.json()[0]
+                    }
+                })
+                request.session = SessionStore(session_key=kwargs.get('token'))
+                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
+                return render(request, template_name='html5dicom/patient_main.html', context=context_user)
+            else:
+                return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        elif type_token == 'study':
+            if validate_token_study_expired(tokenaccessstudy):
+                url_httpdicom = Setting.objects.get(key='url_httpdicom').value
+                url_httpdicom_req = url_httpdicom + '/custodians/titles/' + tokenaccessstudy.role.institution.organization.short_name
+                oid_org = requests.get(url_httpdicom_req)
+                url_httpdicom_req += '/aets/' + tokenaccessstudy.role.institution.short_name
+                oid_inst = requests.get(url_httpdicom_req)
+                organization = {}
+                organization.update({
+                    "patientID": "",
+                    "SeriesSelection": "",
+                    "StudyIUID": tokenaccessstudy.study_iuid,
+                    "name": tokenaccessstudy.role.institution.organization.short_name,
+                    "oid": oid_org.json()[0],
+                    "institution": {
+                        'name': tokenaccessstudy.role.institution.short_name,
+                        'aet': tokenaccessstudy.role.institution.short_name,
+                        'oid': oid_inst.json()[0]
+                    }
+                })
+                request.session = SessionStore(session_key=kwargs.get('token'))
+                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
+                return render(request, template_name='html5dicom/patient_main.html', context=context_user)
+            else:
+                return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
         return HttpResponse({'error': 'missing token'}, status=status.HTTP_400_BAD_REQUEST)
 

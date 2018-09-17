@@ -32,7 +32,7 @@
         }
     }
 
-    addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar, SeriesSelection){
+    addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar, SeriesSelection, StudyIUID){
         $("#table-container").empty();
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
   	    $(ContentTabPane).appendTo('#table-container');
@@ -170,7 +170,12 @@
             },
             "fnServerParams": function ( aoData, fnCallback ) {
                 //aoData.columns[6].search.value = $('#modalities').val();
-                aoData.columns[3].search.value = patientID;
+                if(patientID != ''){
+                    aoData.columns[3].search.value = patientID;
+                }
+                if(StudyIUID != ''){
+                    aoData.studyiuid = StudyIUID;
+                }
                 if($('#date_start').val() === undefined){
 
                 }else{
