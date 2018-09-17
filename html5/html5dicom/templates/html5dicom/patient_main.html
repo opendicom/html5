@@ -28,9 +28,10 @@
         var inst = organization.institution.name;
         var oid = organization.institution.oid;
         var patientID = organization.patientID;
+        var SeriesSelection = organization.SeriesSelection;
         var service = 'Todos';
         var max_rows = 100;
-        addTableStudy(org, inst, oid, 'Medico', service, max_rows, patientID, organization.config_toolbar);
+        addTableStudy(org, inst, oid, 'Medico', service, max_rows, patientID, organization.config_toolbar, SeriesSelection);
 
         $.datepicker.regional['es'] = {
             closeText: 'Cerrar',

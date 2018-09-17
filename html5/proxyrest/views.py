@@ -182,6 +182,7 @@ def study_web(request, *args, **kwargs):
             organization = {}
             organization.update({
                 "patientID": tokenaccesspatient.PatientID,
+                "SeriesSelection": tokenaccesspatient.SeriesSelection,
                 "name": tokenaccesspatient.role.institution.organization.short_name,
                 "oid": oid_org.json()[0],
                 "institution": {
