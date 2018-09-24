@@ -22,29 +22,37 @@
 
     open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
         var url_ajax = '';
-        var cornerstone_window = window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
         if(requestType == 'STUDY'){
             $.ajax({
                 url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
                 type: "GET",
+                async: false,
                 success: function(data, textStatus, jqXHR){
                     sessionStorage.setItem('json_estudio', JSON.stringify(data));
-                    cornerstone_window.location;
                 },
                 error: function (jqXHR, textStatus, errorThrown){
                     console.log('Error ' + jqXHR);
+                },
+                complete: function (jqXHR, textStatus) {
+                    var cornerstone_window = window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                    cornerstone_window.location;
                 }
             });
         }else if(requestType == 'SERIES'){
             $.ajax({
                 url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,
                 type: "GET",
+                async: false,
                 success: function(data, textStatus, jqXHR){
                     sessionStorage.setItem('json_estudio', JSON.stringify(data));
                     cornerstone_window.location;
                 },
                 error: function (jqXHR, textStatus, errorThrown){
                     console.log('Error ' + jqXHR);
+                },
+                complete: function (jqXHR, textStatus) {
+                    var cornerstone_window = window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                    cornerstone_window.location;
                 }
             });
         }
