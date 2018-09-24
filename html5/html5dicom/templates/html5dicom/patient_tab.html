@@ -4,13 +4,14 @@
 <script>
     open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
         var url_ajax = '';
+        var cornerstone_window = window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
         if(requestType == 'STUDY'){
             $.ajax({
                 url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
                 type: "GET",
                 success: function(data, textStatus, jqXHR){
                     sessionStorage.setItem('json_estudio', JSON.stringify(data));
-                    window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                    cornerstone_window.location;
                 },
                 error: function (jqXHR, textStatus, errorThrown){
                     console.log('Error ' + jqXHR);
@@ -22,7 +23,7 @@
                 type: "GET",
                 success: function(data, textStatus, jqXHR){
                     sessionStorage.setItem('json_estudio', JSON.stringify(data));
-                    window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                    cornerstone_window.location;
                 },
                 error: function (jqXHR, textStatus, errorThrown){
                     console.log('Error ' + jqXHR);
@@ -31,7 +32,7 @@
         }
     }
 
-    addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar){
+    addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar, SeriesSelection, StudyIUID){
         $("#table-container").empty();
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
   	    $(ContentTabPane).appendTo('#table-container');
@@ -53,7 +54,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\', \''+ SeriesSelection + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
@@ -77,7 +78,7 @@
                     "targets": 3,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&IssuerOfPatientID"));
-                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\')"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
+                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\',\''+ SeriesSelection + '\')"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
                     }
                 },
                 {
@@ -169,7 +170,12 @@
             },
             "fnServerParams": function ( aoData, fnCallback ) {
                 //aoData.columns[6].search.value = $('#modalities').val();
-                aoData.columns[3].search.value = patientID;
+                if(patientID != ''){
+                    aoData.columns[3].search.value = patientID;
+                }
+                if(StudyIUID != ''){
+                    aoData.studyiuid = StudyIUID;
+                }
                 if($('#date_start').val() === undefined){
 
                 }else{
@@ -230,7 +236,7 @@
             }
         });
     }
-    showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description, accession_number, study_uid, oid, org, inst, config_toolbar){
+    showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description, accession_number, study_uid, oid, org, inst, config_toolbar, SeriesSelection){
         $('#dialog-series').dialog('option', 'title', 'Paciente (' + pat_id +') '+ name_id +'. Detalle del estudio (' + accession_number + ') '+ study_description);
         $('#dialog-series').dialog( "open" );
         $('#table_series thead th').each( function () {
@@ -297,6 +303,7 @@
                 "data"   : function( d ) {
                         d.custodiantitle =  org;
                         d.aet = inst;
+                        d.SeriesSelection = SeriesSelection;
                 }
             },
             'language'      : {
@@ -308,8 +315,8 @@
                     options_toolbar += '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX</a>';
                     options_toolbar += '<a class="btn btn-danger" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + study_uid +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
                 }
-                options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span> HTML5</a>';
-                options_toolbar += '<a class="btn btn-warning" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span> Download</a>';
+                options_toolbar += '<a class="btn btn-default" href="#" onclick="open_cornerstone(\'STUDY\',\'' + accession_number + '\',\'' + study_uid + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span> Ver estudio</a>';
+                options_toolbar += '<a class="btn btn-warning" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + study_uid + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span> Descargar</a>';
                 $("div.toolbarseries").append(options_toolbar);
             }
         });
@@ -325,7 +332,7 @@
             });
         } );
     }
-    showTablePatient = function(url, oid, org, inst, config_toolbar){
+    showTablePatient = function(url, oid, org, inst, config_toolbar, SeriesSelection){
         $('button').trigger('blur');
         $('#dialog-patient').dialog('option', 'title', 'Estudios de un paciente');
         $('#dialog-patient').dialog( "open" );
@@ -346,7 +353,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\', \''+ config_toolbar + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\', \''+ config_toolbar + '\',\''+ SeriesSelection + '\')"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {

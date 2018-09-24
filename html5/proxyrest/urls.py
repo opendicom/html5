@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'^wado/', views.rest_wado, name='wado'),
     url(r'^study_web/(?P<token>[^/]+)', views.study_web, name='study_web'),
     url(r'^patient_login/', views.token_access_patient, name='token_patient'),
+    url(r'^study_login/', views.token_access_study, name='token_study'),
 ]
