@@ -201,7 +201,7 @@ def study_web(request, *args, **kwargs):
                 organization = {}
                 organization.update({
                     "patientID": tokenaccesspatient.PatientID,
-                    "SeriesSelection": tokenaccesspatient.SeriesSelection,
+                    "seriesSelection": tokenaccesspatient.seriesSelection,
                     "StudyIUID": "",
                     "name": tokenaccesspatient.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
@@ -226,7 +226,7 @@ def study_web(request, *args, **kwargs):
                 organization = {}
                 organization.update({
                     "patientID": "",
-                    "SeriesSelection": "",
+                    "seriesSelection": "",
                     "StudyIUID": tokenaccessstudy.study_iuid,
                     "name": tokenaccessstudy.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
@@ -265,7 +265,7 @@ def token_access_patient(request, *args, **kwargs):
                 'PatientID': request.data.get('PatientID'),
                 'IssuerOfPatientID': request.data.get('IssuerOfPatientID', ''),
                 'IssuerOfPatientIDQualifiers': request.data.get('IssuerOfPatientIDQualifiers', ''),
-                'SeriesSelection': request.data.get('SeriesSelection', ''),
+                'seriesSelection': request.data.get('seriesSelection', ''),
                 'start_date': timezone.now(),
                 'expiration_date': timezone.now() + timezone.timedelta(minutes=5),
                 'role_id': role.id
