@@ -8,6 +8,7 @@
             $.ajax({
                 url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
                 type: "GET",
+                async: false,
                 success: function(data, textStatus, jqXHR){
                     sessionStorage.setItem('json_estudio', JSON.stringify(data));
                 },
@@ -23,6 +24,7 @@
             $.ajax({
                 url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,
                 type: "GET",
+                async: false,
                 success: function(data, textStatus, jqXHR){
                     sessionStorage.setItem('json_estudio', JSON.stringify(data));
                 },
