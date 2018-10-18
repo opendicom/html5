@@ -3657,7 +3657,12 @@ var JpegImage = (function jpegImage() {
         var numPixels = rows * columns;
         var sizeInBytes = numPixels * bytesPerPixel;
         var photometricInterpretation = dataSet.string('x00280004');
-        var invert = (photometricInterpretation === "MONOCHROME1");
+        var invert;
+        if (photometricInterpretation === "MONOCHROME1" || photometricInterpretation === "MONOCHROME2"){
+          invert = true;
+        }else{
+          invert = false;
+        }
         var windowWidthAndCenter = cornerstoneWADOImageLoader.getWindowWidthAndCenter(dataSet);
 
         // Decompress and decode the pixel data for this image
