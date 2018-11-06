@@ -198,6 +198,10 @@ def study_web(request, *args, **kwargs):
                 oid_org = requests.get(url_httpdicom_req)
                 url_httpdicom_req += '/aets/' + tokenaccesspatient.role.institution.short_name
                 oid_inst = requests.get(url_httpdicom_req)
+                try:
+                    config_toolbar = Setting.objects.get(key='toolbar_patient').value
+                except Setting.DoesNotExist:
+                    config_toolbar = 'full'
                 organization = {}
                 organization.update({
                     "patientID": tokenaccesspatient.PatientID,
@@ -205,6 +209,7 @@ def study_web(request, *args, **kwargs):
                     "StudyIUID": "",
                     "name": tokenaccesspatient.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
+                    "config_toolbar": config_toolbar,
                     "institution": {
                         'name': tokenaccesspatient.role.institution.short_name,
                         'aet': tokenaccesspatient.role.institution.short_name,
@@ -223,6 +228,10 @@ def study_web(request, *args, **kwargs):
                 oid_org = requests.get(url_httpdicom_req)
                 url_httpdicom_req += '/aets/' + tokenaccessstudy.role.institution.short_name
                 oid_inst = requests.get(url_httpdicom_req)
+                try:
+                    config_toolbar = Setting.objects.get(key='toolbar_patient').value
+                except Setting.DoesNotExist:
+                    config_toolbar = 'full'
                 organization = {}
                 organization.update({
                     "patientID": "",
@@ -230,6 +239,7 @@ def study_web(request, *args, **kwargs):
                     "StudyIUID": tokenaccessstudy.study_iuid,
                     "name": tokenaccessstudy.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
+                    "config_toolbar": config_toolbar,
                     "institution": {
                         'name': tokenaccessstudy.role.institution.short_name,
                         'aet': tokenaccessstudy.role.institution.short_name,
