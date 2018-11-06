@@ -61,11 +61,6 @@ def rest_logout(request, *args, **kwargs):
 
 
 def web_logout(request, *args, **kwargs):
-    try:
-        tokenaccesspatient = TokenAccessPatient.objects.get(token=request.session._session_key)
-        tokenaccesspatient.delete()
-    except TokenAccessPatient.DoesNotExist:
-        pass
     logout(request)
     return HttpResponseRedirect('/html5dicom/login')
 
@@ -94,8 +89,6 @@ def validate_token_patient_expired(tokenaccesspatient):
 
 def validate_token_study_expired(tokenaccessstuy):
     if tokenaccessstuy.expiration_date >= timezone.now():
-        tokenaccessstuy.expiration_date = timezone.now() + timezone.timedelta(minutes=5)
-        tokenaccessstuy.save()
         return True
     else:
         SessionStore(session_key=tokenaccessstuy.token).delete()
@@ -216,7 +209,7 @@ def study_web(request, *args, **kwargs):
                         'oid': oid_inst.json()[0]
                     }
                 })
-                request.session = SessionStore(session_key=kwargs.get('token'))
+                login(request, tokenaccesspatient.role.user)
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             else:
@@ -246,7 +239,7 @@ def study_web(request, *args, **kwargs):
                         'oid': oid_inst.json()[0]
                     }
                 })
-                request.session = SessionStore(session_key=kwargs.get('token'))
+                login(request, tokenaccessstudy.role.user)
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             else:
