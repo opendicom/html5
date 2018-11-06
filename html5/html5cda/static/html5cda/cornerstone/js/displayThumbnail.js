@@ -31,7 +31,7 @@ function displayThumbnail(seriesList, seriesElement, element, stack, loaded) {
         stackState.data[0].currentImageIdIndex = 0;
 
         // Get the default viewport
-        var defViewport = cornerstone.getDefaultViewport(element, image);
+        var defViewport = cornerstone.getDefaultViewportForImage(element, image);
         // Get the current series stack index
         // Display the image
         cornerstone.displayImage(element, image, defViewport);

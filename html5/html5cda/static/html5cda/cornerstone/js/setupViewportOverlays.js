@@ -16,7 +16,7 @@ function setupViewportOverlays(element, data) {
 
 
     // On new image (displayed?)
-    function onNewImage(e, eventData) {
+    function onNewImage(eventData) {
         // If we are currently playing a clip then update the FPS
         // Get the state of the 'playClip tool'
         var playClipToolData = cornerstoneTools.getToolState(element, 'playClip');
@@ -26,7 +26,6 @@ function setupViewportOverlays(element, data) {
 
             // Update FPS
             $(bottomLeft[0]).text("FPS: " + Math.round(eventData.frameRate));
-            console.log('frameRate: ' + e.frameRate);
 
         } else {
             // Set FPS empty if not playing a clip
@@ -45,20 +44,21 @@ function setupViewportOverlays(element, data) {
         $(bottomLeft[2]).text("Image # " + (stack.currentImageIdIndex + 1) + "/" + stack.imageIds.length);
     }
     // Add a CornerstoneNewImage event listener on the 'element' (viewer) (?)
-    $(element).on("CornerstoneNewImage", onNewImage);
+    element.addEventListener("cornerstonenewimage", onNewImage);
 
 
     // On image rendered
     function onImageRendered(e, eventData) {
+        var viewport = cornerstone.getViewport(e.target);
         // Set zoom overlay text
-        $(bottomRight[0]).text("Zoom:" + eventData.viewport.scale.toFixed(2));
+        $(bottomRight[0]).text("Zoom:" + viewport.scale.toFixed(2));
         // Set WW/WL overlay text
-        $(bottomRight[1]).text("WW/WL:" + Math.round(eventData.viewport.voi.windowWidth) + "/" + Math.round(eventData.viewport.voi.windowCenter));
+        $(bottomRight[1]).text("WW/WL:" + Math.round(viewport.voi.windowWidth) + "/" + Math.round(viewport.voi.windowCenter));
         // Set render time overlay text
-        $(bottomLeft[1]).text("Render Time:" + eventData.renderTimeInMs + " ms");
+        $(bottomLeft[1]).text("Render Time:" + e.detail.renderTimeInMs + " ms");
     }
     // Add a CornerstoneImageRendered event listener on the 'element' (viewer) (?)
-    $(element).on("CornerstoneImageRendered", onImageRendered);
+    element.addEventListener("cornerstoneimagerendered", onImageRendered);
 
 
 }

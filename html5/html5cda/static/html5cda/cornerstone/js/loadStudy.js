@@ -6,6 +6,31 @@ function loadStudy(studyViewer, viewportModel, studyId) {
     //$.getJSON('studies/' + studyId, function(data) {
     var data = jQuery.parseJSON(sessionStorage.getItem('json_estudio'));
 
+    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+
+    let webWorkerUrl = '/static/html5cda/cornerstone/lib/cornerstoneWADOImageLoaderWebWorker.min.js';
+    let codecsUrl = 'cornerstoneWADOImageLoaderCodecs.js';
+
+    try {
+        window.cornerstoneWADOImageLoader.webWorkerManager.initialize({
+            maxWebWorkers: 4,
+            startWebWorkersOnDemand: true,
+            webWorkerPath: webWorkerUrl,
+            webWorkerTaskPaths: [],
+            taskConfiguration: {
+                decodeTask: {
+                    loadCodecsOnStartup: true,
+                    initializeCodecsOnStartup: false,
+                    codecsPath: codecsUrl,
+                    usePDFJS: false,
+                    strict: true
+                }
+            }
+        });
+    } catch (error) {
+        throw new Error('cornerstoneWADOImageLoader is not loaded');
+    }
+
         var imageViewer = new ImageViewer(studyViewer, viewportModel);
         //imageViewer.setLayout('1x1'); // default layout
 

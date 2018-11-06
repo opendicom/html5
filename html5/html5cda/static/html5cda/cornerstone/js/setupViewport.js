@@ -1,6 +1,7 @@
 function setupViewport(element, stack, image) {
+    var defViewportd = cornerstone.getDefaultViewportForImage(element, image);
     // Display the image on the viewer element
-    cornerstone.displayImage(element, image);
+    cornerstone.displayImage(element, image,defViewportd);
 
     // If it's a movie (has frames), then play the clip
     if (stack.frameRate !== undefined) {
