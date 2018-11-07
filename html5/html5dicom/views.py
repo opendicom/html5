@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import SESSION_KEY
 from django.contrib.sessions.models import Session
+from django.utils import timezone
 from django.conf import settings
 from html5dicom import models
 from html5dicom.forms import UserViewerSettingsForm
@@ -223,6 +224,20 @@ def weasis(request, *args, **kwargs):
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
+@login_required(login_url='/html5dicom/login')
+def cornerstone(request, *args, **kwargs):
+    url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
+    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+    if request.GET['requestType'] == 'STUDY':
+        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
+    elif request.GET['requestType'] == 'SERIES':
+        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
+    else:
+        url_manifiest = ''
+    manifiest = requests.get(url_manifiest)
+    return HttpResponse(manifiest.text, content_type=manifiest.headers.get('content-type'))
+
+
 def stream_response(url_zip):
     r = requests.get(url_zip, stream=True)
     for chunk in r.iter_content(512 * 1024):
@@ -232,7 +247,8 @@ def stream_response(url_zip):
 def osirix(request, *args, **kwargs):
     if 'session' in request.GET:
         try:
-            session = Session.objects.get(session_key=request.GET['session'])
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
             session.get_decoded()[SESSION_KEY]
             url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
             if request.GET['requestType'] == 'STUDY':
@@ -258,23 +274,11 @@ def osirix(request, *args, **kwargs):
         return HttpResponse('Error', status=400)
 
 
-def cornerstone(request, *args, **kwargs):
-    url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
-    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
-    if request.GET['requestType'] == 'STUDY':
-        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
-    elif request.GET['requestType'] == 'SERIES':
-        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
-    else:
-        url_manifiest = ''
-    manifiest = requests.get(url_manifiest)
-    return HttpResponse(manifiest.text, content_type=manifiest.headers.get('content-type'))
-
-
 def wado(request, *args, **kwargs):
     if 'session' in request.GET:
         try:
-            session = Session.objects.get(session_key=request.GET['session'])
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
             session.get_decoded()[SESSION_KEY]
             url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
             url_request = request.build_absolute_uri()
