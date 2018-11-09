@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 import requests
 import uuid
 from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
-from html5dicom.models import Institution, Role, Setting
+from html5dicom.models import Institution, Role, Setting, UserViewerSettings
 from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer, TokenAccessStudySerializer
 from django.contrib.sessions.backends.db import SessionStore
 
@@ -210,7 +210,13 @@ def study_web(request, *args, **kwargs):
                     }
                 })
                 login(request, tokenaccesspatient.role.user)
-                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
+                user_viewer = ''
+                try:
+                    user_viewer = UserViewerSettings.objects.get(user=tokenaccesspatient.role.user).viewer
+                except UserViewerSettings.DoesNotExist:
+                    user_viewer = ''
+                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
+                                'user_viewer': user_viewer}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             else:
                 return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -240,7 +246,13 @@ def study_web(request, *args, **kwargs):
                     }
                 })
                 login(request, tokenaccessstudy.role.user)
-                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST']}
+                user_viewer = ''
+                try:
+                    user_viewer = UserViewerSettings.objects.get(user=tokenaccessstudy.role.user).viewer
+                except UserViewerSettings.DoesNotExist:
+                    user_viewer = ''
+                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
+                                'user_viewer': user_viewer}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             else:
                 return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
