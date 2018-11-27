@@ -8,6 +8,8 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
     PatientID = serializers.CharField()
     IssuerOfPatientID = serializers.CharField(required=False, default='', allow_blank=True)
     IssuerOfPatientIDQualifiers = serializers.JSONField(required=False, default='')
+    StudyDate = serializers.CharField(required=False, default='', allow_blank=True)
+    viewerType = serializers.CharField(required=False, default='', allow_blank=True)
     seriesSelection = serializers.JSONField(required=False, default='')
     start_date = serializers.DateTimeField
     expiration_date = serializers.DateTimeField
@@ -18,6 +20,8 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
                                                   PatientID=validated_data['PatientID'],
                                                   IssuerOfPatientID=validated_data['IssuerOfPatientID'],
                                                   IssuerOfPatientIDQualifiers=validated_data['IssuerOfPatientIDQualifiers'],
+                                                  StudyDate=validated_data['StudyDate'],
+                                                  viewerType=validated_data['viewerType'],
                                                   seriesSelection=validated_data['seriesSelection'],
                                                   start_date=validated_data['start_date'],
                                                   expiration_date=validated_data['expiration_date'],
@@ -26,19 +30,22 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TokenAccessPatient
-        fields = ('token', 'PatientID', 'IssuerOfPatientID', 'IssuerOfPatientIDQualifiers', 'seriesSelection', 'start_date', 'expiration_date', 'role_id')
+        fields = ('token', 'PatientID', 'IssuerOfPatientID', 'IssuerOfPatientIDQualifiers', 'StudyDate',
+                  'viewerType', 'seriesSelection', 'start_date', 'expiration_date', 'role_id')
 
 
 class TokenAccessStudySerializer(serializers.ModelSerializer):
     token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessStudy.objects.all())])
-    study_iuid = serializers.CharField()
+    StudyInstanceUID = serializers.CharField()
+    viewerType = serializers.CharField()
     start_date = serializers.DateTimeField
     expiration_date = serializers.DateTimeField
     role_id = serializers.IntegerField()
 
     def create(self, validated_data):
         token = TokenAccessStudy.objects.create(token=validated_data['token'],
-                                                study_iuid=validated_data['study_iuid'],
+                                                StudyInstanceUID=validated_data['StudyInstanceUID'],
+                                                viewerType=validated_data['viewerType'],
                                                 start_date=validated_data['start_date'],
                                                 expiration_date=validated_data['expiration_date'],
                                                 role_id=validated_data['role_id'])
@@ -46,7 +53,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TokenAccessPatient
-        fields = ('token', 'study_iuid', 'start_date', 'expiration_date', 'role_id')
+        fields = ('token', 'StudyInstanceUID', 'viewerType', 'start_date', 'expiration_date', 'role_id')
 
 
 class SessionRestSerializer(serializers.ModelSerializer):
@@ -57,9 +64,9 @@ class SessionRestSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         sessionrest = SessionRest.objects.create(sessionid=validated_data['sessionid'],
-                                                      start_date=validated_data['start_date'],
-                                                      expiration_date=validated_data['expiration_date'],
-                                                      role_id=validated_data['role_id'])
+                                                 start_date=validated_data['start_date'],
+                                                 expiration_date=validated_data['expiration_date'],
+                                                 role_id=validated_data['role_id'])
         return sessionrest
 
     class Meta:

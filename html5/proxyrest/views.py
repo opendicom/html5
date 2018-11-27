@@ -199,7 +199,7 @@ def study_web(request, *args, **kwargs):
                 organization.update({
                     "patientID": tokenaccesspatient.PatientID,
                     "seriesSelection": tokenaccesspatient.seriesSelection,
-                    "StudyIUID": "",
+                    "StudyInstanceUID": "",
                     "name": tokenaccesspatient.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
                     "config_toolbar": config_toolbar,
@@ -235,7 +235,7 @@ def study_web(request, *args, **kwargs):
                 organization.update({
                     "patientID": "",
                     "seriesSelection": "",
-                    "StudyIUID": tokenaccessstudy.study_iuid,
+                    "StudyInstanceUID": tokenaccessstudy.StudyInstanceUID,
                     "name": tokenaccessstudy.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
                     "config_toolbar": config_toolbar,
@@ -280,9 +280,11 @@ def token_access_patient(request, *args, **kwargs):
                 'PatientID': request.data.get('PatientID'),
                 'IssuerOfPatientID': request.data.get('IssuerOfPatientID', ''),
                 'IssuerOfPatientIDQualifiers': request.data.get('IssuerOfPatientIDQualifiers', ''),
+                'StudyDate': request.data.get('StudyDate', ''),
+                'viewerType': request.data.get('viewerType', ''),
                 'seriesSelection': request.data.get('seriesSelection', ''),
                 'start_date': timezone.now(),
-                'expiration_date': timezone.now() + timezone.timedelta(minutes=5),
+                'expiration_date': timezone.now() + timezone.timedelta(seconds=5),
                 'role_id': role.id
             })
 
@@ -314,9 +316,9 @@ def token_access_study(request, *args, **kwargs):
             login(request, user)
             serializer = TokenAccessStudySerializer(data={
                 'token': request.session._session_key,
-                'study_iuid': request.data.get('study_iuid'),
+                'StudyInstanceUID': request.data.get('StudyInstanceUID'),
                 'start_date': timezone.now(),
-                'expiration_date': timezone.now() + timezone.timedelta(days=365),
+                'expiration_date': timezone.now() + timezone.timedelta(seconds=365),
                 'role_id': role.id
             })
 

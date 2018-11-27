@@ -14,6 +14,8 @@ class TokenAccessPatient(models.Model):
     PatientID = models.CharField(max_length=20)
     IssuerOfPatientID = models.CharField(max_length=64, blank=True, null=True)
     IssuerOfPatientIDQualifiers = models.TextField(blank=True, null=True)
+    StudyDate = models.CharField(max_length=17, blank=True, null=True)
+    viewerType = models.CharField(max_length=11, blank=True, null=True)
     seriesSelection = models.TextField(blank=True, null=True)
     start_date = models.DateTimeField()
     expiration_date = models.DateTimeField()
@@ -25,10 +27,11 @@ class TokenAccessPatient(models.Model):
 
 class TokenAccessStudy(models.Model):
     token = models.CharField(max_length=32, primary_key=True)
-    study_iuid = models.CharField(max_length=255)
+    StudyInstanceUID = models.CharField(max_length=255)
+    viewerType = models.CharField(max_length=11, blank=True, null=True)
     start_date = models.DateTimeField()
     expiration_date = models.DateTimeField()
     role = models.ForeignKey(Role, on_delete=models.DO_NOTHING)
 
     class Meta:
-        unique_together = ('token', 'study_iuid'),
+        unique_together = ('token', 'StudyInstanceUID'),
