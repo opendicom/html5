@@ -5,38 +5,32 @@
     open_cornerstone = function(requestType, accession_number, study_uid, series_uid, oid){
         var url_ajax = '';
         if(requestType == 'STUDY'){
-            $.ajax({
-                url: "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid,
-                type: "GET",
-                async: false,
-                success: function(data, textStatus, jqXHR){
-                    sessionStorage.setItem('json_estudio', JSON.stringify(data));
-                },
-                error: function (jqXHR, textStatus, errorThrown){
-                    console.log('Error ' + jqXHR);
-                },
-                complete: function (jqXHR, textStatus) {
-                    var cornerstone_window = window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
-                    cornerstone_window.location;
-                }
-            });
+            url_ajax = "{% url 'cornerstone' %}?requestType=STUDY&study_uid=" + study_uid + "&custodianOID=" + oid;
         }else if(requestType == 'SERIES'){
+            url_ajax = "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid;
+        }
+        if(url_ajax){
             $.ajax({
-                url: "{% url 'cornerstone' %}?requestType=SERIES&study_uid=" + study_uid + '&series_uid=' + series_uid  + "&custodianOID=" + oid,
+                url: url_ajax,
                 type: "GET",
                 async: false,
                 success: function(data, textStatus, jqXHR){
                     sessionStorage.setItem('json_estudio', JSON.stringify(data));
                 },
                 error: function (jqXHR, textStatus, errorThrown){
-                    console.log('Error ' + jqXHR);
+                    console.log('Error ' + textStatus);
                 },
                 complete: function (jqXHR, textStatus) {
-                    var cornerstone_window = window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
-                    cornerstone_window.location;
+                    if (jqXHR.status == 403){
+                        location.reload();
+                    }else{
+                        var cornerstone_window = window.open('{% static "html5dicom/cornerstone/index.html" %}','_blank')
+                        cornerstone_window.location;
+                    }
                 }
             });
         }
+
     }
 
     addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar, SeriesSelection, StudyIUID){
