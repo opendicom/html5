@@ -224,8 +224,12 @@ def weasis(request, *args, **kwargs):
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
-@login_required(login_url='/html5dicom/login')
 def cornerstone(request, *args, **kwargs):
+    if not request.user.is_authenticated():
+        if request.is_ajax():
+            return HttpResponse(status=403, content="you are not logged in")
+        else:
+            return HttpResponseRedirect('/html5dicom/login')
     url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
     base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
