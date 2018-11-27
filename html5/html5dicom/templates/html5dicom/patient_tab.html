@@ -33,7 +33,7 @@
 
     }
 
-    addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar, SeriesSelection, StudyIUID){
+    addTableStudy = function (org, inst, oid, role, service, max_rows, patientID, config_toolbar, seriesSelection, StudyInstanceUID){
         $("#table-container").empty();
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
   	    $(ContentTabPane).appendTo('#table-container');
@@ -55,7 +55,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\', `'+ SeriesSelection + '`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\', `'+ seriesSelection + '`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
@@ -79,7 +79,7 @@
                     "targets": 3,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&IssuerOfPatientID"));
-                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\',`'+ SeriesSelection + '`)"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
+                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\',`'+ seriesSelection + '`)"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
                     }
                 },
                 {
@@ -174,8 +174,8 @@
                 if(patientID != ''){
                     aoData.columns[3].search.value = patientID;
                 }
-                if(StudyIUID != ''){
-                    aoData.studyiuid = StudyIUID;
+                if(StudyInstanceUID != ''){
+                    aoData.StudyInstanceUID = StudyInstanceUID;
                 }
                 if($('#date_start').val() === undefined){
 
@@ -237,7 +237,7 @@
             }
         });
     }
-    showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description, accession_number, study_uid, oid, org, inst, config_toolbar, SeriesSelection){
+    showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description, accession_number, study_uid, oid, org, inst, config_toolbar, seriesSelection){
         $('#dialog-series').dialog('option', 'title', 'Paciente (' + pat_id +') '+ name_id +'. Detalle del estudio (' + accession_number + ') '+ study_description);
         $('#dialog-series').dialog( "open" );
         $('#table_series thead th').each( function () {
@@ -304,7 +304,7 @@
                 "data"   : function( d ) {
                         d.custodiantitle =  org;
                         d.aet = inst;
-                        d.seriesSelection = SeriesSelection;
+                        d.seriesSelection = seriesSelection;
                 }
             },
             'language'      : {
@@ -333,7 +333,7 @@
             });
         } );
     }
-    showTablePatient = function(url, oid, org, inst, config_toolbar, SeriesSelection){
+    showTablePatient = function(url, oid, org, inst, config_toolbar, seriesSelection){
         $('button').trigger('blur');
         $('#dialog-patient').dialog('option', 'title', 'Estudios de un paciente');
         $('#dialog-patient').dialog( "open" );
@@ -354,7 +354,7 @@
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
                         var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&IssuerOfPatientID"))
-                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\', \''+ config_toolbar + '\',`'+ SeriesSelection + '`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{{request.scheme}}://{{ httpdicom }}/'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\', \''+ config_toolbar + '\',`'+ seriesSelection + '`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
