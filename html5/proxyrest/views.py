@@ -175,48 +175,61 @@ def study_web(request, *args, **kwargs):
                 config_toolbar = Setting.objects.get(key='toolbar_patient').value
             except Setting.DoesNotExist:
                 config_toolbar = 'full'
-            try:
-                user_viewer = UserViewerSettings.objects.get(user=token_access.role.user).viewer
-            except UserViewerSettings.DoesNotExist:
-                user_viewer = ''
+            if token_access.viewerType != '':
+                user_viewer = token_access.viewerType
+            else:
+                try:
+                    user_viewer = UserViewerSettings.objects.get(user=token_access.role.user).viewer
+                except UserViewerSettings.DoesNotExist:
+                    user_viewer = ''
             url_httpdicom = Setting.objects.get(key='url_httpdicom').value
             url_httpdicom_req = url_httpdicom + '/custodians/titles/' + token_access.role.institution.organization.short_name
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
             organization = {}
-            if type_token == 'patient':
-                organization.update({
-                    "patientID": token_access.PatientID,
-                    "seriesSelection": token_access.seriesSelection,
-                    "StudyInstanceUID": "",
-                    "name": token_access.role.institution.organization.short_name,
-                    "oid": oid_org.json()[0],
-                    "config_toolbar": config_toolbar,
-                    "institution": {
-                        'name': token_access.role.institution.short_name,
-                        'aet': token_access.role.institution.short_name,
-                        'oid': oid_inst.json()[0]
-                    }
-                })
-            elif type_token == 'study':
-                organization.update({
-                    "patientID": "",
-                    "seriesSelection": "",
-                    "StudyInstanceUID": token_access.StudyInstanceUID,
-                    "name": token_access.role.institution.organization.short_name,
-                    "oid": oid_org.json()[0],
-                    "config_toolbar": config_toolbar,
-                    "institution": {
-                        'name': token_access.role.institution.short_name,
-                        'aet': token_access.role.institution.short_name,
-                        'oid': oid_inst.json()[0]
-                    }
-                })
-            login(request, token_access.role.user)
-            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                            'user_viewer': user_viewer}
-            return render(request, template_name='html5dicom/patient_main.html', context=context_user)
+            if (type_token == 'patient') or (type_token == 'study' and token_access.viewerType == ''):
+                if type_token == 'patient':
+                    organization.update({
+                        "patientID": token_access.PatientID,
+                        "seriesSelection": token_access.seriesSelection,
+                        "StudyInstanceUID": "",
+                        "name": token_access.role.institution.organization.short_name,
+                        "oid": oid_org.json()[0],
+                        "config_toolbar": config_toolbar,
+                        "institution": {
+                            'name': token_access.role.institution.short_name,
+                            'aet': token_access.role.institution.short_name,
+                            'oid': oid_inst.json()[0]
+                        }
+                    })
+                elif type_token == 'study' and token_access.viewerType == '':
+                    organization.update({
+                        "patientID": "",
+                        "seriesSelection": "",
+                        "StudyInstanceUID": token_access.StudyInstanceUID,
+                        "name": token_access.role.institution.organization.short_name,
+                        "oid": oid_org.json()[0],
+                        "config_toolbar": config_toolbar,
+                        "institution": {
+                            'name': token_access.role.institution.short_name,
+                            'aet': token_access.role.institution.short_name,
+                            'oid': oid_inst.json()[0]
+                        }
+                    })
+                login(request, token_access.role.user)
+                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
+                                'user_viewer': user_viewer}
+                return render(request, template_name='html5dicom/patient_main.html', context=context_user)
+            elif type_token == 'study' and token_access.viewerType != '':
+                if token_access.viewerType == 'cornerstone':
+                    pass
+                elif token_access.viewerType == 'weasis':
+                    pass
+                elif token_access.viewerType == 'zip':
+                    pass
+                elif token_access.viewerType == 'osirix':
+                    pass
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
