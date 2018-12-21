@@ -86,7 +86,7 @@ class Alternate(BaseModel):
 
 
 class Setting(BaseModel):
-    key = models.CharField(max_length=20, blank=False, null=False)
+    key = models.CharField(max_length=50, blank=False, null=False)
     value = models.CharField(max_length=255, blank=False, null=False)
 
 
