@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
@@ -76,23 +76,11 @@ def validate_session_expired(sessionrest):
         return False
 
 
-def validate_token_patient_expired(tokenaccesspatient):
-    if tokenaccesspatient.expiration_date >= timezone.now():
-        tokenaccesspatient.expiration_date = timezone.now() + timezone.timedelta(minutes=5)
-        tokenaccesspatient.save()
+def validate_token_expired(token_access):
+    if token_access.expiration_date >= timezone.now():
         return True
     else:
-        SessionStore(session_key=tokenaccesspatient.token).delete()
-        tokenaccesspatient.delete()
-        return False
-
-
-def validate_token_study_expired(tokenaccessstuy):
-    if tokenaccessstuy.expiration_date >= timezone.now():
-        return True
-    else:
-        SessionStore(session_key=tokenaccessstuy.token).delete()
-        tokenaccessstuy.delete()
+        token_access.delete()
         return False
 
 
@@ -173,89 +161,64 @@ def rest_wado(request, *args, **kwargs):
 
 def study_web(request, *args, **kwargs):
     if 'token' in kwargs:
-        type_token = ''
         try:
-            tokenaccesspatient = TokenAccessPatient.objects.get(token=kwargs.get('token'))
+            token_access = TokenAccessPatient.objects.get(token=kwargs.get('token'))
             type_token = 'patient'
         except TokenAccessPatient.DoesNotExist:
             try:
-                tokenaccessstudy = TokenAccessStudy.objects.get(token=kwargs.get('token'))
+                token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
                 type_token = 'study'
             except TokenAccessStudy.DoesNotExist:
-                return HttpResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        if type_token == 'patient':
-            if validate_token_patient_expired(tokenaccesspatient):
-                url_httpdicom = Setting.objects.get(key='url_httpdicom').value
-                url_httpdicom_req = url_httpdicom + '/custodians/titles/' + tokenaccesspatient.role.institution.organization.short_name
-                oid_org = requests.get(url_httpdicom_req)
-                url_httpdicom_req += '/aets/' + tokenaccesspatient.role.institution.short_name
-                oid_inst = requests.get(url_httpdicom_req)
-                try:
-                    config_toolbar = Setting.objects.get(key='toolbar_patient').value
-                except Setting.DoesNotExist:
-                    config_toolbar = 'full'
-                organization = {}
+                return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+        if validate_token_expired(token_access):
+            try:
+                config_toolbar = Setting.objects.get(key='toolbar_patient').value
+            except Setting.DoesNotExist:
+                config_toolbar = 'full'
+            try:
+                user_viewer = UserViewerSettings.objects.get(user=token_access.role.user).viewer
+            except UserViewerSettings.DoesNotExist:
+                user_viewer = ''
+            url_httpdicom = Setting.objects.get(key='url_httpdicom').value
+            url_httpdicom_req = url_httpdicom + '/custodians/titles/' + token_access.role.institution.organization.short_name
+            oid_org = requests.get(url_httpdicom_req)
+            url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
+            oid_inst = requests.get(url_httpdicom_req)
+            organization = {}
+            if type_token == 'patient':
                 organization.update({
-                    "patientID": tokenaccesspatient.PatientID,
-                    "seriesSelection": tokenaccesspatient.seriesSelection,
+                    "patientID": token_access.PatientID,
+                    "seriesSelection": token_access.seriesSelection,
                     "StudyInstanceUID": "",
-                    "name": tokenaccesspatient.role.institution.organization.short_name,
+                    "name": token_access.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
                     "config_toolbar": config_toolbar,
                     "institution": {
-                        'name': tokenaccesspatient.role.institution.short_name,
-                        'aet': tokenaccesspatient.role.institution.short_name,
+                        'name': token_access.role.institution.short_name,
+                        'aet': token_access.role.institution.short_name,
                         'oid': oid_inst.json()[0]
                     }
                 })
-                login(request, tokenaccesspatient.role.user)
-                user_viewer = ''
-                try:
-                    user_viewer = UserViewerSettings.objects.get(user=tokenaccesspatient.role.user).viewer
-                except UserViewerSettings.DoesNotExist:
-                    user_viewer = ''
-                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                                'user_viewer': user_viewer}
-                return render(request, template_name='html5dicom/patient_main.html', context=context_user)
-            else:
-                return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
-        elif type_token == 'study':
-            if validate_token_study_expired(tokenaccessstudy):
-                url_httpdicom = Setting.objects.get(key='url_httpdicom').value
-                url_httpdicom_req = url_httpdicom + '/custodians/titles/' + tokenaccessstudy.role.institution.organization.short_name
-                oid_org = requests.get(url_httpdicom_req)
-                url_httpdicom_req += '/aets/' + tokenaccessstudy.role.institution.short_name
-                oid_inst = requests.get(url_httpdicom_req)
-                try:
-                    config_toolbar = Setting.objects.get(key='toolbar_patient').value
-                except Setting.DoesNotExist:
-                    config_toolbar = 'full'
-                organization = {}
+            elif type_token == 'study':
                 organization.update({
                     "patientID": "",
                     "seriesSelection": "",
-                    "StudyInstanceUID": tokenaccessstudy.StudyInstanceUID,
-                    "name": tokenaccessstudy.role.institution.organization.short_name,
+                    "StudyInstanceUID": token_access.StudyInstanceUID,
+                    "name": token_access.role.institution.organization.short_name,
                     "oid": oid_org.json()[0],
                     "config_toolbar": config_toolbar,
                     "institution": {
-                        'name': tokenaccessstudy.role.institution.short_name,
-                        'aet': tokenaccessstudy.role.institution.short_name,
+                        'name': token_access.role.institution.short_name,
+                        'aet': token_access.role.institution.short_name,
                         'oid': oid_inst.json()[0]
                     }
                 })
-                login(request, tokenaccessstudy.role.user)
-                user_viewer = ''
-                try:
-                    user_viewer = UserViewerSettings.objects.get(user=tokenaccessstudy.role.user).viewer
-                except UserViewerSettings.DoesNotExist:
-                    user_viewer = ''
-                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                                'user_viewer': user_viewer}
-                return render(request, template_name='html5dicom/patient_main.html', context=context_user)
-            else:
-                return HttpResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            login(request, token_access.role.user)
+            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
+                            'user_viewer': user_viewer}
+            return render(request, template_name='html5dicom/patient_main.html', context=context_user)
+        else:
+            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
         return HttpResponse({'error': 'missing token'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -275,6 +238,10 @@ def token_access_patient(request, *args, **kwargs):
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
             login(request, user)
+            try:
+                allowed_age = int(Setting.objects.get(key='allowed_age_token_patient').value)
+            except Setting.DoesNotExist:
+                allowed_age = 120
             serializer = TokenAccessPatientSerializer(data={
                 'token': request.session._session_key,
                 'PatientID': request.data.get('PatientID'),
@@ -284,7 +251,7 @@ def token_access_patient(request, *args, **kwargs):
                 'viewerType': request.data.get('viewerType', ''),
                 'seriesSelection': request.data.get('seriesSelection', ''),
                 'start_date': timezone.now(),
-                'expiration_date': timezone.now() + timezone.timedelta(seconds=5),
+                'expiration_date': timezone.now() + timezone.timedelta(seconds=allowed_age),
                 'role_id': role.id
             })
 
@@ -292,7 +259,7 @@ def token_access_patient(request, *args, **kwargs):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response({'error': 'invalid data'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'error': 'invalid data', 'description': serializer.errors}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({'error': 'invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
@@ -301,7 +268,7 @@ def token_access_patient(request, *args, **kwargs):
 
 @api_view(['POST'])
 def token_access_study(request, *args, **kwargs):
-    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'study_iuid' in request.data:
+    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'StudyInstanceUID' in request.data:
         try:
             institution = Institution.objects.get(short_name=request.data.get('institution'))
         except Institution.DoesNotExist:
@@ -314,11 +281,16 @@ def token_access_study(request, *args, **kwargs):
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
             login(request, user)
+            try:
+                allowed_age = int(Setting.objects.get(key='allowed_age_token_study').value)
+            except Setting.DoesNotExist:
+                allowed_age = 120
             serializer = TokenAccessStudySerializer(data={
                 'token': request.session._session_key,
                 'StudyInstanceUID': request.data.get('StudyInstanceUID'),
+                'viewerType': request.data.get('viewerType', ''),
                 'start_date': timezone.now(),
-                'expiration_date': timezone.now() + timezone.timedelta(seconds=365),
+                'expiration_date': timezone.now() + timezone.timedelta(seconds=allowed_age),
                 'role_id': role.id
             })
 
@@ -326,7 +298,7 @@ def token_access_study(request, *args, **kwargs):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response({'error': 'invalid data'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'error': 'invalid data', 'description': serializer.errors}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({'error': 'invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
