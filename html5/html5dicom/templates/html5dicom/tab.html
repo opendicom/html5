@@ -138,13 +138,13 @@
                                 }
                             });
                         }
-                        {% if user_viewer == 'htm' %}
+                        {% if user_viewer == 'cornerstone' %}
                             data_cell += '<a class="btn btn-default btn-xs" href="#" onclick="open_cornerstone(\'STUDY\',\'' + full[13] + '\',\'' + full[16] + '\',\'\',\'' + oid + '\')"><span class="glyphicon glyphicon-eye-open"></span></a>';
-                        {% elif user_viewer == 'dow' %}
+                        {% elif user_viewer == 'zip' %}
                             data_cell += '<a class="btn btn-warning btn-xs" href="{% url 'osirix' %}?requestType=STUDY&study_uid=' + full[16] + '&session={{ request.session.session_key}}&custodianOID='+ oid +'"><span class="glyphicon glyphicon-cloud-download"></span></a>';
-                        {% elif user_viewer == 'osi' %}
+                        {% elif user_viewer == 'osirix' %}
                             data_cell += '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'osirix' %}?requestType=STUDY&study_uid=' + full[16] + '&session={{ request.session.session_key}}&custodianOID='+ oid +'\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
-                        {% elif user_viewer == 'wea' %}
+                        {% elif user_viewer == 'weasis' %}
                             data_cell += '<a class="btn btn-danger btn-xs" href="{% url 'weasis' %}?requestType=STUDY&study_uid=' + full[16] +'&custodianOID='+ oid +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
                         {% endif %}
                         return  data_cell;

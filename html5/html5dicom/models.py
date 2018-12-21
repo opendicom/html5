@@ -99,10 +99,10 @@ class UserChangePassword(models.Model):
 
 class UserViewerSettings(BaseModel):
     viewer_choices = (
-        ('htm', 'Ver estudio'),
-        ('dow', 'Descargar'),
-        ('osi', 'Osirix'),
-        ('wea', 'Weasis'),
+        ('cornerstone', 'Ver estudio'),
+        ('zip', 'Descargar'),
+        ('osirix', 'Osirix'),
+        ('weasis', 'Weasis'),
     )
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, unique=True)
-    viewer = models.CharField(max_length=3, choices=viewer_choices, blank=True, null=True)
+    viewer = models.CharField(max_length=11, choices=viewer_choices, blank=True, null=True)
