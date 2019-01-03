@@ -9,6 +9,7 @@ import requests
 import uuid
 from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
 from html5dicom.models import Institution, Role, Setting, UserViewerSettings
+from html5dicom.views import weasis, osirix, cornerstone
 from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer, TokenAccessStudySerializer
 from django.contrib.sessions.backends.db import SessionStore
 
@@ -187,6 +188,7 @@ def study_web(request, *args, **kwargs):
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
+            login(request, token_access.role.user)
             organization = {}
             if (type_token == 'patient') or (type_token == 'study' and token_access.viewerType == ''):
                 if type_token == 'patient':
@@ -217,7 +219,6 @@ def study_web(request, *args, **kwargs):
                             'oid': oid_inst.json()[0]
                         }
                     })
-                login(request, token_access.role.user)
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
                                 'user_viewer': user_viewer}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
@@ -225,7 +226,12 @@ def study_web(request, *args, **kwargs):
                 if token_access.viewerType == 'cornerstone':
                     pass
                 elif token_access.viewerType == 'weasis':
-                    pass
+                    request.GET._mutable = True
+                    request.GET.__setitem__('requestType', 'STUDY')
+                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
+                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
+                    request.GET._mutable = False
+                    return weasis(request)
                 elif token_access.viewerType == 'zip':
                     pass
                 elif token_access.viewerType == 'osirix':
