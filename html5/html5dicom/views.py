@@ -96,7 +96,10 @@ def main(request, *args, **kwargs):
             pass
 
         organization = {}
-        for role in models.Role.objects.filter(user=request.user.id).order_by('default').reverse():
+        if models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).count() < 1:
+            logout(request)
+            raise PermissionDenied
+        for role in models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).order_by('default').reverse():
             if role.institution:
                 if role.institution.organization.short_name in organization:
                     if role.institution.short_name in organization[role.institution.organization.short_name]['institution']:
