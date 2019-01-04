@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -9,6 +10,7 @@ import requests
 import uuid
 from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
 from html5dicom.models import Institution, Role, Setting, UserViewerSettings
+from html5dicom.views import weasis, osirix, cornerstone
 from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer, TokenAccessStudySerializer
 from django.contrib.sessions.backends.db import SessionStore
 
@@ -187,6 +189,7 @@ def study_web(request, *args, **kwargs):
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
+            login(request, token_access.role.user)
             organization = {}
             if (type_token == 'patient') or (type_token == 'study' and token_access.viewerType == ''):
                 if type_token == 'patient':
@@ -217,19 +220,37 @@ def study_web(request, *args, **kwargs):
                             'oid': oid_inst.json()[0]
                         }
                     })
-                login(request, token_access.role.user)
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
                                 'user_viewer': user_viewer, 'navbar': 'rest'}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             elif type_token == 'study' and token_access.viewerType != '':
                 if token_access.viewerType == 'cornerstone':
-                    pass
+                    request.GET._mutable = True
+                    request.GET.__setitem__('requestType', 'STUDY')
+                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
+                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
+                    request.GET._mutable = False
+                    json_cornerstone = cornerstone(request)
+                    return render(request, template_name='html5dicom/redirect_cornerstone.html', context={'json_cornerstone': json_cornerstone.content})
                 elif token_access.viewerType == 'weasis':
-                    pass
+                    request.GET._mutable = True
+                    request.GET.__setitem__('requestType', 'STUDY')
+                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
+                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
+                    request.GET._mutable = False
+                    return weasis(request)
                 elif token_access.viewerType == 'zip':
-                    pass
+                    request.GET._mutable = True
+                    request.GET.__setitem__('session', request.session._session_key)
+                    request.GET.__setitem__('requestType', 'STUDY')
+                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
+                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
+                    request.GET._mutable = False
+                    return osirix(request)
                 elif token_access.viewerType == 'osirix':
-                    pass
+                    response = HttpResponse("", status=302)
+                    response['Location'] = "osirix://?methodName=DownloadURL&Display=YES&URL='" + request.build_absolute_uri(reverse('osirix')) + "?requestType=STUDY&study_uid=" + token_access.StudyInstanceUID + "&session=" + request.session._session_key + "&custodianOID=" + oid_inst.json()[0] + "'"
+                    return response
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
