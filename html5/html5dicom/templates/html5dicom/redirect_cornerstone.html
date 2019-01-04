@@ -1,0 +1,14 @@
+{% load staticfiles %}
+<html>
+    <head>
+        <script src='{% static "html5dicom/bootstrap-3.3.5/js/jquery-2.1.4.min.js" %}'></script>
+        <script>
+            $(document).ready(function(){
+                sessionStorage.setItem('json_estudio', JSON.stringify({{ json_cornerstone | safe }}));
+                window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+            });
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

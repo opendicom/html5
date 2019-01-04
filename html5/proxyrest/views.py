@@ -225,7 +225,13 @@ def study_web(request, *args, **kwargs):
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             elif type_token == 'study' and token_access.viewerType != '':
                 if token_access.viewerType == 'cornerstone':
-                    pass
+                    request.GET._mutable = True
+                    request.GET.__setitem__('requestType', 'STUDY')
+                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
+                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
+                    request.GET._mutable = False
+                    json_cornerstone = cornerstone(request)
+                    return render(request, template_name='html5dicom/redirect_cornerstone.html', context={'json_cornerstone': json_cornerstone.content})
                 elif token_access.viewerType == 'weasis':
                     request.GET._mutable = True
                     request.GET.__setitem__('requestType', 'STUDY')
