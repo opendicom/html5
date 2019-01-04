@@ -233,7 +233,13 @@ def study_web(request, *args, **kwargs):
                     request.GET._mutable = False
                     return weasis(request)
                 elif token_access.viewerType == 'zip':
-                    pass
+                    request.GET._mutable = True
+                    request.GET.__setitem__('session', request.session._session_key)
+                    request.GET.__setitem__('requestType', 'STUDY')
+                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
+                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
+                    request.GET._mutable = False
+                    return osirix(request)
                 elif token_access.viewerType == 'osirix':
                     pass
         else:
