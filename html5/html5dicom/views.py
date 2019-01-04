@@ -90,7 +90,7 @@ def main(request, *args, **kwargs):
             except models.UserViewerSettings.DoesNotExist:
                 user_viewer = ''
             context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                            'user_viewer': user_viewer}
+                            'user_viewer': user_viewer, 'navbar': 'patient'}
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         except models.Role.DoesNotExist:
             pass

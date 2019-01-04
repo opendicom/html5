@@ -1,7 +1,11 @@
 {% extends "html5dicom/base.html" %}
 {% block title %} Main Patient {% endblock %}
 {% block navbar %}
-    {% include "html5dicom/navbar_simple.html" %}
+    {% if "patient" ==  navbar %}
+        {% include "html5dicom/navbar_medium.html" %}
+    {% else %}
+        {% include "html5dicom/navbar_simple.html" %}
+    {% endif %}
 {% endblock %}
 {% block content %}
     {% include "html5dicom/patient_tab.html" %}
