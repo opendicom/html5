@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
+from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -241,7 +242,9 @@ def study_web(request, *args, **kwargs):
                     request.GET._mutable = False
                     return osirix(request)
                 elif token_access.viewerType == 'osirix':
-                    pass
+                    response = HttpResponse("", status=302)
+                    response['Location'] = "osirix://?methodName=DownloadURL&Display=YES&URL='" + request.build_absolute_uri(reverse('osirix')) + "?requestType=STUDY&study_uid=" + token_access.StudyInstanceUID + "&session=" + request.session._session_key + "&custodianOID=" + oid_inst.json()[0] + "'"
+                    return response
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
