@@ -219,7 +219,7 @@ def study_web(request, *args, **kwargs):
                     })
                 login(request, token_access.role.user)
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                                'user_viewer': user_viewer}
+                                'user_viewer': user_viewer, 'navbar': 'rest'}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             elif type_token == 'study' and token_access.viewerType != '':
                 if token_access.viewerType == 'cornerstone':

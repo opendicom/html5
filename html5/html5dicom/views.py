@@ -90,13 +90,16 @@ def main(request, *args, **kwargs):
             except models.UserViewerSettings.DoesNotExist:
                 user_viewer = ''
             context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                            'user_viewer': user_viewer}
+                            'user_viewer': user_viewer, 'navbar': 'patient'}
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         except models.Role.DoesNotExist:
             pass
 
         organization = {}
-        for role in models.Role.objects.filter(user=request.user.id).order_by('default').reverse():
+        if models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).count() < 1:
+            logout(request)
+            raise PermissionDenied
+        for role in models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).order_by('default').reverse():
             if role.institution:
                 if role.institution.organization.short_name in organization:
                     if role.institution.short_name in organization[role.institution.organization.short_name]['institution']:
