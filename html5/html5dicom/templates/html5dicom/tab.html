@@ -64,10 +64,14 @@
                     service_options += '<option value="' + service_arr[i]+ '" selected>' + service_arr[i] + '</option>';
                 }
             }else{
+                var selected = '';
+                if (service_arr[i] == organization[$('#org_select').val()].institution[$('#inst_select').val()][$('#rol_select').val()].default_service){
+                    selected = 'selected';
+                }
                 if (service_arr[i] == 'Todos') {
-                    service_options += '<option value="ALL">' + service_arr[i] + '</option>';
+                    service_options += '<option value="ALL" '+ selected +'>' + service_arr[i] + '</option>';
                 }else{
-                    service_options += '<option value="' + service_arr[i]+ '">' + service_arr[i] + '</option>';
+                    service_options += '<option value="' + service_arr[i]+ '" '+ selected +'>' + service_arr[i] + '</option>';
                 }
             }
         }
