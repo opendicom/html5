@@ -99,67 +99,34 @@ def main(request, *args, **kwargs):
         if models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).count() < 1:
             logout(request)
             raise PermissionDenied
-        for role in models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).order_by('default').reverse():
-            if role.institution:
-                if role.institution.organization.short_name in organization:
-                    if role.institution.short_name in organization[role.institution.organization.short_name]['institution']:
-                        organization[role.institution.organization.short_name]['institution'][role.institution.short_name].update(
-                            {
-                                role.get_name_display(): {
-                                    'max_rows': role.max_rows,
-                                    "service": []
-                                }
-                            }
-                        )
-                    else:
-                        url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.institution.organization.short_name
-                        url_httpdicom_req += '/aets/' + role.institution.short_name
-                        oid_inst = requests.get(url_httpdicom_req)
-                        organization[role.institution.organization.short_name]['institution'].update(
-                            {
-                                role.institution.short_name: {
-                                    'aet': role.institution.short_name,
-                                    'oid': oid_inst.json()[0],
-                                    role.get_name_display(): {
-                                        'max_rows': role.max_rows,
-                                        "service": []
-                                    }
-                                }
-                            }
-                        )
-                else:
-                    url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.institution.organization.short_name
-                    oid_org = requests.get(url_httpdicom_req)
-                    url_httpdicom_req += '/aets/' + role.institution.short_name
-                    oid_inst = requests.get(url_httpdicom_req)
-                    organization.update({
-                        role.institution.organization.short_name:
-                            {
-                                "oid": oid_org.json()[0],
-                                "name": role.institution.organization.short_name,
-                                "institution": {
-                                    role.institution.short_name: {
-                                        'aet': role.institution.short_name,
-                                        'oid': oid_inst.json()[0],
-                                        role.get_name_display(): {
-                                            'max_rows': role.max_rows,
-                                            "service": []
-                                        }
-                                    }
-                                }
-                            }
-                    })
-            else:
+        for role in models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']):
+            if role.service:
+                default_institution = ''
+                default_role = ''
+                default_service = ''
+                if role.default_institution:
+                    default_institution = role.service.institution.short_name
+                if role.default_role:
+                    default_role = role.get_name_display()
+                if role.default_service:
+                    default_service = role.service.name
                 if role.service.institution.organization.short_name in organization:
+                    if organization[role.service.institution.organization.short_name]['default_institution'] == '':
+                        organization[role.service.institution.organization.short_name]['default_institution'] = default_institution
                     if role.service.institution.short_name in organization[role.service.institution.organization.short_name]['institution']:
+                        if organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name]['default_role'] == '':
+                            organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name]['default_role'] = default_role
                         if role.get_name_display() in organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name]:
+                            if organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['default_service'] == '':
+                                organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['default_service'] = default_service
                             if role.service.name not in organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['service']:
                                 organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name][role.get_name_display()]['service'].append(role.service.name)
                         else:
                             organization[role.service.institution.organization.short_name]['institution'][role.service.institution.short_name].update(
                                 {
                                     role.get_name_display(): {
-                                        'max_rows': role.max_rows,
+                                        "max_rows": role.max_rows,
+                                        "default_service": default_service,
                                         "service": [role.service.name]
                                     }
                                 })
@@ -170,10 +137,12 @@ def main(request, *args, **kwargs):
                         organization[role.service.institution.organization.short_name]['institution'].update(
                             {
                                 role.service.institution.short_name: {
-                                    'aet': role.service.institution.short_name,
-                                    'oid': oid_inst.json()[0],
+                                    "aet": role.service.institution.short_name,
+                                    "oid": oid_inst.json()[0],
+                                    "default_role": default_role,
                                     role.get_name_display(): {
-                                        'max_rows': role.max_rows,
+                                        "max_rows": role.max_rows,
+                                        "default_service": default_service,
                                         "service": [role.service.name]
                                     }
                                 }
@@ -189,12 +158,15 @@ def main(request, *args, **kwargs):
                             {
                                 "oid": oid_org.json()[0],
                                 "name": role.service.institution.organization.short_name,
+                                "default_institution": default_institution,
                                 "institution": {
                                     role.service.institution.short_name: {
-                                        'aet': role.service.institution.short_name,
-                                        'oid': oid_inst.json()[0],
+                                        "aet": role.service.institution.short_name,
+                                        "oid": oid_inst.json()[0],
+                                        "default_role": default_role,
                                         role.get_name_display(): {
-                                            'max_rows': role.max_rows,
+                                            "max_rows": role.max_rows,
+                                            "default_service": default_service,
                                             "service": [role.service.name]
                                         }
                                     }
