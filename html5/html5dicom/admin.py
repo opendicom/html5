@@ -24,7 +24,8 @@ admin.site.register(models.Service, ServiceAdmin)
 
 
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ['name', 'user', 'institution', 'service', 'default_institution', 'default_role', 'default_service', 'max_rows']
+    list_display = ['name', 'user', 'institution', 'service', 'default_organization', 'default_institution', 'default_role', 'default_service', 'max_rows']
+    list_editable = ['default_organization', 'default_institution', 'default_role', 'default_service']
     raw_id_fields = ('user',)
     list_filter = ('name',)
     search_fields = ['user__username']
