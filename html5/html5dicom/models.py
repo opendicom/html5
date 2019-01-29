@@ -62,9 +62,12 @@ class Role(BaseModel):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     institution = models.ForeignKey(Institution, on_delete=models.DO_NOTHING, blank=True, null=True)
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, blank=True, null=True)
-    default = models.BooleanField(default=False)
     max_rows = models.IntegerField(default=100, blank=False, null=False)
     parameter_rest = models.CharField(max_length=255, blank=True, null=True)
+    default_organization = models.BooleanField(default=False)
+    default_institution = models.BooleanField(default=False)
+    default_role = models.BooleanField(default=False)
+    default_service = models.BooleanField(default=False)
 
     def __str__(self):
         return '(%s) - (%s) - (%s) - (%s)' % (self.name, self.user, self.institution, self.service)

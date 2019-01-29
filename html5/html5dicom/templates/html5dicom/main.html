@@ -45,18 +45,26 @@
         });
         function load_inst(){
             var options = '';
+            $('#inst_select').empty();
             for(var key in organization[$('#org_select').val()].institution) {
-                $('#inst_select').empty();
-                options += '<option value="' + key + '">' + key + '</option>';
-                $('#inst_select').html(options);
+                if (key == organization[$('#org_select').val()].default_institution){
+                    options += '<option value="' + key + '" selected>' + key + '</option>';
+                }else{
+                    options += '<option value="' + key + '">' + key + '</option>';
+                }
             }
+            $('#inst_select').html(options);
         }
         function load_rol(){
             var options = '';
             for(var key in organization[$('#org_select').val()].institution[$('#inst_select').val()]) {
                 $('#rol_select').empty();
-                if(key != 'aet' && key != 'oid'){
-                    options += '<option value="' + key + '">' + key + '</option>';
+                if(key != 'aet' && key != 'oid' && key != 'default_role'){
+                    if (key == organization[$('#org_select').val()].institution[$('#inst_select').val()].default_role){
+                        options += '<option value="' + key + '" selected>' + key + '</option>';
+                    }else{
+                        options += '<option value="' + key + '">' + key + '</option>';
+                    }
                 }
                 $('#rol_select').html(options);
             }
