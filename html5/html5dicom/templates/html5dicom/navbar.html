@@ -13,7 +13,13 @@
             <ul class="nav navbar-nav navbar-form">
                     <select class="selectpicker" data-header="Seleccione Organizacion" id="org_select" data-width="fit">
                         {% for key, value in organization.items %}
-                            <option value="{{ key }}">{{ key }}</option>
+                            {% if key != "default_organization" %}
+                                {% if key == organization.default_organization %}
+                                    <option value="{{ key }}" selected>{{ key }}</option>
+                                {% else %}
+                                    <option value="{{ key }}">{{ key }}</option>
+                                {% endif %}
+                            {% endif %}
                         {% endfor %}
                     </select>
                     <select class="selectpicker" data-header="Seleccione Institucion" id="inst_select"> <!--data-width="fit">-->

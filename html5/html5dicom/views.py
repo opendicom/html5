@@ -101,9 +101,12 @@ def main(request, *args, **kwargs):
             raise PermissionDenied
         for role in models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']):
             if role.service:
+                default_organization = ''
                 default_institution = ''
                 default_role = ''
                 default_service = ''
+                if role.default_organization:
+                    default_organization = role.service.institution.organization.short_name
                 if role.default_institution:
                     default_institution = role.service.institution.short_name
                 if role.default_role:
@@ -111,6 +114,8 @@ def main(request, *args, **kwargs):
                 if role.default_service:
                     default_service = role.service.name
                 if role.service.institution.organization.short_name in organization:
+                    if organization['default_organization'] == '':
+                        organization['default_organization'] = default_organization
                     if organization[role.service.institution.organization.short_name]['default_institution'] == '':
                         organization[role.service.institution.organization.short_name]['default_institution'] = default_institution
                     if role.service.institution.short_name in organization[role.service.institution.organization.short_name]['institution']:
@@ -154,6 +159,7 @@ def main(request, *args, **kwargs):
                     url_httpdicom_req += '/aets/' + role.service.institution.short_name
                     oid_inst = requests.get(url_httpdicom_req)
                     organization.update({
+                        "default_organization": default_organization,
                         role.service.institution.organization.short_name:
                             {
                                 "oid": oid_org.json()[0],
