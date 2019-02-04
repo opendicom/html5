@@ -720,7 +720,7 @@ class Autenticado(BigIntegerPKModel):
         xml_cda += '</addr>'
         xml_cda += '<patient>'
         xml_cda += '<name>'
-        if '^' in self.pnombre:
+        if self.pnombre.count('^') == 1:
             last_name, first_name = self.pnombre.split('^')
             xml_cda += '<given>{}</given>'.format(first_name)
             xml_cda += '<family>{}</family>'.format(last_name)
