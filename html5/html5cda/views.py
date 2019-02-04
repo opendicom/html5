@@ -1115,7 +1115,10 @@ def generate_text_observation(section, values_submit, sec=None, subsec=None, sub
     entries_cda = ''
     textareas = re.findall("<textarea name='(.+?)'>", section.article.xhtml5)
     for textarea in textareas:
-        textarea_value = values_submit['{}'.format(textarea)][0]
+        if textarea in values_submit:
+            textarea_value = values_submit['{}'.format(textarea)][0]
+        else:
+            textarea_value = '<p></p>'
         str_replace = re.compile('<p>')
         textarea_value = str_replace.sub('<paragraph>', textarea_value)
         str_replace = re.compile('</p>')
