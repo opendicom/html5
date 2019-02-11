@@ -245,12 +245,14 @@ def osirix(request, *args, **kwargs):
                 #else:
                 #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
                 r = StreamingHttpResponse(stream_response(url_zip))
+                r['Content-Type'] = "application/zip"
                 r['Content-Disposition'] = "attachment; filename=dcm.zip"
                 return r
             elif request.GET['requestType'] == 'SERIES':
                 url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
                           request.GET['series_uid']
                 r = StreamingHttpResponse(stream_response(url_zip))
+                r['Content-Type'] = "application/zip"
                 r['Content-Disposition'] = "attachment; filename=dcm.zip"
                 return r
         except (Session.DoesNotExist, KeyError):
