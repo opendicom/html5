@@ -721,11 +721,21 @@ class Autenticado(BigIntegerPKModel):
         xml_cda += '<patient>'
         xml_cda += '<name>'
         if self.pnombre.count('^') == 1:
-            last_name, first_name = self.pnombre.split('^')
-            xml_cda += '<given>{}</given>'.format(first_name)
-            xml_cda += '<family>{}</family>'.format(last_name)
+            surnames, names = self.pnombre.split('^')
+            if ' ' in names:
+                name1, name2 = names.split(' ', 1)
+                xml_cda += '<given>{}</given>'.format(name1)
+                xml_cda += '<given>{}</given>'.format(name2)
+            else:
+                xml_cda += '<given>{}</given>'.format(names)
+            if '>' in surnames:
+                surname1, surname2 = surnames.split('>', 1)
+                xml_cda += '<family>{}</family>'.format(surname1)
+                xml_cda += '<family>{}</family>'.format(surname2)
+            else:
+                xml_cda += '<family>{}</family>'.format(surnames)
         else:
-            xml_cda += '<familyname>{}</familyname>'.format(self.pnombre)
+            xml_cda += '<familyname>{}</familyname>'.format(self.pnombre.replace('^', ' ').replace('>', ' ').replace('.',' '))
         xml_cda += '</name>'
         if self.psexo == 'M':
             xml_cda += '<administrativeGenderCode code="1" codeSystem="2.16.858.2.10000675.69600"'

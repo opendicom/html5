@@ -672,6 +672,7 @@ def authenticate_report(submit, user):
     xml_suffix += '<xsl:call-template name="formatDate"> '
     xml_suffix += '<xsl:with-param name="date" select="$B"/> '
     xml_suffix += '</xsl:call-template> '
+    xml_suffix += '<xsl:text> </xsl:text> '
     xml_suffix += '<xsl:text> (</xsl:text> '
     xml_suffix += '<xsl:variable name="BY" select="substring($B, 1, 4)"/> '
     xml_suffix += '<xsl:variable name="SY" select="substring($S, 1, 4)"/> '
