@@ -627,13 +627,11 @@ def authenticate_report(submit, user):
     xml_suffix += '}</style> '
     xml_suffix += '</head> '
     xml_suffix += '<body> '
-    xml_suffix += '<h2> '
-    xml_suffix += '<img> '
-    xml_suffix += '<xsl:attribute name="src"> '
-    xml_suffix += '<xsl:value-of select="/dscd/cita/iRealizadora/@logoData"/> '
-    xml_suffix += '</xsl:attribute> '
-    xml_suffix += '</img> '
+    if institution.logo_data:
+        xml_suffix += '<img src="{}"> '.format(institution.logo_data)
+        xml_suffix += '</img> '
     xml_suffix += '<xsl:text> </xsl:text> '
+    xml_suffix += '<h2> '
     xml_suffix += '<xsl:value-of select="/dscd/cita/iRealizadora/@nombre"/> '
     xml_suffix += '<xsl:text>Informe imagenológico</xsl:text> '
     xml_suffix += '</h2> '
