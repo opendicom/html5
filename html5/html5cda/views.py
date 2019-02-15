@@ -628,7 +628,7 @@ def authenticate_report(submit, user):
     xml_suffix += '</head> '
     xml_suffix += '<body> '
     if institution.logo_data:
-        xml_suffix += '<img src="{}"> '.format(institution.logo_data)
+        xml_suffix += '<img src="{}"> '.format(institution.logo_data.decode('utf-8'))
         xml_suffix += '</img> '
     xml_suffix += '<xsl:text> </xsl:text> '
     xml_suffix += '<h2> '
