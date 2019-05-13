@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, HttpResponse
 from django.core.urlresolvers import reverse
+from requests.auth import HTTPBasicAuth
+
 from html5cda import models
 from html5dicom.models import Institution
 from django.db.models import Count
@@ -1104,9 +1106,30 @@ def authenticate_report(submit, user):
         xml_dcm)
     requests.post(url, headers=headers, data=data.encode('utf-8'))
     requests.get(url + '?0020000D=' + values_submit['StudyIUID'][0])
+    execute_integration(values_submit['AccessionNumber'][0], values_submit['PatientID'][0], values_submit['StudyIUID'][0], xml_cda)
     # Active user patient
     User.objects.filter(username=values_submit['PatientID'][0]).update(is_active=True)
     return xml_cda
+
+
+def execute_integration(accession_number, patient_id, study_iuid, report):
+    integrations = models.IntegrationSetting.objects.filter(active=True)
+    for integration in integrations:
+        data = {}
+        if integration.accession_number:
+            data.update({'AccessionNumber': accession_number})
+        if integration.patiend_id:
+            data.update({'PatientID': patient_id})
+        if integration.study_iuid:
+            data.update({'StudyInstanceUID': study_iuid})
+        if integration.report == 'PDF':
+            data.update({'enclosurePDF': ''})
+        if integration.report == 'XML':
+            data.update({'enclosureXML': base64.b64encode(bytes(report, 'utf-8')).decode("utf-8")})
+        if integration.auth:
+            requests.post(integration.url, json=data, auth=HTTPBasicAuth(integration.user, integration.password))
+        else:
+            requests.post(integration.url, json=data)
 
 
 def generate_text_observation(section, values_submit, sec=None, subsec=None, subsubsec=None):

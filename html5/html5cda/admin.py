@@ -7,12 +7,14 @@ class EstudioAdmin(admin.ModelAdmin):
     search_fields = ['modalidad']
     raw_id_fields = ('code',)
 
+
 admin.site.register(models.Estudio, EstudioAdmin)
 
 
 class CodesystemAdmin(admin.ModelAdmin):
     list_display = ['id', 'shortname', 'oid']
     search_fields = ['shortname', 'oid']
+
 
 admin.site.register(models.Codesystem, CodesystemAdmin)
 
@@ -25,11 +27,12 @@ class Code1Inline(admin.TabularInline):
 class CodeAdmin(admin.ModelAdmin):
     list_display = ['id', 'codesystem', 'code', 'displayname']
     search_fields = ['name', 'oid']
-    list_select_related = True # para busacar la fk en listbox
-    #raw_id_fields = ('codesystem',) # para buscar la fk en popup de busaueda
-    list_filter = ('codesystem',) # habilita los filtros al costado derecho
-    #list_filter = (('codesystem', admin.RelatedOnlyFieldListFilter),) #muestra solo los que tengan relacion
+    list_select_related = True  # para busacar la fk en listbox
+    # raw_id_fields = ('codesystem',) # para buscar la fk en popup de busaueda
+    list_filter = ('codesystem',)  # habilita los filtros al costado derecho
+    # list_filter = (('codesystem', admin.RelatedOnlyFieldListFilter),) #muestra solo los que tengan relacion
     inlines = (Code1Inline,)
+
 
 admin.site.register(models.Code, CodeAdmin)
 
@@ -40,7 +43,8 @@ class Code2Inline(admin.TabularInline):
 
 
 class Code1Admin(admin.ModelAdmin):
-    inlines = (Code2Inline, )
+    inlines = (Code2Inline,)
+
 
 admin.site.register(models.Code1, Code1Admin)
 
@@ -51,13 +55,15 @@ class Code3Inline(admin.TabularInline):
 
 
 class Code2Admin(admin.ModelAdmin):
-    inlines = (Code3Inline, )
+    inlines = (Code3Inline,)
+
 
 admin.site.register(models.Code2, Code2Admin)
 
 
 class LabelAdmin(admin.ModelAdmin):
     pass
+
 
 admin.site.register(models.Label, LabelAdmin)
 
@@ -74,6 +80,7 @@ class WidgetSelectAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return self.model.objects.filter(xsitype='CR')
+
 
 admin.site.register(models.WidgetSelect, WidgetSelectAdmin)
 
@@ -95,6 +102,7 @@ class WidgetInputAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return self.model.objects.exclude(xsitype='CR')
 
+
 admin.site.register(models.WidgetInput, WidgetInputAdmin)
 
 
@@ -112,11 +120,13 @@ class WidgetTableAdmin(admin.ModelAdmin):
     list_display = ['id', 'category', 'name', 'title']
     inlines = (RowInline, ColInline)
 
+
 admin.site.register(models.Table, WidgetTableAdmin)
 
 
 class CellAdmin(admin.ModelAdmin):
     pass
+
 
 admin.site.register(models.Cell, CellAdmin)
 
@@ -124,6 +134,7 @@ admin.site.register(models.Cell, CellAdmin)
 class ArticlehtmlAdmin(admin.ModelAdmin):
     list_display = ['id', 'titulo', 'descripcion']
     search_fields = ['titulo', 'descripcion']
+
 
 admin.site.register(models.Articlehtml, ArticlehtmlAdmin)
 
@@ -134,13 +145,13 @@ class SelectOptionInline(admin.TabularInline):
 
 
 class SectionAdmin(admin.ModelAdmin):
-    list_display = ['idattribute', 'ordinal','plantilla']
+    list_display = ['idattribute', 'ordinal', 'plantilla']
     search_fields = ['idattribute', 'plantilla']
     list_filter = ('plantilla',)
     inlines = (SelectOptionInline,)
 
-admin.site.register(models.Section, SectionAdmin)
 
+admin.site.register(models.Section, SectionAdmin)
 
 admin.site.register(models.Header)
 admin.site.register(models.Footer)
@@ -171,4 +182,13 @@ class PlantillaAdmin(admin.ModelAdmin):
     model = models.Plantilla
     inlines = (IntermediatePlantillaHeaderInline, IntermediatePlantillaFooterInline,
                IntermediateHeadScriptInline, IntermediateBodyScriptInline)
+
+
 admin.site.register(models.Plantilla, PlantillaAdmin)
+
+
+class IntegrationSettingAdmin(admin.ModelAdmin):
+    model = models.IntegrationSetting
+
+
+admin.site.register(models.IntegrationSetting, IntegrationSettingAdmin)

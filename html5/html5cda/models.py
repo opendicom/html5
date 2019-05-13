@@ -887,3 +887,20 @@ class IntermediateBodyScript(BaseIntermediateScript):
     class Meta:
         db_table = 'bodyscript'
         verbose_name = 'Body script'
+
+
+class IntegrationSetting(BigIntegerPKModel):
+    report_choice = (('PDF', 'PDF'), ('XML', 'XML'), ('-', 'None'))
+    name = models.CharField(max_length=30)
+    url = models.URLField(blank=False, null=False)
+    accession_number = models.BooleanField(default=False, blank=False, null=False)
+    patiend_id = models.BooleanField(default=False, blank=False, null=False)
+    study_iuid = models.BooleanField(default=False, blank=False, null=False)
+    report = models.CharField(max_length=3, choices=report_choice, default="-")
+    auth = models.BooleanField(default=False, blank=False, null=False)
+    user = models.CharField(max_length=20, blank=True, null=True)
+    password = models.CharField(max_length=20, blank=True, null=True)
+    active = models.BooleanField(default=False, blank=False, null=False)
+
+    def __str__(self):
+        return self.name
