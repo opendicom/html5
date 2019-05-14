@@ -1106,13 +1106,13 @@ def authenticate_report(submit, user):
         xml_dcm)
     requests.post(url, headers=headers, data=data.encode('utf-8'))
     requests.get(url + '?0020000D=' + values_submit['StudyIUID'][0])
-    execute_integration(values_submit['AccessionNumber'][0], values_submit['PatientID'][0], values_submit['StudyIUID'][0], xml_cda)
+    execute_integration(values_submit['AccessionNumber'][0], values_submit['PatientID'][0], values_submit['StudyIUID'][0], user, xml_cda)
     # Active user patient
     User.objects.filter(username=values_submit['PatientID'][0]).update(is_active=True)
     return xml_cda
 
 
-def execute_integration(accession_number, patient_id, study_iuid, report):
+def execute_integration(accession_number, patient_id, study_iuid, user, report):
     integrations = models.IntegrationSetting.objects.filter(active=True)
     for integration in integrations:
         data = {}
@@ -1126,6 +1126,8 @@ def execute_integration(accession_number, patient_id, study_iuid, report):
             data.update({'enclosurePDF': ''})
         if integration.report == 'XML':
             data.update({'enclosureXML': base64.b64encode(bytes(report, 'utf-8')).decode("utf-8")})
+        if integration.username:
+            data.update({'username': user.username})
         if integration.auth:
             requests.post(integration.url, json=data, auth=HTTPBasicAuth(integration.user, integration.password))
         else:

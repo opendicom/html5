@@ -893,6 +893,7 @@ class IntegrationSetting(BigIntegerPKModel):
     report_choice = (('PDF', 'PDF'), ('XML', 'XML'), ('-', 'None'))
     name = models.CharField(max_length=30)
     url = models.URLField(blank=False, null=False)
+    username = models.BooleanField(default=False, blank=False, null=False)
     accession_number = models.BooleanField(default=False, blank=False, null=False)
     patiend_id = models.BooleanField(default=False, blank=False, null=False)
     study_iuid = models.BooleanField(default=False, blank=False, null=False)
