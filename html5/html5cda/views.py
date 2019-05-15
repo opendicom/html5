@@ -469,10 +469,14 @@ def authenticate_report(submit, user):
             xml_cda += '<component><templateId root="{}"/>'.format(submit.plantilla.identifier)
             xml_cda += '<section>'
             xml_cda += '<templateId root="1.2.840.10008.9.2"/>'
-            xml_cda += '<code codeSystem="{}" codeSystemName="{}"'.format(section.conceptcode.codesystem.oid,
-                                                                          section.conceptcode.codesystem.shortname)
-            xml_cda += ' code="{}" displayName="{}"/>'.format(section.conceptcode.code, section.conceptcode.displayname)
-            xml_cda += '<title>{}</title>'.format(section.selecttitle)
+            if section.conceptcode is not None:
+                xml_cda += '<code codeSystem="{}" codeSystemName="{}"'.format(section.conceptcode.codesystem.oid,
+                                                                              section.conceptcode.codesystem.shortname)
+                xml_cda += ' code="{}" displayName="{}"/>'.format(section.conceptcode.code, section.conceptcode.displayname)
+            if section.selecttitle is not None:
+                xml_cda += '<title>{}</title>'.format(section.selecttitle)
+            else:
+                xml_cda += '<title></title>'
             sec = models.Sec.objects.create(
                 autenticado=autenticado,
                 idsec=section.idattribute,
