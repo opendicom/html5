@@ -1093,7 +1093,7 @@ def authenticate_report(submit, user):
     xml_dcm += '<DicomAttribute keyword="AcquisitionDateTime" tag="0008002A" vr="DT"><Value number="1">{}{}</Value></DicomAttribute>'.format(
         datetime.now().strftime("%Y%m%d"), datetime.now().strftime("%H%M%S"))
     xml_dcm += '<DicomAttribute keyword="BurnedInAnnotation" tag="00280301" vr="CS"><Value number="1">YES</Value></DicomAttribute>'
-    xml_dcm += '<DicomAttribute keyword="DocumentTitle" tag="00420010" vr="ST"><Value number="1">INFORME IMAGENOLOGIGO</Value></DicomAttribute>'
+    xml_dcm += '<DicomAttribute keyword="DocumentTitle" tag="00420010" vr="ST"><Value number="1">INFORME IMAGENOLOGICO</Value></DicomAttribute>'
     xml_dcm += '<DicomAttribute keyword="HL7InstanceIdentifier" tag="0040E001" vr="ST"><Value number="1">{}</Value></DicomAttribute>'.format(
         autenticado.id)
     xml_dcm += '<DicomAttribute keyword="MIMETypeOfEncapsulatedDocument" tag="00420012" vr="LO"><Value number="1">text/xml</Value></DicomAttribute>'
