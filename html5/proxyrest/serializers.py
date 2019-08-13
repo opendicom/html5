@@ -38,16 +38,30 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
 class TokenAccessStudySerializer(serializers.ModelSerializer):
     viewer_choice = ['cornerstone', 'weasis', 'zip', 'osirix']
     token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessStudy.objects.all())])
-    StudyInstanceUID = serializers.CharField()
-    viewerType = serializers.ChoiceField(choices=viewer_choice, allow_blank=True)
+    viewerType = serializers.ChoiceField(choices=viewer_choice)
+    StudyInstanceUID = serializers.CharField(allow_blank=True)
+    AccessionNumber = serializers.CharField(allow_blank=True)
+    StudyDate = serializers.CharField(allow_blank=True)
+    PatientID = serializers.CharField(allow_blank=True)
+    issuer = serializers.CharField(allow_blank=True)
+    SeriesDescription = serializers.CharField(allow_blank=True)
+    Modality = serializers.CharField(allow_blank=True)
+    SOPClass = serializers.CharField(allow_blank=True)
     start_date = serializers.DateTimeField
     expiration_date = serializers.DateTimeField
     role_id = serializers.IntegerField()
 
     def create(self, validated_data):
         token = TokenAccessStudy.objects.create(token=validated_data['token'],
-                                                StudyInstanceUID=validated_data['StudyInstanceUID'],
                                                 viewerType=validated_data['viewerType'],
+                                                StudyInstanceUID=validated_data['StudyInstanceUID'],
+                                                AccessionNumber=validated_data['AccessionNumber'],
+                                                StudyDate=validated_data['StudyDate'],
+                                                PatientID=validated_data['PatientID'],
+                                                issuer=validated_data['issuer'],
+                                                SeriesDescription=validated_data['SeriesDescription'],
+                                                Modality=validated_data['Modality'],
+                                                SOPClass=validated_data['SOPClass'],
                                                 start_date=validated_data['start_date'],
                                                 expiration_date=validated_data['expiration_date'],
                                                 role_id=validated_data['role_id'])
@@ -55,7 +69,8 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TokenAccessPatient
-        fields = ('token', 'StudyInstanceUID', 'viewerType', 'start_date', 'expiration_date', 'role_id')
+        fields = ('token', 'viewerType', 'StudyInstanceUID', 'AccessionNumber', 'StudyDate', 'PatientID', 'issuer',
+                  'SeriesDescription', 'Modality', 'SOPClass',  'start_date', 'expiration_date', 'role_id')
 
 
 class SessionRestSerializer(serializers.ModelSerializer):

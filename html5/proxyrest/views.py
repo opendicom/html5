@@ -191,66 +191,48 @@ def study_web(request, *args, **kwargs):
             oid_inst = requests.get(url_httpdicom_req)
             login(request, token_access.role.user)
             organization = {}
-            if (type_token == 'patient') or (type_token == 'study' and token_access.viewerType == ''):
-                if type_token == 'patient':
-                    organization.update({
-                        "patientID": token_access.PatientID,
-                        "seriesSelection": token_access.seriesSelection,
-                        "StudyInstanceUID": "",
-                        "name": token_access.role.institution.organization.short_name,
-                        "oid": oid_org.json()[0],
-                        "config_toolbar": config_toolbar,
-                        "institution": {
-                            'name': token_access.role.institution.short_name,
-                            'aet': token_access.role.institution.short_name,
-                            'oid': oid_inst.json()[0]
-                        }
-                    })
-                elif type_token == 'study' and token_access.viewerType == '':
-                    organization.update({
-                        "patientID": "",
-                        "seriesSelection": "",
-                        "StudyInstanceUID": token_access.StudyInstanceUID,
-                        "name": token_access.role.institution.organization.short_name,
-                        "oid": oid_org.json()[0],
-                        "config_toolbar": config_toolbar,
-                        "institution": {
-                            'name': token_access.role.institution.short_name,
-                            'aet': token_access.role.institution.short_name,
-                            'oid': oid_inst.json()[0]
-                        }
-                    })
+            if type_token == 'patient':
+                organization.update({
+                    "patientID": token_access.PatientID,
+                    "seriesSelection": token_access.seriesSelection,
+                    "StudyInstanceUID": "",
+                    "name": token_access.role.institution.organization.short_name,
+                    "oid": oid_org.json()[0],
+                    "config_toolbar": config_toolbar,
+                    "institution": {
+                        'name': token_access.role.institution.short_name,
+                        'aet': token_access.role.institution.short_name,
+                        'oid': oid_inst.json()[0]
+                    }
+                })
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
                                 'user_viewer': user_viewer, 'navbar': 'rest'}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             elif type_token == 'study' and token_access.viewerType != '':
+                study_token = {}
+                base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+                study_token.update({
+                    "session": request.session.session_key,
+                    "custodianOID": oid_inst.json()[0],
+                    "proxyURI": base_url + '/html5dicom/wado',
+                    "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
+                    "StudyDate": token_access.StudyDate,
+                    "PatientID": token_access.PatientID
+                })
+                response_study_token = requests.post(url_httpdicom + '/studyToken', study_token)
+                print(response_study_token.text)
                 if token_access.viewerType == 'cornerstone':
-                    request.GET._mutable = True
-                    request.GET.__setitem__('requestType', 'STUDY')
-                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
-                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
-                    request.GET._mutable = False
-                    json_cornerstone = cornerstone(request)
-                    return render(request, template_name='html5dicom/redirect_cornerstone.html', context={'json_cornerstone': json_cornerstone.content})
+                    return render(request,
+                                  template_name='html5dicom/redirect_cornerstone.html',
+                                  context={'json_cornerstone': response_study_token.text})
                 elif token_access.viewerType == 'weasis':
-                    request.GET._mutable = True
-                    request.GET.__setitem__('requestType', 'STUDY')
-                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
-                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
-                    request.GET._mutable = False
-                    return weasis(request)
-                elif token_access.viewerType == 'zip':
-                    request.GET._mutable = True
-                    request.GET.__setitem__('session', request.session._session_key)
-                    request.GET.__setitem__('requestType', 'STUDY')
-                    request.GET.__setitem__('study_uid', token_access.StudyInstanceUID)
-                    request.GET.__setitem__('custodianOID', oid_inst.json()[0])
-                    request.GET._mutable = False
-                    return osirix(request)
-                elif token_access.viewerType == 'osirix':
                     response = HttpResponse("", status=302)
-                    response['Location'] = "osirix://?methodName=DownloadURL&Display=YES&URL='" + request.build_absolute_uri(reverse('osirix')) + "?requestType=STUDY&study_uid=" + token_access.StudyInstanceUID + "&session=" + request.session._session_key + "&custodianOID=" + oid_inst.json()[0] + "'"
+                    response['Location'] = 'weasis://%24dicom%3Aget%20-w%20%22"' + response_study_token.text + '"'
                     return response
+                elif token_access.viewerType == 'zip':
+                    pass
+                elif token_access.viewerType == 'osirix':
+                    pass
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
@@ -302,7 +284,7 @@ def token_access_patient(request, *args, **kwargs):
 
 @api_view(['POST'])
 def token_access_study(request, *args, **kwargs):
-    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'StudyInstanceUID' in request.data:
+    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'viewerType' in request.data:
         try:
             institution = Institution.objects.get(short_name=request.data.get('institution'))
         except Institution.DoesNotExist:
@@ -321,8 +303,15 @@ def token_access_study(request, *args, **kwargs):
                 allowed_age = 120
             serializer = TokenAccessStudySerializer(data={
                 'token': request.session._session_key,
-                'StudyInstanceUID': request.data.get('StudyInstanceUID'),
-                'viewerType': request.data.get('viewerType', ''),
+                'viewerType': request.data.get('viewerType'),
+                'StudyInstanceUID': request.data.get('StudyInstanceUID', ''),
+                'AccessionNumber': request.data.get('AccessionNumber', ''),
+                'StudyDate': request.data.get('StudyDate', ''),
+                'PatientID': request.data.get('PatientID', ''),
+                'issuer': request.data.get('issuer', ''),
+                'SeriesDescription': request.data.get('SeriesDescription', ''),
+                'Modality': request.data.get('Modality', ''),
+                'SOPClass': request.data.get('SOPClass', ''),
                 'start_date': timezone.now(),
                 'expiration_date': timezone.now() + timezone.timedelta(seconds=allowed_age),
                 'role_id': role.id

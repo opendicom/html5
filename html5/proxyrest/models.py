@@ -27,8 +27,15 @@ class TokenAccessPatient(models.Model):
 
 class TokenAccessStudy(models.Model):
     token = models.CharField(max_length=32, primary_key=True)
-    StudyInstanceUID = models.CharField(max_length=255)
-    viewerType = models.CharField(max_length=11, blank=True, null=True)
+    viewerType = models.CharField(max_length=11)
+    StudyInstanceUID = models.CharField(max_length=255, blank=True, null=True)
+    AccessionNumber = models.CharField(max_length=255, blank=True, null=True)
+    StudyDate = models.CharField(max_length=20, blank=True, null=True)
+    PatientID = models.CharField(max_length=20, blank=True, null=True)
+    issuer = models.CharField(max_length=255, blank=True, null=True)
+    SeriesDescription = models.TextField(blank=True, null=True)
+    Modality = models.CharField(max_length=20, blank=True, null=True)
+    SOPClass = models.TextField(blank=True, null=True)
     start_date = models.DateTimeField()
     expiration_date = models.DateTimeField()
     role = models.ForeignKey(Role, on_delete=models.DO_NOTHING)
