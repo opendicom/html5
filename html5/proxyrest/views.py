@@ -1,3 +1,4 @@
+from django.core.serializers import json
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -219,7 +220,10 @@ def study_web(request, *args, **kwargs):
                     "StudyDate": token_access.StudyDate,
                     "PatientID": token_access.PatientID
                 })
-                response_study_token = requests.post(url_httpdicom + '/studyToken', study_token)
+                headers = {'Content-type': 'application/json'}
+                response_study_token = requests.post(url_httpdicom + '/studyToken',
+                                                     data=json.dumps(study_token),
+                                                     headers=headers)
                 print(response_study_token.text)
                 if token_access.viewerType == 'cornerstone':
                     return render(request,
