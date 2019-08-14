@@ -222,7 +222,7 @@ def study_web(request, *args, **kwargs):
                 })
                 headers = {'Content-type': 'application/json'}
                 response_study_token = requests.post(url_httpdicom + '/studyToken',
-                                                     data=json.dumps(study_token),
+                                                     json=study_token,
                                                      headers=headers)
                 print(response_study_token.text)
                 if token_access.viewerType == 'cornerstone':
