@@ -1,4 +1,4 @@
-from django.core.serializers import json
+import json
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -224,11 +224,12 @@ def study_web(request, *args, **kwargs):
                 response_study_token = requests.post(url_httpdicom + '/studyToken',
                                                      json=study_token,
                                                      headers=headers)
-                print(response_study_token.text)
+                # print(response_study_token.text)
                 if token_access.viewerType == 'cornerstone':
+                    cornerstone_json = response_study_token.json()
                     return render(request,
                                   template_name='html5dicom/redirect_cornerstone.html',
-                                  context={'json_cornerstone': response_study_token.text})
+                                  context={'json_cornerstone': json.dumps(cornerstone_json[0]['patientList'][0]['studyList'][0])})
                 elif token_access.viewerType == 'weasis':
                     response = HttpResponse("", status=302)
                     response['Location'] = 'weasis://%24dicom%3Aget%20-w%20%22"' + response_study_token.text + '"'
