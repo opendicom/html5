@@ -6,6 +6,7 @@ function loadStudy(studyViewer, viewportModel, studyId) {
     //$.getJSON('studies/' + studyId, function(data) {
     var data = jQuery.parseJSON(sessionStorage.getItem('json_estudio'));
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+    cornerstoneWebImageLoader.external.cornerstone = cornerstone;
 
     let webWorkerUrl = 'lib/cornerstoneWADOImageLoaderWebWorker.min.js';
     let codecsUrl = 'cornerstoneWADOImageLoaderCodecs.js';
