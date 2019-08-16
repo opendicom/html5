@@ -206,7 +206,7 @@ def weasis(request, *args, **kwargs):
 
 
 def weasis_manifiest(request, *args, **kwargs):
-    print(args)
+    print(request.GET)
 
 
 def cornerstone(request, *args, **kwargs):

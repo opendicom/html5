@@ -1,4 +1,5 @@
 import json
+import urllib
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -231,7 +232,7 @@ def study_web(request, *args, **kwargs):
                                   template_name='html5dicom/redirect_cornerstone.html',
                                   context={'json_cornerstone': json.dumps(cornerstone_json[0]['patientList'][0]['studyList'][0])})
                 elif token_access.viewerType == 'weasis':
-                    return redirect('/weasis_manifiest', args=study_token)
+                    return redirect('/html5dicom/weasis_manifiest/?' + urllib.parse.urlencode(study_token))
                 elif token_access.viewerType == 'zip':
                     pass
                 elif token_access.viewerType == 'osirix':
