@@ -231,9 +231,7 @@ def study_web(request, *args, **kwargs):
                                   template_name='html5dicom/redirect_cornerstone.html',
                                   context={'json_cornerstone': json.dumps(cornerstone_json[0]['patientList'][0]['studyList'][0])})
                 elif token_access.viewerType == 'weasis':
-                    response = HttpResponse("", status=302)
-                    response['Location'] = 'weasis://%24dicom%3Aget%20-w%20%22"' + response_study_token.text + '"'
-                    return response
+                    return redirect('/weasis_manifiest', args=study_token)
                 elif token_access.viewerType == 'zip':
                     pass
                 elif token_access.viewerType == 'osirix':

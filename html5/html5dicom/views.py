@@ -205,6 +205,10 @@ def weasis(request, *args, **kwargs):
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
+def weasis_manifiest(request, *args, **kwargs):
+    print(args)
+
+
 def cornerstone(request, *args, **kwargs):
     if not request.user.is_authenticated():
         if request.is_ajax():

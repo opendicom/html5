@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^logout', views.user_logout, name='logout'),
     url(r'^main', views.main, name='main'),
     url(r'^weasis$', views.weasis, name='weasis'),
+    url(r'^weasis_manifiest$', views.weasis_manifiest, name='weasis_manifiest'),
     url(r'^wado$', views.wado, name='wado'),
     url(r'^dcm.zip$', views.osirix, name='osirix'),
     url(r'^cornerstone$', views.cornerstone, name='cornerstone'),
