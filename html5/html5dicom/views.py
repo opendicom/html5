@@ -201,23 +201,6 @@ def weasis(request, *args, **kwargs):
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
-def weasis_manifiest(request, *args, **kwargs):
-    if 'session' in request.GET:
-        try:
-            session = Session.objects.get(session_key=request.GET['session'],
-                                          expire_date__gt=timezone.now())
-            session.get_decoded()[SESSION_KEY]
-            url_manifiest = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(request.GET)
-            r = StreamingHttpResponse(stream_response(url_manifiest))
-            r['Content-Type'] = "application/gzip"
-            r['Content-Disposition'] = "attachment; filename=manifiest.gzip"
-            return r
-        except (Session.DoesNotExist, KeyError):
-            raise PermissionDenied
-    else:
-        return HttpResponse('Error', status=400)
-
-
 def cornerstone(request, *args, **kwargs):
     if not request.user.is_authenticated():
         if request.is_ajax():

@@ -159,6 +159,35 @@ def rest_wado(request, *args, **kwargs):
         return Response({'error': 'missing headers'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+def weasis_manifiest(request, *args, **kwargs):
+    try:
+        token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
+        if validate_token_expired(token_access):
+            url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + token_access.role.institution.organization.short_name
+            url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
+            oid_inst = requests.get(url_httpdicom_req)
+
+            study_token = {}
+            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+            study_token.update({
+                "session": request.session.session_key,
+                "custodianOID": oid_inst.json()[0],
+                "proxyURI": base_url + '/html5dicom/wado',
+                "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
+                "StudyDate": token_access.StudyDate,
+                "PatientID": token_access.PatientID
+            })
+            headers = {'Content-type': 'application/json'}
+            response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
+                                                 json=study_token,
+                                                 headers=headers)
+            return response_study_token
+        else:
+            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+    except TokenAccessStudy.DoesNotExist:
+        return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
 def study_web(request, *args, **kwargs):
     if 'token' in kwargs:
         try:
@@ -206,17 +235,23 @@ def study_web(request, *args, **kwargs):
                                 'user_viewer': user_viewer, 'navbar': 'rest'}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             elif type_token == 'study' and token_access.viewerType != '':
-                study_token = {}
-                base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
-                study_token.update({
-                    "session": request.session.session_key,
-                    "custodianOID": oid_inst.json()[0],
-                    "proxyURI": base_url + '/html5dicom/wado',
-                    "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
-                    "StudyDate": token_access.StudyDate,
-                    "PatientID": token_access.PatientID
-                })
-                if token_access.viewerType == 'cornerstone':
+                if token_access.viewerType == 'weasis':
+                    response = HttpResponse("", status=302)
+                    response['Location'] = 'weasis://' + urllib.parse.quote(
+                        '$dicom:get -w "' + request.build_absolute_uri(reverse('weasis_manifiest')) + '/' + kwargs.get(
+                            'token') + '"', safe='')
+                    return response
+                elif token_access.viewerType == 'cornerstone':
+                    study_token = {}
+                    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+                    study_token.update({
+                        "session": request.session.session_key,
+                        "custodianOID": oid_inst.json()[0],
+                        "proxyURI": base_url + '/html5dicom/wado',
+                        "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
+                        "StudyDate": token_access.StudyDate,
+                        "PatientID": token_access.PatientID
+                    })
                     headers = {'Content-type': 'application/json'}
                     response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
                                                          json=study_token,
@@ -225,10 +260,6 @@ def study_web(request, *args, **kwargs):
                     return render(request,
                                   template_name='html5dicom/redirect_cornerstone.html',
                                   context={'json_cornerstone': json.dumps(cornerstone_json[0]['patientList'][0]['studyList'][0])})
-                elif token_access.viewerType == 'weasis':
-                    response = HttpResponse("", status=302)
-                    response['Location'] = 'weasis://' + urllib.parse.quote('$dicom:get -w "', safe='') + urllib.parse.quote(request.build_absolute_uri(reverse('weasis_manifiest')) + '?', safe='') + urllib.parse.urlencode(study_token) + urllib.parse.quote('"', safe='')
-                    return response
                 elif token_access.viewerType == 'zip':
                     pass
                 elif token_access.viewerType == 'osirix':
