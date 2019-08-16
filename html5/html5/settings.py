@@ -134,3 +134,7 @@ STATIC_ROOT = '/Users/Shared/html5/html5/html5dicom/static/'
 SESSION_COOKIE_AGE = 1200
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Access to httpdicom
+
+HTTP_DICOM = 'http://127.0.0.1:11111'

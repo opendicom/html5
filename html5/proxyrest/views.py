@@ -1,24 +1,23 @@
 import json
 import urllib
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, reverse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
-from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import requests
-import uuid
 from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
 from html5dicom.models import Institution, Role, Setting, UserViewerSettings
-from html5dicom.views import weasis, osirix, cornerstone
 from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer, TokenAccessStudySerializer
 from django.contrib.sessions.backends.db import SessionStore
+from django.conf import settings
 
 
 @api_view(['POST'])
 def rest_login(request, *args, **kwargs):
+
     if 'institution' in request.data and 'user' in request.data and 'password' in request.data:
         try:
             institution = Institution.objects.get(short_name=request.data.get('institution'))
@@ -98,11 +97,10 @@ def rest_qido(request, *args, **kwargs):
         if validate_session_expired(sessionrest):
             full_path = request.get_full_path()
             current_path = full_path[full_path.index('qido/') + 5:]
-            url_httpdicom = Setting.objects.get(key='url_httpdicom').value
-            url_httpdicom_req = url_httpdicom + '/custodians/titles/' + sessionrest.role.institution.organization.short_name
+            url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + sessionrest.role.institution.organization.short_name
             url_httpdicom_req += '/aets/' + sessionrest.role.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
-            current_path = url_httpdicom + '/pacs/' + oid_inst.json()[0] + '/rs/' + current_path + sessionrest.role.parameter_rest
+            current_path = settings.HTTP_DICOM + '/pacs/' + oid_inst.json()[0] + '/rs/' + current_path + sessionrest.role.parameter_rest
             qido_response = requests.get(current_path)
             if qido_response.text != '':
                 data_response = qido_response.json()
@@ -140,19 +138,17 @@ def rest_wado(request, *args, **kwargs):
             current_path = full_path[full_path.index('wado/') + 5:]
             study_data = current_path.split('/')
             if len(study_data) == 2 and study_data[0] == 'studies':
-                url_httpdicom = Setting.objects.get(key='url_httpdicom').value
-                url_httpdicom_req = url_httpdicom + '/custodians/titles/' + sessionrest.role.institution.organization.short_name
+                url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + sessionrest.role.institution.organization.short_name
                 url_httpdicom_req += '/aets/' + sessionrest.role.institution.short_name
                 oid_inst = requests.get(url_httpdicom_req)
-                url_zip = url_httpdicom + '/pacs/' + oid_inst.json()[0] + '/dcm.zip?StudyInstanceUID=' + study_data[1]
+                url_zip = settings.HTTP_DICOM + '/pacs/' + oid_inst.json()[0] + '/dcm.zip?StudyInstanceUID=' + study_data[1]
                 wado_response = requests.get(url_zip)
                 return HttpResponse(wado_response.content, content_type=wado_response.headers.get('content-type'))
             elif len(study_data) == 4 and study_data[0] == 'studies' and study_data[2] == 'series':
-                url_httpdicom = Setting.objects.get(key='url_httpdicom').value
-                url_httpdicom_req = url_httpdicom + '/custodians/titles/' + sessionrest.role.institution.organization.short_name
+                url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + sessionrest.role.institution.organization.short_name
                 url_httpdicom_req += '/aets/' + sessionrest.role.institution.short_name
                 oid_inst = requests.get(url_httpdicom_req)
-                url_zip = url_httpdicom + '/pacs/' + oid_inst.json()[0] + '/dcm.zip?SeriesInstanceUID=' + study_data[3]
+                url_zip = settings.HTTP_DICOM + '/pacs/' + oid_inst.json()[0] + '/dcm.zip?SeriesInstanceUID=' + study_data[3]
                 wado_response = requests.get(url_zip)
                 return HttpResponse(wado_response.content, content_type=wado_response.headers.get('content-type'))
             else:
@@ -186,8 +182,7 @@ def study_web(request, *args, **kwargs):
                     user_viewer = UserViewerSettings.objects.get(user=token_access.role.user).viewer
                 except UserViewerSettings.DoesNotExist:
                     user_viewer = ''
-            url_httpdicom = Setting.objects.get(key='url_httpdicom').value
-            url_httpdicom_req = url_httpdicom + '/custodians/titles/' + token_access.role.institution.organization.short_name
+            url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + token_access.role.institution.organization.short_name
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
@@ -221,18 +216,19 @@ def study_web(request, *args, **kwargs):
                     "StudyDate": token_access.StudyDate,
                     "PatientID": token_access.PatientID
                 })
-                headers = {'Content-type': 'application/json'}
-                response_study_token = requests.post(url_httpdicom + '/studyToken',
-                                                     json=study_token,
-                                                     headers=headers)
-                # print(response_study_token.text)
                 if token_access.viewerType == 'cornerstone':
+                    headers = {'Content-type': 'application/json'}
+                    response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
+                                                         json=study_token,
+                                                         headers=headers)
                     cornerstone_json = response_study_token.json()
                     return render(request,
                                   template_name='html5dicom/redirect_cornerstone.html',
                                   context={'json_cornerstone': json.dumps(cornerstone_json[0]['patientList'][0]['studyList'][0])})
                 elif token_access.viewerType == 'weasis':
-                    return redirect('/html5dicom/weasis_manifiest/?' + urllib.parse.urlencode(study_token))
+                    response = HttpResponse("", status=302)
+                    response['Location'] = "weasis://%24dicom%3Aget%20-w%20%22" + request.build_absolute_uri(reverse('weasis_manifiest')) + "?" + urllib.parse.urlencode(study_token) + "%22"
+                    return response
                 elif token_access.viewerType == 'zip':
                     pass
                 elif token_access.viewerType == 'osirix':

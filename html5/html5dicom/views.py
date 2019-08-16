@@ -2,18 +2,16 @@ from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpRespons
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import update_session_auth_hash, authenticate, login, logout, SESSION_KEY
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth import SESSION_KEY
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
-from html5dicom import models
+from html5dicom.models import Setting, UserChangePassword, UserViewerSettings, Role
 from html5dicom.forms import UserViewerSettingsForm
-from html5dicom.models import UserViewerSettings
 import requests
+import urllib
 
 
 def user_login(request, *args, **kwargs):
@@ -25,9 +23,9 @@ def user_login(request, *args, **kwargs):
             login(request, user)
             if user.is_active:
                 try:
-                    ucp = models.UserChangePassword.objects.get(user=user)
+                    ucp = UserChangePassword.objects.get(user=user)
                     changepassword=ucp.changepassword
-                except models.UserChangePassword.DoesNotExist:
+                except UserChangePassword.DoesNotExist:
                     changepassword=False
                 if changepassword:
                     return HttpResponseRedirect('/html5dicom/password')
@@ -55,22 +53,21 @@ def user_logout(request, *args, **kwargs):
 def main(request, *args, **kwargs):
     if request.user.is_authenticated:
         try:
-            ucp = models.UserChangePassword.objects.get(user=request.user)
+            ucp = UserChangePassword.objects.get(user=request.user)
             changepassword = ucp.changepassword
-        except models.UserChangePassword.DoesNotExist:
+        except UserChangePassword.DoesNotExist:
             changepassword = False
         if changepassword:
             return HttpResponseRedirect('/html5dicom/password')
-        url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
         try:
-            role_patient = models.Role.objects.get(user=request.user, name='pac')
-            url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role_patient.institution.organization.short_name
+            role_patient = Role.objects.get(user=request.user, name='pac')
+            url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + role_patient.institution.organization.short_name
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + role_patient.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
             try:
-                config_toolbar = models.Setting.objects.get(key='toolbar_patient').value
-            except models.Setting.DoesNotExist:
+                config_toolbar = Setting.objects.get(key='toolbar_patient').value
+            except Setting.DoesNotExist:
                 config_toolbar = 'full'
             organization = {}
             organization.update({
@@ -86,20 +83,20 @@ def main(request, *args, **kwargs):
             })
             user_viewer = ''
             try:
-                user_viewer = models.UserViewerSettings.objects.get(user=request.user).viewer
-            except models.UserViewerSettings.DoesNotExist:
+                user_viewer = UserViewerSettings.objects.get(user=request.user).viewer
+            except UserViewerSettings.DoesNotExist:
                 user_viewer = ''
             context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
                             'user_viewer': user_viewer, 'navbar': 'patient'}
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
-        except models.Role.DoesNotExist:
+        except Role.DoesNotExist:
             pass
 
         organization = {}
-        if models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).count() < 1:
+        if Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).count() < 1:
             logout(request)
             raise PermissionDenied
-        for role in models.Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']):
+        for role in Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']):
             if role.service:
                 default_organization = ''
                 default_institution = ''
@@ -136,7 +133,7 @@ def main(request, *args, **kwargs):
                                     }
                                 })
                     else:
-                        url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.service.institution.organization.short_name
+                        url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + role.service.institution.organization.short_name
                         url_httpdicom_req += '/aets/' + role.service.institution.short_name
                         oid_inst = requests.get(url_httpdicom_req)
                         organization[role.service.institution.organization.short_name]['institution'].update(
@@ -154,7 +151,7 @@ def main(request, *args, **kwargs):
                             }
                         )
                 else:
-                    url_httpdicom_req = url_httpdicom + '/custodians/titles/' + role.service.institution.organization.short_name
+                    url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + role.service.institution.organization.short_name
                     oid_org = requests.get(url_httpdicom_req)
                     url_httpdicom_req += '/aets/' + role.service.institution.short_name
                     oid_inst = requests.get(url_httpdicom_req)
@@ -181,8 +178,8 @@ def main(request, *args, **kwargs):
                     })
         user_viewer = ''
         try:
-            user_viewer = models.UserViewerSettings.objects.get(user=request.user).viewer
-        except models.UserViewerSettings.DoesNotExist:
+            user_viewer = UserViewerSettings.objects.get(user=request.user).viewer
+        except UserViewerSettings.DoesNotExist:
             user_viewer = ''
         context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'], 'user_viewer': user_viewer}
         return render(request, template_name='html5dicom/main.html', context=context_user)
@@ -190,23 +187,35 @@ def main(request, *args, **kwargs):
 
 @login_required(login_url='/html5dicom/login')
 def weasis(request, *args, **kwargs):
-    url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
     jnlp_file = open(settings.STATIC_ROOT + 'html5dicom/weasis/weasis.jnlp', 'r')
     jnlp_text = jnlp_file.read()
     jnlp_file.close()
     base_url = request.META['wsgi.url_scheme']+'://'+request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
-        manifiest = requests.get(url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
+        manifiest = requests.get(settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
         jnlp_text = jnlp_text.replace('%@', manifiest.text)
     elif request.GET['requestType'] == 'SERIES':
-        manifiest = requests.get(url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
+        manifiest = requests.get(settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
         jnlp_text = jnlp_text.replace('%@', manifiest.text)
     jnlp_text = jnlp_text.replace('{IIDURL}', base_url +'/static/html5dicom')
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
 def weasis_manifiest(request, *args, **kwargs):
-    print(request.GET)
+    if 'session' in request.GET:
+        try:
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
+            session.get_decoded()[SESSION_KEY]
+            url_manifiest = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(request.GET)
+            r = StreamingHttpResponse(stream_response(url_manifiest))
+            r['Content-Type'] = "application/gzip"
+            r['Content-Disposition'] = "attachment; filename=manifiest.gzip"
+            return r
+        except (Session.DoesNotExist, KeyError):
+            raise PermissionDenied
+    else:
+        return HttpResponse('Error', status=400)
 
 
 def cornerstone(request, *args, **kwargs):
@@ -215,12 +224,11 @@ def cornerstone(request, *args, **kwargs):
             return HttpResponse(status=403, content="you are not logged in")
         else:
             return HttpResponseRedirect('/html5dicom/login')
-    url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
     base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
     if request.GET['requestType'] == 'STUDY':
-        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
+        url_manifiest = settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
     elif request.GET['requestType'] == 'SERIES':
-        url_manifiest = url_httpdicom + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
+        url_manifiest = settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
     else:
         url_manifiest = ''
     manifiest = requests.get(url_manifiest)
@@ -239,21 +247,20 @@ def osirix(request, *args, **kwargs):
             session = Session.objects.get(session_key=request.GET['session'],
                                           expire_date__gt=timezone.now())
             session.get_decoded()[SESSION_KEY]
-            url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
             if request.GET['requestType'] == 'STUDY':
-                url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + \
+                url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + \
                           request.GET['study_uid']
                 # Valida accession number
                 #if request.GET['accession_no'] == '':
-                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
+                #    url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
                 #else:
-                #    url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
+                #    url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
                 r = StreamingHttpResponse(stream_response(url_zip))
                 r['Content-Type'] = "application/zip"
                 r['Content-Disposition'] = "attachment; filename=dcm.zip"
                 return r
             elif request.GET['requestType'] == 'SERIES':
-                url_zip = url_httpdicom + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
+                url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
                           request.GET['series_uid']
                 r = StreamingHttpResponse(stream_response(url_zip))
                 r['Content-Type'] = "application/zip"
@@ -271,9 +278,8 @@ def wado(request, *args, **kwargs):
             session = Session.objects.get(session_key=request.GET['session'],
                                           expire_date__gt=timezone.now())
             session.get_decoded()[SESSION_KEY]
-            url_httpdicom = models.Setting.objects.get(key='url_httpdicom').value
             url_request = request.build_absolute_uri()
-            url_wado = url_httpdicom + url_request[url_request.index("?"):]
+            url_wado = settings.HTTP_DICOM + url_request[url_request.index("?"):]
             r = requests.get(url_wado)
             return HttpResponse(r.content, content_type=r.headers.get('content-type'))
         except (Session.DoesNotExist, KeyError):
@@ -290,10 +296,10 @@ def change_password(request):
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
             try:
-                ucp = models.UserChangePassword.objects.get(user=user)
+                ucp = UserChangePassword.objects.get(user=user)
                 ucp.changepassword=False
                 ucp.save()
-            except models.UserChangePassword.DoesNotExist:
+            except UserChangePassword.DoesNotExist:
                 pass
             messages.success(request, 'Su contraseña fue actualizada correctamente!')
             return redirect('logout')
@@ -311,7 +317,7 @@ def change_password(request):
 def viewer_settings(request):
     try:
         userviewersettings = UserViewerSettings.objects.get(user=request.user)
-    except models.UserViewerSettings.DoesNotExist:
+    except UserViewerSettings.DoesNotExist:
         userviewersettings = UserViewerSettings.objects.create(user=request.user)
         userviewersettings.save()
     if request.method == 'POST':
