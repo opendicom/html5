@@ -1,7 +1,7 @@
 import json
 import urllib
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.core.urlresolvers import reverse
