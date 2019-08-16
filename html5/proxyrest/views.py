@@ -227,7 +227,7 @@ def study_web(request, *args, **kwargs):
                                   context={'json_cornerstone': json.dumps(cornerstone_json[0]['patientList'][0]['studyList'][0])})
                 elif token_access.viewerType == 'weasis':
                     response = HttpResponse("", status=302)
-                    response['Location'] = 'weasis://' + urllib.parse.quote('$dicom:get -w "' + request.build_absolute_uri(reverse('weasis_manifiest')) + '?' + urllib.parse.urlencode(study_token) + '"')
+                    response['Location'] = 'weasis://' + urllib.parse.quote('$dicom:get -w "', safe='') + urllib.parse.quote(request.build_absolute_uri(reverse('weasis_manifiest')) + '?', safe='') + urllib.parse.urlencode(study_token) + urllib.parse.quote('"', safe='')
                     return response
                 elif token_access.viewerType == 'zip':
                     pass
