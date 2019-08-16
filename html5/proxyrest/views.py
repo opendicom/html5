@@ -166,7 +166,7 @@ def weasis_manifiest(request, *args, **kwargs):
             url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + token_access.role.institution.organization.short_name
             url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
             oid_inst = requests.get(url_httpdicom_req)
-
+            login(request, token_access.role.user)
             study_token = {}
             base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
             study_token.update({
@@ -178,10 +178,13 @@ def weasis_manifiest(request, *args, **kwargs):
                 "PatientID": token_access.PatientID
             })
             headers = {'Content-type': 'application/json'}
-            response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
-                                                 json=study_token,
-                                                 headers=headers)
-            return response_study_token
+            #response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
+            #                                     json=study_token,
+            #                                     headers=headers)
+            response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token))
+            response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
+            response['Content-Length'] = str(len(response_study_token.content))
+            return response
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:
@@ -238,8 +241,8 @@ def study_web(request, *args, **kwargs):
                 if token_access.viewerType == 'weasis':
                     response = HttpResponse("", status=302)
                     response['Location'] = 'weasis://' + urllib.parse.quote(
-                        '$dicom:get -w "' + request.build_absolute_uri(reverse('weasis_manifiest')) + '/' + kwargs.get(
-                            'token') + '"', safe='')
+                        '$dicom:get -w "' + request.build_absolute_uri(reverse('weasis_manifiest', args=[kwargs.get(
+                            'token')])) + '"', safe='')
                     return response
                 elif token_access.viewerType == 'cornerstone':
                     study_token = {}
