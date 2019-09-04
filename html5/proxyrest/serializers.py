@@ -47,6 +47,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
     SeriesDescription = serializers.CharField(allow_blank=True)
     Modality = serializers.CharField(allow_blank=True)
     SOPClass = serializers.CharField(allow_blank=True)
+    SeriesNumber = serializers.CharField(allow_blank=True)
     start_date = serializers.DateTimeField
     expiration_date = serializers.DateTimeField
     role_id = serializers.IntegerField()
@@ -62,6 +63,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
                                                 SeriesDescription=validated_data['SeriesDescription'],
                                                 Modality=validated_data['Modality'],
                                                 SOPClass=validated_data['SOPClass'],
+                                                SeriesNumber=validated_data['SeriesNumber'],
                                                 start_date=validated_data['start_date'],
                                                 expiration_date=validated_data['expiration_date'],
                                                 role_id=validated_data['role_id'])
@@ -70,7 +72,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
     class Meta:
         model = TokenAccessPatient
         fields = ('token', 'viewerType', 'StudyInstanceUID', 'AccessionNumber', 'StudyDate', 'PatientID', 'issuer',
-                  'SeriesDescription', 'Modality', 'SOPClass',  'start_date', 'expiration_date', 'role_id')
+                  'SeriesDescription', 'Modality', 'SOPClass', 'SeriesNumber', 'start_date', 'expiration_date', 'role_id')
 
 
 class SessionRestSerializer(serializers.ModelSerializer):

@@ -276,6 +276,9 @@ def generate_study_token(token_access, request):
     # SOPClass
     if token_access.SOPClass:
         study_token['SOPClass'] = token_access.SOPClass
+    # SeriesNumber
+    if token_access.SeriesNumber:
+        study_token['SeriesNumber'] = token_access.SeriesNumber
     return study_token
 
 
@@ -352,6 +355,7 @@ def token_access_study(request, *args, **kwargs):
                 'SeriesDescription': request.data.get('SeriesDescription', ''),
                 'Modality': request.data.get('Modality', ''),
                 'SOPClass': request.data.get('SOPClass', ''),
+                'SeriesNumber': request.data.get('SeriesNumber', ''),
                 'start_date': timezone.now(),
                 'expiration_date': timezone.now() + timezone.timedelta(seconds=allowed_age),
                 'role_id': role.id
