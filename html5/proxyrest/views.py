@@ -165,7 +165,7 @@ def weasis_manifiest(request, *args, **kwargs):
         if validate_token_expired(token_access):
             login(request, token_access.role.user)
             study_token = generate_study_token(token_access, request)
-            response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token))
+            response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
             response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
             response['Content-Length'] = str(len(response_study_token.content))
             return response
