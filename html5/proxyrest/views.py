@@ -163,24 +163,8 @@ def weasis_manifiest(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
         if validate_token_expired(token_access):
-            url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + token_access.role.institution.organization.short_name
-            url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
-            oid_inst = requests.get(url_httpdicom_req)
             login(request, token_access.role.user)
-            study_token = {}
-            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
-            study_token.update({
-                "session": request.session.session_key,
-                "custodianOID": oid_inst.json()[0],
-                "proxyURI": base_url + '/html5dicom/wado',
-                "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
-                "StudyDate": token_access.StudyDate,
-                "PatientID": token_access.PatientID
-            })
-            headers = {'Content-type': 'application/json'}
-            #response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
-            #                                     json=study_token,
-            #                                     headers=headers)
+            study_token = generate_study_token(token_access, request)
             response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token))
             response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
             response['Content-Length'] = str(len(response_study_token.content))
@@ -214,10 +198,6 @@ def study_web(request, *args, **kwargs):
                     user_viewer = UserViewerSettings.objects.get(user=token_access.role.user).viewer
                 except UserViewerSettings.DoesNotExist:
                     user_viewer = ''
-            url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + token_access.role.institution.organization.short_name
-            oid_org = requests.get(url_httpdicom_req)
-            url_httpdicom_req += '/aets/' + token_access.role.institution.short_name
-            oid_inst = requests.get(url_httpdicom_req)
             login(request, token_access.role.user)
             organization = {}
             if type_token == 'patient':
@@ -226,12 +206,12 @@ def study_web(request, *args, **kwargs):
                     "seriesSelection": token_access.seriesSelection,
                     "StudyInstanceUID": "",
                     "name": token_access.role.institution.organization.short_name,
-                    "oid": oid_org.json()[0],
+                    "oid": token_access.role.institution.organization.oid,
                     "config_toolbar": config_toolbar,
                     "institution": {
                         'name': token_access.role.institution.short_name,
                         'aet': token_access.role.institution.short_name,
-                        'oid': oid_inst.json()[0]
+                        'oid': token_access.role.institution.oid
                     }
                 })
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
@@ -245,16 +225,7 @@ def study_web(request, *args, **kwargs):
                             'token')])) + '"', safe='')
                     return response
                 elif token_access.viewerType == 'cornerstone':
-                    study_token = {}
-                    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
-                    study_token.update({
-                        "session": request.session.session_key,
-                        "custodianOID": oid_inst.json()[0],
-                        "proxyURI": base_url + '/html5dicom/wado',
-                        "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
-                        "StudyDate": token_access.StudyDate,
-                        "PatientID": token_access.PatientID
-                    })
+                    study_token = generate_study_token(token_access, request)
                     headers = {'Content-type': 'application/json'}
                     response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
                                                          json=study_token,
@@ -271,6 +242,41 @@ def study_web(request, *args, **kwargs):
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
         return HttpResponse({'error': 'missing token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def generate_study_token(token_access, request):
+    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+    study_token = {
+        "session": request.session.session_key,
+        "custodianOID": token_access.role.institution.oid,
+        "proxyURI": base_url + '/html5dicom/wado',
+        "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
+    }
+    # StudyInstanceUID
+    if token_access.StudyInstanceUID:
+        study_token['StudyInstanceUID'] = token_access.StudyInstanceUID
+    # AccessionNumber
+    if token_access.AccessionNumber:
+        study_token['AccessionNumber'] = token_access.AccessionNumber
+    # StudyDate
+    if token_access.StudyDate:
+        study_token['StudyDate'] = token_access.StudyDate
+    # PatientID
+    if token_access.PatientID:
+        study_token['PatientID'] = token_access.PatientID
+    # issuer
+    if token_access.issuer:
+        study_token['issuer'] = token_access.issuer
+    # SeriesDescription
+    if token_access.SeriesDescription:
+        study_token['SeriesDescription'] = token_access.SeriesDescription
+    # Modality
+    if token_access.Modality:
+        study_token['Modality'] = token_access.Modality
+    # SOPClass
+    if token_access.SOPClass:
+        study_token['SOPClass'] = token_access.SOPClass
+    return study_token
 
 
 @api_view(['POST'])
