@@ -36,7 +36,7 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
 
 
 class TokenAccessStudySerializer(serializers.ModelSerializer):
-    access_choice = ['osirix.dcmURLs', 'weasis.xml', 'dicom.zip', 'cornerstone.json', 'datatablesseries.json', 'datatablespatient.json']
+    access_choice = ['osirix.zip', 'weasis.xml', 'dicom.zip', 'cornerstone.json', 'datatablesseries.json', 'datatablespatient.json']
     token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessStudy.objects.all())])
     accessType = serializers.ChoiceField(choices=access_choice, write_only=True)
     StudyInstanceUID = serializers.CharField(allow_blank=True, write_only=True)

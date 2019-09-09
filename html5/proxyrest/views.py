@@ -272,7 +272,7 @@ def study_web(request, *args, **kwargs):
                     response = HttpResponse("", status=302)
                     response['Location'] = request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')]))
                     return response
-                elif token_access.accessType == 'osirix.dcmURLs':
+                elif token_access.accessType == 'osirix.zip':
                     response = HttpResponse("", status=302)
                     response['Location'] = "osirix://?methodName=DownloadURL&Display=YES&URL='" + \
                                            request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')])) + "'"
@@ -291,7 +291,7 @@ def generate_study_token(token_access, request):
         "session": request.session.session_key,
         "custodianOID": token_access.role.institution.oid,
         "proxyURI": base_url + '/html5dicom/wado',
-        "accessType": 'dicom.zip' if token_access.accessType == 'osirix.dcmURLs' else token_access.accessType,
+        "accessType": 'dicom.zip' if token_access.accessType == 'osirix.zip' else token_access.accessType,
     }
     # StudyInstanceUID
     if token_access.StudyInstanceUID:
