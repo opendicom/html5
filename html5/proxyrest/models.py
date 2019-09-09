@@ -37,6 +37,8 @@ class TokenAccessStudy(models.Model):
     Modality = models.CharField(max_length=20, blank=True, null=True)
     SOPClass = models.TextField(blank=True, null=True)
     SeriesNumber = models.CharField(max_length=20, blank=True, null=True)
+    SOPClassOff = models.CharField(max_length=255, blank=True, null=True)
+    transferSyntax = models.CharField(max_length=255, blank=True, null=True)
     start_date = models.DateTimeField()
     expiration_date = models.DateTimeField()
     role = models.ForeignKey(Role, on_delete=models.DO_NOTHING)

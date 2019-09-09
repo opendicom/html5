@@ -316,6 +316,12 @@ def generate_study_token(token_access, request):
     # SeriesNumber
     if token_access.SeriesNumber:
         study_token['SeriesNumber'] = token_access.SeriesNumber
+    # SOPClassOff
+    if token_access.SOPClassOff:
+        study_token['SOPClassOff'] = token_access.SOPClassOff
+    # transferSyntax
+    if token_access.transferSyntax:
+        study_token['transferSyntax'] = token_access.transferSyntax
     return study_token
 
 
@@ -393,6 +399,8 @@ def token_access_study(request, *args, **kwargs):
                 'Modality': request.data.get('Modality', ''),
                 'SOPClass': request.data.get('SOPClass', ''),
                 'SeriesNumber': request.data.get('SeriesNumber', ''),
+                'SOPClassOff': request.data.get('SOPClassOff', ''),
+                'transferSyntax': request.data.get('transferSyntax', ''),
                 'start_date': timezone.now(),
                 'expiration_date': timezone.now() + timezone.timedelta(seconds=allowed_age),
                 'role_id': role.id
