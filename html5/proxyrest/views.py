@@ -1,6 +1,5 @@
-import json
 import urllib
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.shortcuts import render, reverse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
@@ -192,6 +191,29 @@ def cornerstone_manifiest(request, *args, **kwargs):
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+def stream_response(url_zip):
+    r = requests.get(url_zip, stream=True)
+    for chunk in r.iter_content(512 * 1024):
+        yield chunk
+
+
+def dicom_zip(request, *args, **kwargs):
+    try:
+        token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
+        if validate_token_expired(token_access):
+            login(request, token_access.role.user)
+            study_token = generate_study_token(token_access, request)
+            url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
+            r = StreamingHttpResponse(stream_response(url_zip))
+            r['Content-Type'] = "application/zip"
+            r['Content-Disposition'] = "attachment; filename=dicom.zip"
+            return r
+        else:
+            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+    except TokenAccessStudy.DoesNotExist:
+        return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
 def study_web(request, *args, **kwargs):
     if 'token' in kwargs:
         try:
@@ -204,20 +226,20 @@ def study_web(request, *args, **kwargs):
             except TokenAccessStudy.DoesNotExist:
                 return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
         if validate_token_expired(token_access):
-            try:
-                config_toolbar = Setting.objects.get(key='toolbar_patient').value
-            except Setting.DoesNotExist:
-                config_toolbar = 'full'
-            if token_access.viewerType != '':
-                user_viewer = token_access.viewerType
-            else:
-                try:
-                    user_viewer = UserViewerSettings.objects.get(user=token_access.role.user).viewer
-                except UserViewerSettings.DoesNotExist:
-                    user_viewer = ''
-            login(request, token_access.role.user)
-            organization = {}
             if type_token == 'patient':
+                try:
+                    config_toolbar = Setting.objects.get(key='toolbar_patient').value
+                except Setting.DoesNotExist:
+                    config_toolbar = 'full'
+                if token_access.viewerType != '':
+                    user_viewer = token_access.viewerType
+                else:
+                    try:
+                        user_viewer = UserViewerSettings.objects.get(user=token_access.role.user).viewer
+                    except UserViewerSettings.DoesNotExist:
+                        user_viewer = ''
+                login(request, token_access.role.user)
+                organization = {}
                 organization.update({
                     "patientID": token_access.PatientID,
                     "seriesSelection": token_access.seriesSelection,
@@ -247,9 +269,12 @@ def study_web(request, *args, **kwargs):
                                   context={'url_manifiest': request.build_absolute_uri(
                                       reverse('cornerstone_manifiest', args=[kwargs.get('token')]))})
                 elif token_access.viewerType == 'zip':
-                    pass
+                    response = HttpResponse("", status=302)
+                    response['Location'] = request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')]))
                 elif token_access.viewerType == 'osirix':
-                    pass
+                    response = HttpResponse("", status=302)
+                    response['Location'] = "osirix://?methodName=DownloadURL&Display=YES&URL='" + \
+                                           request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')])) + "'"
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
