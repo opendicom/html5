@@ -57,16 +57,12 @@
         <script src='{% static "html5dicom/bootstrap-3.3.5/js/jquery-2.1.4.min.js" %}'></script>
         <script>
             $(document).ready(function(){
-                jQuery.ajax({
-                    type: 'GET',
-                    url: '{{ url_manifiest }}',
-                    success: function(data) {
-                        document.getElementById("loader").style.display = "none";
-                        sessionStorage.setItem('json_estudio', data[0]['patientList'][0]['studyList'][0]);
-                        window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
-                    }
-                });
 
+                $.getJSON( "{{ url_manifiest }}", function( data ) {
+                    document.getElementById("loader").style.display = "none";
+                    sessionStorage.setItem('json_estudio', JSON.stringify(data[0]['patientList'][0]['studyList'][0]));
+                    window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+                });
             });
 
         </script>
