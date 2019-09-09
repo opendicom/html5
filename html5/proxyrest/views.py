@@ -175,6 +175,23 @@ def weasis_manifiest(request, *args, **kwargs):
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+def cornerstone_manifiest(request, *args, **kwargs):
+    try:
+        token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
+        if validate_token_expired(token_access):
+            login(request, token_access.role.user)
+            study_token = generate_study_token(token_access, request)
+            headers = {'Content-type': 'application/json'}
+            response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
+                                                 json=study_token,
+                                                 headers=headers)
+            return response_study_token.json()
+        else:
+            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+    except TokenAccessStudy.DoesNotExist:
+        return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
 def study_web(request, *args, **kwargs):
     if 'token' in kwargs:
         try:
@@ -225,15 +242,10 @@ def study_web(request, *args, **kwargs):
                             'token')])) + '"', safe='')
                     return response
                 elif token_access.viewerType == 'cornerstone':
-                    study_token = generate_study_token(token_access, request)
-                    headers = {'Content-type': 'application/json'}
-                    response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
-                                                         json=study_token,
-                                                         headers=headers)
-                    cornerstone_json = response_study_token.json()
                     return render(request,
                                   template_name='html5dicom/redirect_cornerstone.html',
-                                  context={'json_cornerstone': json.dumps(cornerstone_json[0]['patientList'][0]['studyList'][0])})
+                                  context={'url_manifiest': request.build_absolute_uri(
+                                      reverse('cornerstone_manifiest', args=[kwargs.get('token')]))})
                 elif token_access.viewerType == 'zip':
                     pass
                 elif token_access.viewerType == 'osirix':
