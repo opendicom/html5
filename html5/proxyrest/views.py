@@ -271,10 +271,12 @@ def study_web(request, *args, **kwargs):
                 elif token_access.accessType == 'dicom.zip':
                     response = HttpResponse("", status=302)
                     response['Location'] = request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')]))
+                    return response
                 elif token_access.accessType == 'osirix.dcmURLs':
                     response = HttpResponse("", status=302)
                     response['Location'] = "osirix://?methodName=DownloadURL&Display=YES&URL='" + \
                                            request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')])) + "'"
+                    return response
             else:
                 return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
