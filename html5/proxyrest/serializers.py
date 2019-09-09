@@ -36,9 +36,9 @@ class TokenAccessPatientSerializer(serializers.ModelSerializer):
 
 
 class TokenAccessStudySerializer(serializers.ModelSerializer):
-    viewer_choice = ['cornerstone', 'weasis', 'zip', 'osirix']
+    access_choice = ['osirix.dcmURLs', 'weasis.xml', 'dicom.zip', 'cornerstone.json', 'datatablesseries.json', 'datatablespatient.json']
     token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessStudy.objects.all())])
-    viewerType = serializers.ChoiceField(choices=viewer_choice)
+    accessType = serializers.ChoiceField(choices=access_choice, write_only=True)
     StudyInstanceUID = serializers.CharField(allow_blank=True, write_only=True)
     AccessionNumber = serializers.CharField(allow_blank=True, write_only=True)
     StudyDate = serializers.CharField(allow_blank=True, write_only=True)
@@ -56,7 +56,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         token = TokenAccessStudy.objects.create(token=validated_data['token'],
-                                                viewerType=validated_data['viewerType'],
+                                                accessType=validated_data['accessType'],
                                                 StudyInstanceUID=validated_data['StudyInstanceUID'],
                                                 AccessionNumber=validated_data['AccessionNumber'],
                                                 StudyDate=validated_data['StudyDate'],
@@ -75,7 +75,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TokenAccessPatient
-        fields = ('token', 'viewerType', 'StudyInstanceUID', 'AccessionNumber', 'StudyDate', 'PatientID', 'issuer',
+        fields = ('token', 'accessType', 'StudyInstanceUID', 'AccessionNumber', 'StudyDate', 'PatientID', 'issuer',
                   'SeriesDescription', 'Modality', 'SOPClass', 'SeriesNumber', 'SOPClassOff', 'transferSyntax',
                   'start_date', 'expiration_date', 'role_id')
 

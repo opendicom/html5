@@ -256,25 +256,27 @@ def study_web(request, *args, **kwargs):
                 context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
                                 'user_viewer': user_viewer, 'navbar': 'rest'}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
-            elif type_token == 'study' and token_access.viewerType != '':
-                if token_access.viewerType == 'weasis':
+            elif type_token == 'study' and token_access.accessType != '':
+                if token_access.accessType == 'weasis.xml':
                     response = HttpResponse("", status=302)
                     response['Location'] = 'weasis://' + urllib.parse.quote(
                         '$dicom:get -w "' + request.build_absolute_uri(reverse('weasis_manifiest', args=[kwargs.get(
                             'token')])) + '"', safe='')
                     return response
-                elif token_access.viewerType == 'cornerstone':
+                elif token_access.accessType == 'cornerstone.json':
                     return render(request,
                                   template_name='html5dicom/redirect_cornerstone.html',
                                   context={'url_manifiest': request.build_absolute_uri(
                                       reverse('cornerstone_manifiest', args=[kwargs.get('token')]))})
-                elif token_access.viewerType == 'zip':
+                elif token_access.accessType == 'dicom.zip':
                     response = HttpResponse("", status=302)
                     response['Location'] = request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')]))
-                elif token_access.viewerType == 'osirix':
+                elif token_access.accessType == 'osirix.dcmURLs':
                     response = HttpResponse("", status=302)
                     response['Location'] = "osirix://?methodName=DownloadURL&Display=YES&URL='" + \
                                            request.build_absolute_uri(reverse('dicom_zip', args=[kwargs.get('token')])) + "'"
+            else:
+                return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     else:
@@ -287,7 +289,7 @@ def generate_study_token(token_access, request):
         "session": request.session.session_key,
         "custodianOID": token_access.role.institution.oid,
         "proxyURI": base_url + '/html5dicom/wado',
-        "accessType": 'zip' if token_access.viewerType == 'osirix' else token_access.viewerType,
+        "accessType": 'dicom.zip' if token_access.accessType == 'osirix.dcmURLs' else token_access.accessType,
     }
     # StudyInstanceUID
     if token_access.StudyInstanceUID:
@@ -370,7 +372,7 @@ def token_access_patient(request, *args, **kwargs):
 
 @api_view(['POST'])
 def token_access_study(request, *args, **kwargs):
-    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'viewerType' in request.data:
+    if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'accessType' in request.data:
         try:
             institution = Institution.objects.get(short_name=request.data.get('institution'))
         except Institution.DoesNotExist:
@@ -389,7 +391,7 @@ def token_access_study(request, *args, **kwargs):
                 allowed_age = 120
             serializer = TokenAccessStudySerializer(data={
                 'token': request.session._session_key,
-                'viewerType': request.data.get('viewerType'),
+                'accessType': request.data.get('accessType'),
                 'StudyInstanceUID': request.data.get('StudyInstanceUID', ''),
                 'AccessionNumber': request.data.get('AccessionNumber', ''),
                 'StudyDate': request.data.get('StudyDate', ''),
