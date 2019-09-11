@@ -1,79 +1,142 @@
+{% extends "html5dicom/base.html" %}
 {% load staticfiles %}
-<html>
-    <head>
-        <style>
-            /* Center the loader */
-            #loader {
-              position: absolute;
-              left: 50%;
-              top: 50%;
-              z-index: 1;
-              width: 150px;
-              height: 150px;
-              margin: -75px 0 0 -75px;
-              border: 16px solid #f3f3f3;
-              border-radius: 50%;
-              border-top: 16px solid #3498db;
-              width: 120px;
-              height: 120px;
-              -webkit-animation: spin 2s linear infinite;
-              animation: spin 2s linear infinite;
-            }
+{% block title %} Opendicom Viewer {% endblock %}
+{% block head %}
+    <style>
+        /* Center the loader */
+        #loader {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          z-index: 1;
+          width: 150px;
+          height: 150px;
+          margin: -75px 0 0 -75px;
+          border: 16px solid #f3f3f3;
+          border-radius: 50%;
+          border-top: 16px solid #3498db;
+          width: 120px;
+          height: 120px;
+          -webkit-animation: spin 2s linear infinite;
+          animation: spin 2s linear infinite;
+        }
 
-            @-webkit-keyframes spin {
-              0% { -webkit-transform: rotate(0deg); }
-              100% { -webkit-transform: rotate(360deg); }
-            }
+        @-webkit-keyframes spin {
+          0% { -webkit-transform: rotate(0deg); }
+          100% { -webkit-transform: rotate(360deg); }
+        }
 
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
 
-            /* Add animation to "page content" */
-            .animate-bottom {
-              position: relative;
-              -webkit-animation-name: animatebottom;
-              -webkit-animation-duration: 1s;
-              animation-name: animatebottom;
-              animation-duration: 1s
-            }
+        /* Add animation to "page content" */
+        .animate-bottom {
+          position: relative;
+          -webkit-animation-name: animatebottom;
+          -webkit-animation-duration: 1s;
+          animation-name: animatebottom;
+          animation-duration: 1s
+        }
 
-            @-webkit-keyframes animatebottom {
-              from { bottom:-100px; opacity:0 }
-              to { bottom:0px; opacity:1 }
-            }
+        @-webkit-keyframes animatebottom {
+          from { bottom:-100px; opacity:0 }
+          to { bottom:0px; opacity:1 }
+        }
 
-            @keyframes animatebottom {
-              from{ bottom:-100px; opacity:0 }
-              to{ bottom:0; opacity:1 }
-            }
+        @keyframes animatebottom {
+          from{ bottom:-100px; opacity:0 }
+          to{ bottom:0; opacity:1 }
+        }
 
-            #myDiv {
-              display: none;
-              text-align: center;
-            }
-            </style>
-        <script src='{% static "html5dicom/bootstrap-3.3.5/js/jquery-2.1.4.min.js" %}'></script>
-        <script>
-            $(document).ready(function(){
+        #myDiv {
+          display: none;
+          text-align: center;
+        }
+    </style>
+{% endblock %}
 
-                $.getJSON( "{{ url_manifiest }}", function( data ) {
+{% block content %}
+    <div id="loader"></div>
+
+<div id="studies">
+    <h1 id="patient_name">Nombre paciente</h1>
+    <table id="table_studies" class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Study Description</th>
+          <th scope="col">Study Date</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>descripcion 1</td>
+          <td>11/09/2019</td>
+          <td><button type="button" class="btn btn-default">Ver</button></td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>descripcion 2</td>
+          <td>11/09/2019</td>
+          <td><button type="button" class="btn btn-default">Ver</button></td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>descripcion 3</td>
+          <td>11/09/2019</td>
+          <td><button type="button" class="btn btn-default">Ver</button></td>
+        </tr>
+      </tbody>
+    </table>
+</div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        var json_cornerstone;
+        $(document).ready(function(){
+            document.getElementById("loader").style.display = "none";
+            fill_data_patient();
+            //document.getElementById("studies").style.display = "none";
+
+            /*$.getJSON( "{{ url_manifiest }}", function( data ) {
+                document.getElementById("loader").style.display = "none";
+                sessionStorage.setItem('json_estudio', JSON.stringify(data[0]['patientList'][0]['studyList'][0]));
+                window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+            })
+            .error(function(event, jqxhr, exception) {
+                if (event.status >= 400) {
                     document.getElementById("loader").style.display = "none";
-                    sessionStorage.setItem('json_estudio', JSON.stringify(data[0]['patientList'][0]['studyList'][0]));
-                    window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
-                })
-                .error(function(event, jqxhr, exception) {
-                    if (event.status >= 400) {
-                        document.getElementById("loader").style.display = "none";
-                        alert("error occurred ");
-                    }
-                });
+                    alert("error occurred ");
+                }
+            });*/
+        });
+        function fill_data_patient(){
+            // Path JSON with patient information
+            // $json_cornerstone[0]['patientList'][0]
+            $('#patient_name').text('ID: 11111 - Claudio Baeza');
+            // Path study list
+            // $json_cornerstone[0]['patientList'][0]['studyList']
+            var count = 1;
+            json_cornerstone[0]['patientList'][0]['studyList'].forEach(function(study){
+                var tbody = $('#table_studies').children('tbody');
+                var table = tbody.length ? tbody : $('#table_studies');
+                var row = '<tr>';
+                row = row + '<td>'+ count +'</td>';
+                row = row + '<td>'+ study['studyDescription'] +'</td>';
+                row = row + '<td>'+ study['studyDate'] +'</td>';
+                row = row + '<td><button type="button" class="btn btn-default" onclick("javascript:load_cornerstone(' + JSON.stringify(study) + ')")>Ver</button></td>';
+                row = row + '</tr>';
+                table.append('<tr><td>hello></td></tr>');
+                count = count +1;
             });
-
-        </script>
-    </head>
-    <body>
-        <div id="loader"></div>
-    </body>
-</html>
+        }
+        function load_cornerstone(json_estudio_str){
+            sessionStorage.setItem('json_estudio', json_estudio_str);
+            window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+        }
+    </script>
+{% endblock %}
