@@ -50,7 +50,7 @@
           to{ bottom:0; opacity:1 }
         }
 
-        #myDiv {
+        #studies {
           display: none;
           text-align: center;
         }
@@ -72,24 +72,6 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <th scope="row">1</th>
-          <td>descripcion 1</td>
-          <td>11/09/2019</td>
-          <td><button type="button" class="btn btn-default">Ver</button></td>
-        </tr>
-        <tr>
-          <th scope="row">2</th>
-          <td>descripcion 2</td>
-          <td>11/09/2019</td>
-          <td><button type="button" class="btn btn-default">Ver</button></td>
-        </tr>
-        <tr>
-          <th scope="row">3</th>
-          <td>descripcion 3</td>
-          <td>11/09/2019</td>
-          <td><button type="button" class="btn btn-default">Ver</button></td>
-        </tr>
       </tbody>
     </table>
 </div>
@@ -98,26 +80,31 @@
     <script>
         var json_cornerstone;
         $(document).ready(function(){
-            document.getElementById("loader").style.display = "none";
-            fill_data_patient();
+            //document.getElementById("loader").style.display = "none";
             //document.getElementById("studies").style.display = "none";
 
-            /*$.getJSON( "{{ url_manifiest }}", function( data ) {
+            $.getJSON( "{{ url_manifiest }}", function( data ) {
                 document.getElementById("loader").style.display = "none";
-                sessionStorage.setItem('json_estudio', JSON.stringify(data[0]['patientList'][0]['studyList'][0]));
-                window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+                document.getElementById("studies").style.display = "block";
+                if (data[0]['patientList'][0]['studyList'].length > 1) {
+                    json_cornerstone = data;
+                    fill_data_patient();
+                }else{
+                    sessionStorage.setItem('json_estudio', JSON.stringify(data[0]['patientList'][0]['studyList'][0]));
+                    window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+                }
             })
             .error(function(event, jqxhr, exception) {
                 if (event.status >= 400) {
                     document.getElementById("loader").style.display = "none";
                     alert("error occurred ");
                 }
-            });*/
+            });
         });
         function fill_data_patient(){
             // Path JSON with patient information
             // $json_cornerstone[0]['patientList'][0]
-            $('#patient_name').text('ID: 11111 - Claudio Baeza');
+            $('#patient_name').text('ID: '+ json_cornerstone[0]['patientList'][0]['PatientID'] +' - ' + json_cornerstone[0]['patientList'][0]['PatientName']);
             // Path study list
             // $json_cornerstone[0]['patientList'][0]['studyList']
             var count = 1;
@@ -128,15 +115,15 @@
                 row = row + '<td>'+ count +'</td>';
                 row = row + '<td>'+ study['studyDescription'] +'</td>';
                 row = row + '<td>'+ study['studyDate'] +'</td>';
-                row = row + '<td><button type="button" class="btn btn-default" onclick("javascript:load_cornerstone(' + JSON.stringify(study) + ')")>Ver</button></td>';
+                row = row + "<td><button type='button' class='btn btn-default' onclick='load_cornerstone(" + JSON.stringify(study) + ")'>Ver</button></td>";
                 row = row + '</tr>';
-                table.append('<tr><td>hello></td></tr>');
+                table.append(row);
                 count = count +1;
             });
         }
-        function load_cornerstone(json_estudio_str){
-            sessionStorage.setItem('json_estudio', json_estudio_str);
-            window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+        function load_cornerstone(json_estudio){
+            sessionStorage.setItem('json_estudio', JSON.stringify(json_estudio));
+            window.open("{% static "html5dicom/cornerstone/index.html" %}", '_blank');
         }
     </script>
 {% endblock %}
