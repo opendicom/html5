@@ -184,7 +184,10 @@ def cornerstone_manifiest(request, *args, **kwargs):
             response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
                                                  json=study_token,
                                                  headers=headers)
-            return response_study_token.json()
+            response = HttpResponse(response_study_token.content,
+                                    status=response_study_token.status_code,
+                                    content_type=response_study_token.headers['Content-Type'])
+            return response
         else:
             return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:

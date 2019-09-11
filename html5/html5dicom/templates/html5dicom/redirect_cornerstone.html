@@ -62,6 +62,12 @@
                     document.getElementById("loader").style.display = "none";
                     sessionStorage.setItem('json_estudio', JSON.stringify(data[0]['patientList'][0]['studyList'][0]));
                     window.location.replace("{% static "html5dicom/cornerstone/index.html" %}");
+                })
+                .error(function(event, jqxhr, exception) {
+                    if (event.status >= 400) {
+                        document.getElementById("loader").style.display = "none";
+                        alert("error occurred ");
+                    }
                 });
             });
 
