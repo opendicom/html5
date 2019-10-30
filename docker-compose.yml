@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  web:
+    build: ./html5
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./html5/:/usr/src/html5
+    ports:
+      - 8000:8000
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
+  db:
+    image: mariadb:10.1.14
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+      - "4567:4567"
+      - "4568:4568"
+      - "4444:4444"
+    environment:
+      - MYSQL_DATABASE=html5
+      - MYSQL_USER=html5
+      - MYSQL_PASSWORD=html5
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - mariadb_data:/var/lib/mysql
+volumes:
+  mariadb_data:

@@ -1,0 +1,65 @@
+###########
+# BUILDER #
+###########
+FROM python:3.6.8 as builder
+
+# set work directory
+WORKDIR /usr/src/html5
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update \
+    && apt-get install -y netcat
+
+# lint
+RUN pip install --upgrade pip
+#RUN pip install flake8
+COPY . /usr/src/html5/
+#RUN flake8 --ignore=E501,F401 .
+
+# install dependencies
+COPY ./requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/html5/wheels -r requirements.txt
+
+#########
+# FINAL #
+#########
+FROM python:3.6.8
+
+# create directory for the app user
+RUN mkdir -p /home/html5
+
+# create the app user
+RUN addgroup --system html5 && adduser --system --ingroup html5 html5
+
+# create the appropriate directories
+ENV HOME=/home/html5
+ENV APP_HOME=/home/html5/web
+RUN mkdir $APP_HOME
+RUN mkdir $APP_HOME/static
+WORKDIR $APP_HOME
+
+# install dependencies
+RUN apt-get update \
+    && apt-get install -y netcat
+COPY --from=builder /usr/src/html5/wheels /wheels
+COPY --from=builder /usr/src/html5/requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install --no-cache /wheels/*
+
+# copy entrypoint-prod.sh
+COPY ./entrypoint.prod.sh $APP_HOME
+
+# copy project
+COPY . $APP_HOME
+
+# chown all the files to the app user
+RUN chown -R html5:html5 $APP_HOME
+
+# change to the app user
+USER html5
+
+# run entrypoint.prod.sh
+ENTRYPOINT ["/home/html5/web/entrypoint.prod.sh"]
