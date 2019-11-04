@@ -2,6 +2,7 @@ version: '3'
 
 services:
   web:
+    restart: unless-stopped
     build:
       context: ./html5
       dockerfile: Dockerfile.prod
@@ -28,10 +29,11 @@ services:
       - mariadb_data:/var/lib/mysql
   nginx:
     build: ./nginx
+    restart: unless-stopped
     volumes:
       - static_volume:/home/html5/web/static
     ports:
-      - 1337:80
+      - 80:80
     depends_on:
       - web
 
