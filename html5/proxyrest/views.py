@@ -291,6 +291,7 @@ def study_web(request, *args, **kwargs):
 def generate_study_token(token_access, request):
     base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
     study_token = {
+        "token": token_access.token,
         "session": request.session.session_key,
         "custodianOID": token_access.role.institution.oid,
         "proxyURI": base_url + '/html5dicom/wado',
