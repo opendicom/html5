@@ -161,15 +161,18 @@ def rest_wado(request, *args, **kwargs):
 def weasis_manifiest(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
-        if validate_token_expired(token_access):
-            login(request, token_access.role.user)
-            study_token = generate_study_token(token_access, request)
-            response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
-            response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
-            response['Content-Length'] = str(len(response_study_token.content))
-            return response
+        if token_access.accessType == 'weasis.xml':
+            if validate_token_expired(token_access):
+                login(request, token_access.role.user)
+                study_token = generate_study_token(token_access, request)
+                response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+                response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
+                response['Content-Length'] = str(len(response_study_token.content))
+                return response
+            else:
+                return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -177,19 +180,19 @@ def weasis_manifiest(request, *args, **kwargs):
 def cornerstone_manifiest(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
-        if validate_token_expired(token_access):
-            login(request, token_access.role.user)
-            study_token = generate_study_token(token_access, request)
-            headers = {'Content-type': 'application/json'}
-            response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
-                                                 json=study_token,
-                                                 headers=headers)
-            response = HttpResponse(response_study_token.content,
-                                    status=response_study_token.status_code,
-                                    content_type=response_study_token.headers['Content-Type'])
-            return response
+        if token_access.accessType == 'cornerstone.json':
+            if validate_token_expired(token_access):
+                login(request, token_access.role.user)
+                study_token = generate_study_token(token_access, request)
+                response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+                response = HttpResponse(response_study_token.content,
+                                        status=response_study_token.status_code,
+                                        content_type=response_study_token.headers['Content-Type'])
+                return response
+            else:
+                return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -203,16 +206,19 @@ def stream_response(url_zip):
 def dicom_zip(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
-        if validate_token_expired(token_access):
-            login(request, token_access.role.user)
-            study_token = generate_study_token(token_access, request)
-            url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
-            r = StreamingHttpResponse(stream_response(url_zip))
-            r['Content-Type'] = "application/zip"
-            r['Content-Disposition'] = "attachment; filename=dicom.zip"
-            return r
+        if token_access.accessType in 'dicom.zip osirix.zip':
+            if validate_token_expired(token_access):
+                login(request, token_access.role.user)
+                study_token = generate_study_token(token_access, request)
+                url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
+                r = StreamingHttpResponse(stream_response(url_zip))
+                r['Content-Type'] = "application/zip"
+                r['Content-Disposition'] = "attachment; filename=dicom.zip"
+                return r
+            else:
+                return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
