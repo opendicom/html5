@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import requests
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -129,7 +130,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 SESSION_COOKIE_AGE = 1200
 SESSION_SAVE_EVERY_REQUEST = True
@@ -137,4 +138,13 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Access to httpdicom
 
-HTTP_DICOM = os.environ.get("HTTP_DICOM")
+HTTP_DICOM = os.environ.get('HTTP_DICOM')
+
+OID_URL = {}
+
+_OIDS = requests.get(HTTP_DICOM + '/custodians/oids').json()
+for oid in _OIDS:
+    custodians = requests.get(HTTP_DICOM + '/custodians/oids/' + oid + '/aeis').json()
+    for custodian in custodians:
+        url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/wadouri')
+        OID_URL[custodian] = url
