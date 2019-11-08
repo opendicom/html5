@@ -146,5 +146,5 @@ _OIDS = requests.get(HTTP_DICOM + '/custodians/oids').json()
 for oid in _OIDS:
     custodians = requests.get(HTTP_DICOM + '/custodians/oids/' + oid + '/aeis').json()
     for custodian in custodians:
-        url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/wadouri')
+        url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/wadouri').text
         OID_URL[custodian] = url
