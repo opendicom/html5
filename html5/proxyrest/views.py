@@ -299,7 +299,7 @@ def generate_study_token(token_access, request):
     study_token = {
         "token": token_access.token,
         "session": request.session.session_key,
-        "custodianOID": token_access.role.institution.oid,
+        "institution": token_access.role.institution.oid,
         "proxyURI": base_url + '/html5dicom/wado',
         "accessType": 'dicom.zip' if token_access.accessType == 'osirix.zip' else token_access.accessType,
     }
