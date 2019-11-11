@@ -5,13 +5,21 @@ from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes
 import requests
 from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
 from html5dicom.models import Institution, Role, Setting, UserViewerSettings
 from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer, TokenAccessStudySerializer
 from django.contrib.sessions.backends.db import SessionStore
 from django.conf import settings
+from rest_framework.authentication import SessionAuthentication
+import uuid
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return
 
 
 @api_view(['POST'])
@@ -340,6 +348,7 @@ def generate_study_token(token_access, request):
 
 
 @api_view(['POST'])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def token_access_patient(request, *args, **kwargs):
     if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'PatientID' in request.data:
         try:
@@ -353,13 +362,12 @@ def token_access_patient(request, *args, **kwargs):
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
-            login(request, user)
             try:
                 allowed_age = int(Setting.objects.get(key='allowed_age_token_patient').value)
             except Setting.DoesNotExist:
                 allowed_age = 120
             serializer = TokenAccessPatientSerializer(data={
-                'token': request.session._session_key,
+                'token': str(uuid.uuid4()).replace('-', ''),
                 'PatientID': request.data.get('PatientID'),
                 'IssuerOfPatientID': request.data.get('IssuerOfPatientID', ''),
                 'IssuerOfPatientIDQualifiers': request.data.get('IssuerOfPatientIDQualifiers', ''),
@@ -383,6 +391,7 @@ def token_access_patient(request, *args, **kwargs):
 
 
 @api_view(['POST'])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def token_access_study(request, *args, **kwargs):
     if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'accessType' in request.data:
         try:
@@ -396,13 +405,12 @@ def token_access_study(request, *args, **kwargs):
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
-            login(request, user)
             try:
                 allowed_age = int(Setting.objects.get(key='allowed_age_token_study').value)
             except Setting.DoesNotExist:
                 allowed_age = 120
             serializer = TokenAccessStudySerializer(data={
-                'token': request.session._session_key,
+                'token': str(uuid.uuid4()).replace('-', ''),
                 'accessType': request.data.get('accessType'),
                 'StudyInstanceUID': request.data.get('StudyInstanceUID', ''),
                 'AccessionNumber': request.data.get('AccessionNumber', ''),
