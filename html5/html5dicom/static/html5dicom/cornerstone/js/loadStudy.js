@@ -93,29 +93,16 @@ function loadStudy(studyViewer, viewportModel, studyId) {
                 frameRate: series.frameRate
             };
 
-
-            // Populate imageIds array with the imageIds from each series
-            // For series with frame information, get the image url's by requesting each frame
-            if (series.numberOfFrames !== undefined) {
-                var numberOfFrames = series.numberOfFrames;
-                for (var i = 0; i < numberOfFrames; i++) {
-                    var imageId = series.instanceList[0].imageId + "?frame=" + i;
-                    /*if (imageId.substr(0, 4) !== 'http') {
-                        imageId = "dicomweb://cornerstonetech.org/images/ClearCanvas/" + imageId;
-                    }*/
-                    stack.imageIds.push(imageId);
+            series.instanceList.forEach(function(image) {
+                if (image.numFrames > 1){
+                    for (var i = 0; i < image.numFrames; i++) {
+                        var imageId = image.imageId + "?frame=" + i;
+                        stack.imageIds.push(imageId);
+                    }
+                }else{
+                    stack.imageIds.push(image.imageId);
                 }
-                // Otherwise, get each instance url
-            } else {
-                series.instanceList.forEach(function(image) {
-                    var imageId = image.imageId;
-
-                    /*if (image.imageId.substr(0, 4) !== 'http') {
-                        imageId = "dicomweb://cornerstonetech.org/images/ClearCanvas/" + image.imageId;
-                    }*/
-                    stack.imageIds.push(imageId);
-                });
-            }
+            });
             // Move to next series
             seriesIndex++;
 
