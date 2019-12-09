@@ -34,6 +34,10 @@ RUN mkdir -p /home/html5
 # create the app user
 RUN addgroup --system html5 && adduser --system --ingroup html5 html5
 
+# Set timezone
+ENV TZ=America/Montevideo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # create the appropriate directories
 ENV HOME=/home/html5
 ENV APP_HOME=/home/html5/web
