@@ -96,7 +96,7 @@ function loadStudy(studyViewer, viewportModel, studyId) {
             series.instanceList.forEach(function(image) {
                 if (image.numFrames > 1){
                     for (var i = 0; i < image.numFrames; i++) {
-                        var imageId = image.imageId + "?frame=" + i;
+                        var imageId = image.imageId + "&frame=" + i;
                         stack.imageIds.push(imageId);
                     }
                 }else{
