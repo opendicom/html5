@@ -19,7 +19,7 @@ class UserCreate(APIView):
             if user:
                 userviewersettings, create_settings = UserViewerSettings.objects.update_or_create(user=user)
                 if create_settings:
-                    userviewersettings.viewer = 'htm'
+                    userviewersettings.viewer = 'cornerstone'
                     userviewersettings.save()
                 institution = Institution.objects.get(short_name=request.data['institution'])
                 role, create_role = Role.objects.update_or_create(name='pac', user=user)
