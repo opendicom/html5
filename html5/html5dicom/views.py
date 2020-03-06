@@ -201,6 +201,47 @@ def weasis(request, *args, **kwargs):
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
+def datatables_studies(request, *args, **kwargs):
+    if not request.user.is_authenticated():
+        if request.is_ajax():
+            return HttpResponse(status=403, content="you are not logged in")
+        else:
+            return HttpResponseRedirect('/html5dicom/login')
+    datatables = {
+        "callback": request.GET['callback'],
+        "draw": request.GET['draw'],
+        "start": request.GET['start'],
+        "length": request.GET['length'],
+        "date_start": request.GET['date_start'],
+        "date_end": request.GET['date_end'],
+        "username": request.GET['username'],
+        "useroid": request.GET['useroid'],
+        "session": request.GET['session'],
+        "custodiantitle": request.GET['custodiantitle'],
+        "aet": request.GET['aet'],
+        "role": request.GET['role'],
+        "max": request.GET['max'],
+        "new": request.GET['new'],
+        "_": request.GET['_']
+    }
+    if request.GET['columns'][3]['search']['value']:
+        datatables['PatientID'] = request.GET['columns'][3]['search']['value']
+    if request.GET['columns'][4]['search']['value']:
+        datatables['PatientName'] = ''
+    if request.GET['columns'][6]['search']['value']:
+        datatables['Modalities'] = ''
+    if request.GET['columns'][7]['search']['value']:
+        datatables['StudyDescription'] = ''
+    # if request.GET['columns'][3]['search']['value']:
+    #    datatables['AccessionNumber'] = ''
+    response_datatables = requests.get(
+        settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(datatables, quote_via=urllib.parse.quote))
+    response = HttpResponse(response_datatables.content,
+                            status=response_datatables.status_code,
+                            content_type=response_datatables.headers['Content-Type'])
+    return response
+
+
 def cornerstone(request, *args, **kwargs):
     if not request.user.is_authenticated():
         if request.is_ajax():
