@@ -225,6 +225,10 @@ def datatables_studies(request, *args, **kwargs):
         datatables['date_start'] = request.GET['date_start']
     if 'date_end' in request.GET:
         datatables['date_end'] = request.GET['date_end']
+    search = request.GET.get('search')
+    if 'value' in search:
+        datatables['AccessionNumber'] = search['value']
+    columns = request.GET.get('columns')
     if request.GET['columns'][3]['search']['value']:
         datatables['PatientID'] = request.GET['columns'][3]['search']['value']
     if request.GET['columns'][4]['search']['value']:
@@ -233,8 +237,6 @@ def datatables_studies(request, *args, **kwargs):
         datatables['Modalities'] = ''
     if request.GET['columns'][7]['search']['value']:
         datatables['StudyDescription'] = ''
-    if request.GET['search']['value']:
-        datatables['AccessionNumber'] = request.GET['search']['value']
     response_datatables = requests.get(
         settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(datatables, quote_via=urllib.parse.quote))
     response = HttpResponse(response_datatables.content,
