@@ -128,8 +128,8 @@
             'serverSide'    : true,
             'ajax': {
                 "type"   : "GET",
-                "url"    : "{% url 'datatables_studies' %},
-                "dataType": "jsonp",
+                "url"    : "{% url 'datatables_studies' %}",
+                "dataType": "json",
                 "dataSrc": "data",
                 "data"   : function( d ) {
                         d.username = '{{ user.username }}';
