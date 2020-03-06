@@ -128,7 +128,7 @@
             'serverSide'    : true,
             'ajax': {
                 "type"   : "GET",
-                "url" : '{{request.scheme}}://{{ httpdicom }}/datatables/studies',
+                "url"    : "{% url 'datatables_studies' %},
                 "dataType": "jsonp",
                 "dataSrc": "data",
                 "data"   : function( d ) {
