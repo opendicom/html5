@@ -222,7 +222,7 @@ def datatables_studies(request, *args, **kwargs):
         "role": request.GET['role'],
         "max": request.GET['max'],
         "new": request.GET['new'],
-        "_": request.GET['_']
+        "_": request.GET['_'],
     }
     if request.GET['columns'][3]['search']['value']:
         datatables['PatientID'] = request.GET['columns'][3]['search']['value']
