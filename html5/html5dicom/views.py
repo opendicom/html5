@@ -225,18 +225,16 @@ def datatables_studies(request, *args, **kwargs):
         datatables['date_start'] = request.GET['date_start']
     if 'date_end' in request.GET:
         datatables['date_end'] = request.GET['date_end']
-    search = request.GET.get('search')
-    if 'value' in search:
-        datatables['AccessionNumber'] = search['value']
-    columns = request.GET.get('columns')
-    if request.GET['columns'][3]['search']['value']:
-        datatables['PatientID'] = request.GET['columns'][3]['search']['value']
-    if request.GET['columns'][4]['search']['value']:
-        datatables['PatientName'] = ''
-    if request.GET['columns'][6]['search']['value']:
-        datatables['Modalities'] = ''
-    if request.GET['columns'][7]['search']['value']:
-        datatables['StudyDescription'] = ''
+    if 'search[value]' in request.GET:
+        datatables['AccessionNumber'] = request.GET['search[value]']
+    if 'columns[3][search][value]' in request.GET:
+        datatables['PatientID'] = request.GET['columns[3][search][value]']
+    if 'columns[4][search][value]' in request.GET:
+        datatables['PatientName'] = request.GET['columns[4][search][value]']
+    if 'columns[6][search][value]' in request.GET:
+        datatables['Modalities'] = request.GET['columns[6][search][value]']
+    if 'columns[7][search][value]' in request.GET:
+        datatables['StudyDescription'] = request.GET['columns[7][search][value]']
     response_datatables = requests.get(
         settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(datatables, quote_via=urllib.parse.quote))
     response = HttpResponse(response_datatables.content,
