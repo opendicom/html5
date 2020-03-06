@@ -6,7 +6,7 @@ services:
     build:
       context: ./html5
       dockerfile: Dockerfile.prod
-    command: gunicorn html5.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn html5.wsgi:application --bind 0.0.0.0:8000 --limit-request-line 0
     volumes:
       - static_volume:/home/html5/web/static
     expose:

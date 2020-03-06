@@ -208,7 +208,6 @@ def datatables_studies(request, *args, **kwargs):
         else:
             return HttpResponseRedirect('/html5dicom/login')
     datatables = {
-        "callback": request.GET['callback'],
         "draw": request.GET['draw'],
         "start": request.GET['start'],
         "length": request.GET['length'],
