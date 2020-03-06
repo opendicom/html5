@@ -211,8 +211,6 @@ def datatables_studies(request, *args, **kwargs):
         "draw": request.GET['draw'],
         "start": request.GET['start'],
         "length": request.GET['length'],
-        "date_start": request.GET['date_start'],
-        "date_end": request.GET['date_end'],
         "username": request.GET['username'],
         "useroid": request.GET['useroid'],
         "session": request.GET['session'],
@@ -223,6 +221,10 @@ def datatables_studies(request, *args, **kwargs):
         "new": request.GET['new'],
         "_": request.GET['_'],
     }
+    if request.GET['date_start']:
+        datatables['date_start'] = request.GET['date_start']
+    if request.GET['date_end']:
+        datatables['date_end'] = request.GET['date_end']
     if request.GET['columns'][3]['search']['value']:
         datatables['PatientID'] = request.GET['columns'][3]['search']['value']
     if request.GET['columns'][4]['search']['value']:
