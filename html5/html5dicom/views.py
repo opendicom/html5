@@ -60,7 +60,7 @@ def main(request, *args, **kwargs):
         if changepassword:
             return HttpResponseRedirect('/html5dicom/password')
         try:
-            role_patient = Role.objects.get(user=request.user, name='pac')
+            role_patient = Role.objects.get(user=request.user, name='Paciente')
             url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + role_patient.institution.organization.short_name
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + role_patient.institution.short_name
@@ -93,10 +93,10 @@ def main(request, *args, **kwargs):
             pass
 
         organization = {}
-        if Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).count() < 1:
+        if Role.objects.filter(user=request.user.id).exclude(name__in=['Rest', 'Paciente']).count() < 1:
             logout(request)
             raise PermissionDenied
-        for role in Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']):
+        for role in Role.objects.filter(user=request.user.id).exclude(name__in=['Rest', 'Paciente']):
             if role.service:
                 default_organization = ''
                 default_institution = ''

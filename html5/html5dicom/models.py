@@ -51,14 +51,14 @@ class Service(BaseModel):
 
 class Role(BaseModel):
     role_choices = (
-        ('rad', 'Radiologo'),
-        ('sol', 'Solicitante'),
-        ('aut', 'Autenticador'),
-        ('med', 'Medico'),
-        ('res', 'Rest'),
-        ('pac', 'Paciente'),
+        ('Radiologo', 'Radiologo'),
+        ('Solicitante', 'Solicitante'),
+        ('Autenticador', 'Autenticador'),
+        ('Medico', 'Medico'),
+        ('Rest', 'Rest'),
+        ('Paciente', 'Paciente'),
     )
-    name = models.CharField(max_length=3, choices=role_choices)
+    name = models.CharField(max_length=12, choices=role_choices)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     institution = models.ForeignKey(Institution, on_delete=models.DO_NOTHING, blank=True, null=True)
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, blank=True, null=True)

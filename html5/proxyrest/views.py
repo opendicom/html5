@@ -33,7 +33,7 @@ def rest_login(request, *args, **kwargs):
         user = authenticate(username=request.data.get('user'), password=request.data.get('password'))
         if user:
             try:
-                role = Role.objects.get(user=user, institution=institution, name='res')
+                role = Role.objects.get(user=user, institution=institution, name='Rest')
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(kwargs.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
@@ -358,7 +358,7 @@ def token_access_patient(request, *args, **kwargs):
         user = authenticate(username=request.data.get('user'), password=request.data.get('password'))
         if user:
             try:
-                role = Role.objects.get(user=user, institution=institution, name='res')
+                role = Role.objects.get(user=user, institution=institution, name='Rest')
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
@@ -401,7 +401,7 @@ def token_access_study(request, *args, **kwargs):
         user = authenticate(username=request.data.get('user'), password=request.data.get('password'))
         if user:
             try:
-                role = Role.objects.get(user=user, institution=institution, name='res')
+                role = Role.objects.get(user=user, institution=institution, name='Rest')
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
