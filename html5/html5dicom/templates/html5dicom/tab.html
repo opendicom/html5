@@ -207,13 +207,11 @@
             'serverSide'    : true,
             'ajax': {
                 "type"   : "GET",
-                "url"    : "{% url 'datatables_studies' %}",
+                "url"    : "{% url 'data_tables_studies' %}",
                 "dataType": "json",
                 "dataSrc": "data",
                 "data"   : function( d ) {
-                        d.username = '{{ user.username }}';
                         d.useroid = '';
-                        d.session = '{{ request.session.session_key}}';
                         d.custodiantitle =  org;
                         d.aet = inst;
                         d.role = role;
@@ -376,7 +374,7 @@
             'ajax': {
                 "type"   : 'GET',
                 "url"    : url,
-                "dataType": "jsonp",
+                "dataType": "json",
                 "dataSrc": "data",
                 "data"   : function( d ) {
                         d.custodiantitle =  org;
@@ -496,7 +494,7 @@
             'ajax': {
                 "type"   : 'GET',
                 "url"    : url,
-                "dataType": "jsonp",
+                "dataType": "json",
                 "dataSrc": "data",
                 "data"   : function( d ) {
                         d.custodiantitle =  org;
