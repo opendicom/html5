@@ -29,6 +29,7 @@ class TokenAccessStudy(models.Model):
     token = models.CharField(max_length=32, primary_key=True)
     accessType = models.CharField(max_length=22)
     StudyInstanceUID = models.CharField(max_length=255, blank=True, null=True)
+    SeriesInstanceUID = models.CharField(max_length=255, blank=True, null=True)
     AccessionNumber = models.CharField(max_length=255, blank=True, null=True)
     StudyDate = models.CharField(max_length=20, blank=True, null=True)
     PatientID = models.CharField(max_length=20, blank=True, null=True)

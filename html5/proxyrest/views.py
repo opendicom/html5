@@ -185,6 +185,8 @@ def weasis_manifiest(request, *args, **kwargs):
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+@api_view(['POST'])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def cornerstone_manifiest(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
@@ -413,6 +415,7 @@ def token_access_study(request, *args, **kwargs):
                 'token': str(uuid.uuid4()).replace('-', ''),
                 'accessType': request.data.get('accessType'),
                 'StudyInstanceUID': request.data.get('StudyInstanceUID', ''),
+                'SeriesInstanceUID': request.data.get('SeriesInstanceUID', ''),
                 'AccessionNumber': request.data.get('AccessionNumber', ''),
                 'StudyDate': request.data.get('StudyDate', ''),
                 'PatientID': request.data.get('PatientID', ''),
