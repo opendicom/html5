@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse, JsonResponse
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -8,7 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
-from html5dicom.models import Setting, UserChangePassword, UserViewerSettings, Role
+
+from html5dicom.models import Setting, UserChangePassword, UserViewerSettings, Role, Institution
 from html5dicom.forms import UserViewerSettingsForm
 import requests
 import urllib
@@ -71,7 +72,6 @@ def main(request, *args, **kwargs):
                 config_toolbar = 'full'
             organization = {}
             organization.update({
-                "patientID": request.user.username,
                 "name": role_patient.institution.organization.short_name,
                 "oid": oid_org.json()[0],
                 "config_toolbar": config_toolbar,
@@ -201,19 +201,38 @@ def weasis(request, *args, **kwargs):
     return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
 
 
-def datatables_studies(request, *args, **kwargs):
+def data_tables_studies(request, *args, **kwargs):
     if not request.user.is_authenticated():
         if request.is_ajax():
             return HttpResponse(status=403, content="you are not logged in")
         else:
             return HttpResponseRedirect('/html5dicom/login')
-    datatables = {
+    authorized = True
+    try:
+        institution = Institution.objects.get(short_name=request.GET['aet'])
+    except Institution.DoesNotExist:
+        authorized = False
+    if authorized and not Role.objects.filter(user=request.user, institution=institution, name=request.GET['role']).exists():
+        authorized = False
+    if not authorized:
+        if request.is_ajax():
+            error = {
+                "draw": request.GET['draw'],
+                "data": [],
+                "recordsFiltered": 0,
+                "recordsTotal": 0,
+                "error": "No autorizado"
+            }
+            return JsonResponse(error)
+        else:
+            return HttpResponseRedirect('/html5dicom/login')
+    data_tables = {
         "draw": request.GET['draw'],
         "start": request.GET['start'],
         "length": request.GET['length'],
-        "username": request.GET['username'],
+        "username": request.user.username,
         "useroid": request.GET['useroid'],
-        "session": request.GET['session'],
+        "session": request.session._session_key,
         "custodiantitle": request.GET['custodiantitle'],
         "aet": request.GET['aet'],
         "role": request.GET['role'],
@@ -222,24 +241,27 @@ def datatables_studies(request, *args, **kwargs):
         "_": request.GET['_'],
     }
     if 'date_start' in request.GET:
-        datatables['date_start'] = request.GET['date_start']
+        if request.GET['date_start'] != '':
+            data_tables['date_start'] = request.GET['date_start']
     if 'date_end' in request.GET:
-        datatables['date_end'] = request.GET['date_end']
-    if 'search[value]' in request.GET:
-        datatables['AccessionNumber'] = request.GET['search[value]']
-    if 'columns[3][search][value]' in request.GET:
-        datatables['PatientID'] = request.GET['columns[3][search][value]']
-    if 'columns[4][search][value]' in request.GET:
-        datatables['PatientName'] = request.GET['columns[4][search][value]']
-    if 'columns[6][search][value]' in request.GET:
-        datatables['Modalities'] = request.GET['columns[6][search][value]']
-    if 'columns[7][search][value]' in request.GET:
-        datatables['StudyDescription'] = request.GET['columns[7][search][value]']
-    response_datatables = requests.get(
-        settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(datatables, quote_via=urllib.parse.quote))
-    response = HttpResponse(response_datatables.content,
-                            status=response_datatables.status_code,
-                            content_type=response_datatables.headers['Content-Type'])
+        if request.GET['date_end'] != '':
+            data_tables['date_end'] = request.GET['date_end']
+    if request.GET['search[value]'] != '':
+        data_tables['AccessionNumber'] = request.GET['search[value]']
+    if request.GET['columns[3][search][value]'] != '':
+        data_tables['PatientID'] = request.GET['columns[3][search][value]']
+    if request.GET['columns[4][search][value]'] != '':
+        data_tables['PatientName'] = request.GET['columns[3][search][value]']
+    if request.GET['columns[6][search][value]'] != '':
+        data_tables['Modalities'] = request.GET['columns[6][search][value]']
+    if request.GET['columns[7][search][value]'] != '':
+        data_tables['StudyDescription'] = request.GET['columns[7][search][value]']
+
+    response_data_tables = requests.get(
+        settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(data_tables, quote_via=urllib.parse.quote))
+    response = HttpResponse(response_data_tables.content,
+                            status=response_data_tables.status_code,
+                            content_type=response_data_tables.headers['Content-Type'])
     return response
 
 

@@ -12,5 +12,5 @@ urlpatterns = [
     url(r'^cornerstone$', views.cornerstone, name='cornerstone'),
     url(r'^password$', views.change_password, name='change_password'),
     url(r'^viewer_settings', views.viewer_settings, name='viewer_settings'),
-    url(r'^datatables_studies', views.datatables_studies, name='datatables_studies'),
+    url(r'^data_tables_studies', views.data_tables_studies, name='data_tables_studies'),
 ]
