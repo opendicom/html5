@@ -185,7 +185,7 @@ def weasis_manifiest(request, *args, **kwargs):
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @authentication_classes([CsrfExemptSessionAuthentication])
 def cornerstone_manifiest(request, *args, **kwargs):
     try:
