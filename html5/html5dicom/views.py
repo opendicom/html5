@@ -6,6 +6,7 @@ from django.contrib.auth import update_session_auth_hash, authenticate, login, l
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.sessions.models import Session
+from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
 
@@ -185,29 +186,10 @@ def main(request, *args, **kwargs):
         return render(request, template_name='html5dicom/main.html', context=context_user)
 
 
-@login_required(login_url='/html5dicom/login')
-def weasis(request, *args, **kwargs):
-    jnlp_file = open(settings.STATIC_ROOT + 'html5dicom/weasis/weasis.jnlp', 'r')
-    jnlp_text = jnlp_file.read()
-    jnlp_file.close()
-    base_url = request.META['wsgi.url_scheme']+'://'+request.META['HTTP_HOST']
-    if request.GET['requestType'] == 'STUDY':
-        manifiest = requests.get(settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
-        jnlp_text = jnlp_text.replace('%@', manifiest.text)
-    elif request.GET['requestType'] == 'SERIES':
-        manifiest = requests.get(settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
-        jnlp_text = jnlp_text.replace('%@', manifiest.text)
-    jnlp_text = jnlp_text.replace('{IIDURL}', base_url +'/static/html5dicom')
-    return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
-
-
 def data_tables_studies(request, *args, **kwargs):
-    if not request.user.is_authenticated():
-        if request.is_ajax():
-            return HttpResponse(status=403, content="you are not logged in")
-        else:
-            return HttpResponseRedirect('/html5dicom/login')
     authorized = True
+    if not request.user.is_authenticated():
+        authorized = False
     try:
         institution = Institution.objects.get(short_name=request.GET['aet'])
     except Institution.DoesNotExist:
@@ -265,58 +247,162 @@ def data_tables_studies(request, *args, **kwargs):
     return response
 
 
-def cornerstone(request, *args, **kwargs):
+def data_tables_series(request, *args, **kwargs):
     if not request.user.is_authenticated():
         if request.is_ajax():
-            return HttpResponse(status=403, content="you are not logged in")
+            error = {
+                "draw": request.GET['draw'],
+                "data": [],
+                "recordsFiltered": 0,
+                "recordsTotal": 0,
+                "error": "No autorizado"
+            }
+            return JsonResponse(error)
         else:
             return HttpResponseRedirect('/html5dicom/login')
-    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
-    if request.GET['requestType'] == 'STUDY':
-        url_manifiest = settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
-    elif request.GET['requestType'] == 'SERIES':
-        url_manifiest = settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
+    response_data_tables = requests.get(
+        settings.HTTP_DICOM + '/datatables/series?' + urllib.parse.urlencode(request.GET, quote_via=urllib.parse.quote))
+    response = HttpResponse(response_data_tables.content,
+                            status=response_data_tables.status_code,
+                            content_type=response_data_tables.headers['Content-Type'])
+    return response
+
+
+def data_tables_patient(request, *args, **kwargs):
+    if not request.user.is_authenticated():
+        if request.is_ajax():
+            error = {
+                "draw": request.GET['draw'],
+                "data": [],
+                "recordsFiltered": 0,
+                "recordsTotal": 0,
+                "error": "No autorizado"
+            }
+            return JsonResponse(error)
+        else:
+            return HttpResponseRedirect('/html5dicom/login')
+    response_data_tables = requests.get(
+        settings.HTTP_DICOM + '/datatables/patient?' + urllib.parse.urlencode(request.GET,
+                                                                              quote_via=urllib.parse.quote))
+    response = HttpResponse(response_data_tables.content,
+                            status=response_data_tables.status_code,
+                            content_type=response_data_tables.headers['Content-Type'])
+    return response
+
+
+def study_token_weasis(request, *args, **kwargs):
+    if 'session' in request.GET:
+        try:
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
+            session.get_decoded()[SESSION_KEY]
+            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+            study_token = {
+                "session": request.GET['session'],
+                "institution": request.GET['institutionOID'],
+                "proxyURI": base_url + '/html5dicom/wado',
+                "accessType": 'weasis.xml',
+            }
+            # cache
+            if 'cache' in request.GET:
+                study_token['cache'] = request.GET['cache']
+            # StudyInstanceUID
+            if 'StudyInstanceUID' in request.GET:
+                study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
+            # SeriesInstanceUID
+            if 'SeriesInstanceUID' in request.GET:
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
+            response_study_token = requests.get(
+                settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+            response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
+            response['Content-Length'] = str(len(response_study_token.content))
+            return response
+        except (Session.DoesNotExist, KeyError):
+            raise PermissionDenied
     else:
-        url_manifiest = ''
-    manifiest = requests.get(url_manifiest)
-    return HttpResponse(manifiest.text, content_type=manifiest.headers.get('content-type'))
+        return HttpResponse('Error', status=400)
+
+
+def study_token_cornerstone(request, *args, **kwargs):
+    if 'session' in request.GET:
+        try:
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
+            session.get_decoded()[SESSION_KEY]
+            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+            study_token = {
+                "session": request.GET['session'],
+                "institution": request.GET['institutionOID'],
+                "proxyURI": base_url + '/html5dicom/wado',
+                "accessType": 'cornerstone.json',
+            }
+            # cache
+            if 'cache' in request.GET:
+                study_token['cache'] = request.GET['cache']
+            # StudyInstanceUID
+            if 'StudyInstanceUID' in request.GET:
+                study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
+            # SeriesInstanceUID
+            if 'SeriesInstanceUID' in request.GET:
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
+            response_study_token = requests.get(
+                settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token,
+                                                                              quote_via=urllib.parse.quote))
+            response = HttpResponse(response_study_token.content,
+                                    status=response_study_token.status_code,
+                                    content_type=response_study_token.headers['Content-Type'])
+            return response
+        except (Session.DoesNotExist, KeyError):
+            raise PermissionDenied
+    else:
+        return HttpResponse('Error', status=400)
+
+
+def study_token_zip(request, *args, **kwargs):
+    if 'session' in request.GET:
+        try:
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
+            session.get_decoded()[SESSION_KEY]
+            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+            study_token = {
+                "session": request.GET['session'],
+                "institution": request.GET['institutionOID'],
+                "proxyURI": base_url + '/html5dicom/wado',
+                "accessType": 'dicom.zip',
+            }
+            # cache
+            if 'cache' in request.GET:
+                study_token['cache'] = request.GET['cache']
+            # StudyInstanceUID
+            if 'StudyInstanceUID' in request.GET:
+                study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
+            # SeriesInstanceUID
+            if 'SeriesInstanceUID' in request.GET:
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
+            url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token,
+                                                                                    quote_via=urllib.parse.quote)
+            r = StreamingHttpResponse(stream_response(url_zip))
+            r['Content-Type'] = "application/zip"
+            r['Content-Disposition'] = "attachment; filename=dcm.zip"
+            return r
+        except (Session.DoesNotExist, KeyError):
+            raise PermissionDenied
+    else:
+        return HttpResponse('Error', status=400)
+
+
+def cornerstone(request, *args, **kwargs):
+    return render(request,
+                  template_name='html5dicom/redirect_cornerstone.html',
+                  context={'url_manifiest': request.build_absolute_uri(
+                      reverse('study_token_cornerstone') + '?' + urllib.parse.urlencode(request.GET))})
 
 
 def stream_response(url_zip):
     r = requests.get(url_zip, stream=True)
     for chunk in r.iter_content(512 * 1024):
         yield chunk
-
-
-def osirix(request, *args, **kwargs):
-    if 'session' in request.GET:
-        try:
-            session = Session.objects.get(session_key=request.GET['session'],
-                                          expire_date__gt=timezone.now())
-            session.get_decoded()[SESSION_KEY]
-            if request.GET['requestType'] == 'STUDY':
-                url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + \
-                          request.GET['study_uid']
-                # Valida accession number
-                #if request.GET['accession_no'] == '':
-                #    url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
-                #else:
-                #    url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
-                r = StreamingHttpResponse(stream_response(url_zip))
-                r['Content-Type'] = "application/zip"
-                r['Content-Disposition'] = "attachment; filename=dcm.zip"
-                return r
-            elif request.GET['requestType'] == 'SERIES':
-                url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
-                          request.GET['series_uid']
-                r = StreamingHttpResponse(stream_response(url_zip))
-                r['Content-Type'] = "application/zip"
-                r['Content-Disposition'] = "attachment; filename=dcm.zip"
-                return r
-        except (Session.DoesNotExist, KeyError):
-            raise PermissionDenied
-    else:
-        return HttpResponse('Error', status=400)
 
 
 def wado(request, *args, **kwargs):
