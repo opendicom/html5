@@ -86,7 +86,7 @@
                                 dataType: "json",
                                 success: function(data, textStatus, jqXHR){
                                     if(!data.error){
-                                        data_cell = '<a href='+ data.url_editor +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
+                                        data_cell = '<a href="#" onclick="window.open(\''+ data.url_editor +'&cache=' + full[22] +'&institutionOID=' + full[21] +'\')"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
                                         if (data.url_autentication != ''){
                                             data_cell += '<a href=#><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>';
                                         }
@@ -103,7 +103,9 @@
                                         data_cell += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','').replace('OT\\','').replace('DOC\\','')
                                         data_cell += '&StudyIUID=' + full[16]
                                         data_cell += '&custodianOID=' + oid
-                                        data_cell = '<a href={% url 'editor' %}?'+ encodeURI(data_cell) +' target="_blank"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
+                                        data_cell += '&cache=' + full[22]
+                                        data_cell += '&institutionOID=' + full[21]
+                                        data_cell = '<a href="#" onclick="window.open(\'{% url 'editor' %}?'+ encodeURI(data_cell) +'\')"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
                                     }
                                 },
                                 error: function (jqXHR, textStatus, errorThrown){

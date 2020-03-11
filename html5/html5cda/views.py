@@ -269,6 +269,10 @@ def save_template(request, *args, **kwargs):
     response_save = dict()
     if 'csrfmiddlewaretoken' in post_param:
         del post_param['csrfmiddlewaretoken']
+    if 'cache' in post_param:
+        del post_param['cache']
+    if 'institutionOID' in post_param:
+        del post_param['institutionOID']
     if request.POST.get("guardar"):
         if saveTemplate(request, post_param) is True:
             response_save = {'message': 'Guardado Correctamente'}
@@ -323,6 +327,10 @@ def saveTemplate(request, post_param):
         del post_param['guardar']
     if 'firmar' in post_param:
         del post_param['firmar']
+    if 'cache' in post_param:
+        del post_param['cache']
+    if 'institutionOID' in post_param:
+        del post_param['institutionOID']
 
     submit, created = models.Submit.objects.update_or_create(
         eiud=request.POST.get('StudyIUID')
@@ -394,7 +402,7 @@ def authenticate_report(submit, user):
         pciudad='',
         pregion='',
         ppais='',
-        efecha=datetime.strptime(values_submit['StudyDate'][0], '%Y%m%d'),
+        efecha=datetime.strptime(values_submit['StudyDate'][0], '%Y-%m-%d %H:%M'),
         eid='',
         erealizadoroid='',
         estudio=estudio,
