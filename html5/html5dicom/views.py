@@ -229,17 +229,20 @@ def data_tables_studies(request, *args, **kwargs):
     if 'date_end' in request.GET:
         if request.GET['date_end'] != '':
             data_tables['date_end'] = request.GET['date_end']
+    if 'order[0][column]' in request.GET:
+        data_tables['order'] = request.GET['order[0][column]']
+    if 'order[0][dir]' in request.GET:
+        data_tables['dir'] = request.GET['order[0][dir]'].lower()
     if request.GET['search[value]'] != '':
         data_tables['AccessionNumber'] = request.GET['search[value]']
     if request.GET['columns[3][search][value]'] != '':
         data_tables['PatientID'] = request.GET['columns[3][search][value]']
     if request.GET['columns[4][search][value]'] != '':
-        data_tables['PatientName'] = request.GET['columns[3][search][value]']
+        data_tables['PatientName'] = request.GET['columns[4][search][value]']
     if request.GET['columns[6][search][value]'] != '':
         data_tables['Modalities'] = request.GET['columns[6][search][value]']
     if request.GET['columns[7][search][value]'] != '':
         data_tables['StudyDescription'] = request.GET['columns[7][search][value]']
-
     response_data_tables = requests.get(
         settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(data_tables, quote_via=urllib.parse.quote))
     response = HttpResponse(response_data_tables.content,

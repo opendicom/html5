@@ -41,7 +41,7 @@
            var oid = organization[$('#org_select').val()].institution[$('#inst_select').val()].oid;
            var service = organization[$('#org_select').val()].institution[$('#inst_select').val()][$('#rol_select').val()].service;
            var max_rows = organization[$('#org_select').val()].institution[$('#inst_select').val()][$('#rol_select').val()]['max_rows'];
-           addTableStudy($('#org_select').val(), $('#inst_select').val(), oid, $('#rol_select').val(), service.toString(), max_rows, '');
+           addTableStudy($('#org_select').val(), $('#inst_select').val(), oid, $('#rol_select').val(), service.toString(), max_rows);
         });
         function load_inst(){
             var options = '';
