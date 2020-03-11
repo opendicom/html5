@@ -23,8 +23,7 @@
                     "targets": 1,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&issuer"))
-                        return '<a href=# onclick="showTableSeries(\'{% url 'data_tables_series' %}'+ data +'\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\', `'+ seriesSelection + '`, `'+ full[21] +'`, `'+ full[22] +'`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{% url 'data_tables_series' %}'+ data +'\',\''+ full[23] +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\', `'+ seriesSelection + '`, `'+ full[21] +'`, `'+ full[22] +'`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
@@ -48,8 +47,7 @@
   	            {
                     "targets": 3,
                     "render": function ( data, type, full, meta ) {
-                        var patient_id = data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&issuer"));
-                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{% url 'data_tables_patient' %}'+ data +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\',`'+ seriesSelection + '`)"><span class="glyphicon glyphicon-search"></span> '+ patient_id +'</button>';
+                        return '<button class="btn btn-default btn-xs" type="button" onclick="showTablePatient(\'{% url 'data_tables_patient' %}'+ data +'\', \'' + oid + '\', \''+ org + '\',\''+ inst + '\',\''+ config_toolbar + '\',`'+ seriesSelection + '`)"><span class="glyphicon glyphicon-search"></span> '+ full[23] +'</button>';
                     }
                 },
                 {
@@ -319,8 +317,7 @@
                     "targets": 1,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        var patient_id = full[3].substring(full[3].indexOf("PatientID=") + 10,full[3].indexOf("&issuer"))
-                        return '<a href=# onclick="showTableSeries(\'{% url 'data_tables_series' %}'+ data +'&session={{ request.session.session_key}}\',\''+ patient_id +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\', \''+ config_toolbar + '\',`'+ seriesSelection + '`, `'+ full[21] +'`, `'+ full[22] +'`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
+                        return '<a href=# onclick="showTableSeries(\'{% url 'data_tables_series' %}'+ data +'&session={{ request.session.session_key}}\',\''+ full[23] +'\',\''+ full[4] +'\',\''+ full[5] +'\',\''+ full[6] +'\',\''+ full[7] +'\',\''+ full[13] +'\',\''+ full[16] +'\', \''+ oid + '\', \''+ org + '\',\''+ inst + '\', \''+ config_toolbar + '\',`'+ seriesSelection + '`, `'+ full[21] +'`, `'+ full[22] +'`)"><spam class="glyphicon glyphicon-folder-open" title="Series"></spam></a>';
                     }
                 },
                 {
@@ -338,7 +335,7 @@
                     "targets": 3,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        return data.substring(data.indexOf("PatientID=") + 10,data.indexOf("&issuer"));
+                        return full[23];
                     }
                 },
                 {
