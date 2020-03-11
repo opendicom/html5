@@ -9,6 +9,7 @@ from django.contrib.sessions.models import Session
 from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
+from django.db.models import Q
 
 from html5dicom.models import Setting, UserChangePassword, UserViewerSettings, Role, Institution
 from html5dicom.forms import UserViewerSettingsForm
@@ -194,7 +195,7 @@ def data_tables_studies(request, *args, **kwargs):
         institution = Institution.objects.get(short_name=request.GET['aet'])
     except Institution.DoesNotExist:
         authorized = False
-    if authorized and not Role.objects.filter(user=request.user, service__institution=institution, name=request.GET['role']).exists():
+    if authorized and not Role.objects.filter(Q(service__institution=institution) | Q(institution=institution), user=request.user, name=request.GET['role']).exists():
         authorized = False
     if not authorized:
         if request.is_ajax():
