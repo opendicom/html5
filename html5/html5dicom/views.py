@@ -194,7 +194,7 @@ def data_tables_studies(request, *args, **kwargs):
         institution = Institution.objects.get(short_name=request.GET['aet'])
     except Institution.DoesNotExist:
         authorized = False
-    if authorized and not Role.objects.filter(user=request.user, institution=institution, name=request.GET['role']).exists():
+    if authorized and not Role.objects.filter(user=request.user, service__institution=institution, name=request.GET['role']).exists():
         authorized = False
     if not authorized:
         if request.is_ajax():
