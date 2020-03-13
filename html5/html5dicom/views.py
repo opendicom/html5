@@ -229,6 +229,9 @@ def data_tables_studies(request, *args, **kwargs):
     if 'date_end' in request.GET:
         if request.GET['date_end'] != '':
             data_tables['date_end'] = request.GET['date_end']
+    if 'cache' in request.GET:
+        if request.GET['cache'] != '':
+            data_tables['cache'] = request.GET['cache']
     if 'order[0][column]' in request.GET:
         data_tables['order'] = request.GET['order[0][column]']
     if 'order[0][dir]' in request.GET:

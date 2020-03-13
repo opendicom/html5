@@ -14,7 +14,9 @@
 <script>
 
     refreshTableStudy = function(){
+
         var table = $('#table_study').DataTable()
+        $('#cache').val('');
         $('#new').val('true');
         table.ajax.reload();
         $('#new').val('false');
@@ -49,6 +51,7 @@
         var ContentTabPane = `{% include "html5dicom/tab_study.html" %}`;
   	    $(ContentTabPane).appendTo('#table-container');
   	    $('<input id="new" value="true" type="hidden"/>').appendTo('#table-container');
+  	    $('<input id="cache" value="" type="hidden"/>').appendTo('#table-container');
         $('#table_study thead th').each( function () {
             var title = $('#table_study tfoot th').eq( $(this).index() ).text();
             if (title != '' && title != 'Fecha') {
@@ -166,7 +169,14 @@
                         }
                         return ot_ico + ' ' + doc_ico + ' ' + mod_str.substring(0,mod_str.length -1);
                     }
-                }
+                },
+                {
+                    "targets": 22,
+                    "render": function ( data, type, full, meta ) {
+                        $('#cache').val(data);
+                        return data;
+                    }
+                },
             ],
   	        'pageLength'    : 10,
   	        'order'         : [],
@@ -188,6 +198,7 @@
                         d.role = role;
                         d.max = max_rows;
                         d.new = $('#new').val();
+                        d.cache = $('#cache').val();
                 }
             },
             initComplete: function(){
@@ -202,6 +213,7 @@
                 $('#reload_study').click(function() {
                     $('#reload_study').trigger('blur');
                     $('#new').val('true');
+                    $('#cache').val('');
                     var table = $('#table_study').DataTable();
                     table.ajax.reload();
                     $('#new').val('false');
