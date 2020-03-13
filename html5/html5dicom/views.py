@@ -419,7 +419,7 @@ def wado(request, *args, **kwargs):
                                           expire_date__gt=timezone.now())
             session.get_decoded()[SESSION_KEY]
             url_request = request.build_absolute_uri()
-            url_wado = settings.OID_URL[request.GET['arcId']] + url_request[url_request.index("?"):]
+            url_wado = settings.OID_URL[request.GET['arcId']]['wadouri'] + url_request[url_request.index("?"):]
             r = requests.get(url_wado)
             return HttpResponse(r.content, content_type=r.headers.get('content-type'))
         except (Session.DoesNotExist, KeyError):

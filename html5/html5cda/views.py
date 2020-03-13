@@ -1049,7 +1049,7 @@ def authenticate_report(submit, user):
     xml_suffix += '</dscd> '
 
     xml_cda = xml_preffix + xml_cda + xml_suffix
-    xml_cda_base64 = base64.b64encode(bytes(xml_cda, 'utf-8'))
+    # xml_cda_base64 = base64.b64encode(bytes(xml_cda, 'utf-8'))
     seriesuid = '2.25.{}'.format(int(str(uuid.uuid4()).replace('-', ''), 16))
     xml_dcm = '<?xml version="1.0" encoding="UTF-8"?>'
     xml_dcm += '<NativeDicomModel xml-space="preserved">'
@@ -1106,17 +1106,17 @@ def authenticate_report(submit, user):
     xml_dcm += '<DicomAttribute keyword="HL7InstanceIdentifier" tag="0040E001" vr="ST"><Value number="1">{}</Value></DicomAttribute>'.format(
         autenticado.id)
     xml_dcm += '<DicomAttribute keyword="MIMETypeOfEncapsulatedDocument" tag="00420012" vr="LO"><Value number="1">text/xml</Value></DicomAttribute>'
-    xml_dcm += '<DicomAttribute keyword="EncapsulatedDocument" tag="00420011" vr="OB"><InlineBinary>{}</InlineBinary></DicomAttribute>'.format(
-        xml_cda_base64.decode("utf-8"))
+    xml_dcm += '<DicomAttribute keyword="EncapsulatedDocument" tag="00420011" vr="OB"><BulkData uri="bulk"/></DicomAttribute>'
     xml_dcm += '</NativeDicomModel>'
 
     submit.listoparaautenticacion = 'NO'
     submit.save()
     models.Firma.objects.filter(informe=submit).delete()
-    url = settings.HTTP_DICOM + '/pacs/{}/studies'.format(institution.oid)
-    headers = {'Content-Type': 'multipart/related;type=application/dicom+xml; boundary=myboundary;'}
-    data = '\r\n--myboundary\r\nContent-Type: application/dicom+xml; transfer-syntax=1.2.840.10008.1.2.1\r\n\r\n{}\r\n--myboundary--'.format(
-        xml_dcm)
+    # url = settings.HTTP_DICOM + '/pacs/{}/studies'.format(institution.oid)
+    url = settings.OID_URL[institution.oid]['stow']
+    headers = {'Content-Type': 'multipart/related; type=application/dicom+xml; boundary=myboundary'}
+    data = '\r\n--myboundary\r\nContent-Type: application/dicom+xml; transfer-syntax=1.2.840.10008.1.2.1\r\n\r\n{}\r\n\r\n--myboundary\r\nContent-Type: text/XML\r\nContent-Location: bulk\r\n\r\n{}\r\n--myboundary--'.format(
+        xml_dcm, xml_cda)
     requests.post(url, headers=headers, data=data.encode('utf-8'))
     execute_integration(values_submit['AccessionNumber'][0], values_submit['PatientID'][0], values_submit['StudyIUID'][0], user, xml_cda)
     # Active user patient
