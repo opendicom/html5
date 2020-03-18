@@ -89,7 +89,7 @@ def main(request, *args, **kwargs):
             except UserViewerSettings.DoesNotExist:
                 user_viewer = ''
             context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                            'user_viewer': user_viewer, 'navbar': 'patient'}
+                            'user_viewer': user_viewer, 'navbar': 'patient', 'data_tables_study_id': 'none'}
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         except Role.DoesNotExist:
             pass
@@ -183,7 +183,14 @@ def main(request, *args, **kwargs):
             user_viewer = UserViewerSettings.objects.get(user=request.user).viewer
         except UserViewerSettings.DoesNotExist:
             user_viewer = ''
-        context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'], 'user_viewer': user_viewer}
+        try:
+            data_tables_study_id = Setting.objects.get(key='data_tables_study_id').value
+        except Setting.DoesNotExist:
+            data_tables_study_id = 'none'
+        context_user = {'organization': organization,
+                        'httpdicom': request.META['HTTP_HOST'],
+                        'user_viewer': user_viewer,
+                        'data_tables_study_id': data_tables_study_id}
         return render(request, template_name='html5dicom/main.html', context=context_user)
 
 
@@ -246,6 +253,8 @@ def data_tables_studies(request, *args, **kwargs):
         data_tables['Modalities'] = request.GET['columns[6][search][value]']
     if request.GET['columns[7][search][value]'] != '':
         data_tables['StudyDescription'] = request.GET['columns[7][search][value]']
+    if request.GET['columns[15][search][value]'] != '':
+        data_tables['StudyID'] = request.GET['columns[15][search][value]']
     response_data_tables = requests.get(
         settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(data_tables, quote_via=urllib.parse.quote))
     response = HttpResponse(response_data_tables.content,
