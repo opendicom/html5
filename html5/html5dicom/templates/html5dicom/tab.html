@@ -91,7 +91,7 @@
                                     if(!data.error){
                                         data_cell = '<a href="#" onclick="window.open(\''+ data.url_editor +'&cache=' + full[22] +'&institutionOID=' + full[21] +'\')"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
                                         if (data.url_autentication != ''){
-                                            data_cell += '<a href=#><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>';
+                                            data_cell += '<a href=#><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>&nbsp;';
                                         }
                                     }else{
                                         data_cell += 'PatientID=' + full[23]
@@ -117,14 +117,14 @@
                             });
                         }
                         {% if user_viewer == 'cornerstone' %}
-                            data_cell += '<a class="btn btn-default btn-xs" href="{% url 'cornerstone' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                            data_cell += '<a href="{% url 'cornerstone' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-film"></span></a>';
                         {% elif user_viewer == 'zip' %}
-                            data_cell += '<a class="btn btn-warning btn-xs" href="{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'"><span class="glyphicon glyphicon-cloud-download"></span></a>';
+                            data_cell += '<a href="{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'"><span class="glyphicon glyphicon-film"></span></a>';
                         {% elif user_viewer == 'osirix' %}
-                            data_cell += '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'\'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                            data_cell += '<a href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'\'"><span class="glyphicon glyphicon-film"></span></a>';
                         {% elif user_viewer == 'weasis' %}
                             var url_weasis = "weasis://" + encodeURIComponent('$dicom:get -w "{{request.scheme}}://{{request.get_host}}{% url 'study_token_weasis' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'"')
-                            data_cell += '<a class="btn btn-danger btn-xs" href="'+ url_weasis +'"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                            data_cell += '<a href="'+ url_weasis +'"><span class="glyphicon glyphicon-film"></span></a>';
                         {% endif %}
                         return  data_cell;
                     }

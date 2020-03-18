@@ -58,17 +58,7 @@
     <tbody>
     </tbody>
 </table>
-{% if user_viewer == 'cornerstone' %}
-    <p><a class="btn btn-default btn-xs" href=#><span class="glyphicon glyphicon-eye-open"></span></a> <strong>Visualizar estudio</strong>
-{% elif user_viewer == 'zip' %}
-    <p><a class="btn btn-warning btn-xs" href=#><span class="glyphicon glyphicon-cloud-download"></span></a> <strong>Descargar estudio</strong>
-{% elif user_viewer == 'osirix' %}
-    <p><a class="btn btn-primary btn-xs" href=#><span class="glyphicon glyphicon-eye-open"></span></a> <strong>Visualizar estudio con Osirix</strong>
-{% elif user_viewer == 'weasis' %}
-    <p><a class="btn btn-danger btn-xs" href=#><span class="glyphicon glyphicon-eye-open"></span></a> <strong>Visualizar estudio con weasis</strong>
-{% else %}
-    <p>
-{% endif %}
+<p><a href=#><span class="glyphicon glyphicon-film"></span></a> <strong>Visualizar estudio</strong>
 <a href=#><span class="glyphicon glyphicon-list-alt" title="Solicitud"></span></a> <strong>Ver orden medica</strong>
 <a href=#><span class="glyphicon glyphicon-check" title="Informe"></span></a> <strong>Ver informe</strong></p>
 <div id="dialog-series" title="Series" class="container-fluid">
