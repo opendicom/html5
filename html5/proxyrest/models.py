@@ -35,7 +35,7 @@ class TokenAccessStudy(models.Model):
     PatientID = models.CharField(max_length=20, blank=True, null=True)
     issuer = models.CharField(max_length=255, blank=True, null=True)
     SeriesDescription = models.TextField(blank=True, null=True)
-    Modality = models.CharField(max_length=20, blank=True, null=True)
+    Modality = models.CharField(max_length=64, blank=True, null=True)
     SOPClass = models.TextField(blank=True, null=True)
     SeriesNumber = models.CharField(max_length=20, blank=True, null=True)
     SOPClassOff = models.CharField(max_length=255, blank=True, null=True)
