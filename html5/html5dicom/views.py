@@ -88,8 +88,10 @@ def main(request, *args, **kwargs):
                 user_viewer = UserViewerSettings.objects.get(user=request.user).viewer
             except UserViewerSettings.DoesNotExist:
                 user_viewer = ''
-            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                            'user_viewer': user_viewer, 'navbar': 'patient', 'data_tables_study_id': 'none'}
+            context_user = {'organization': organization,
+                            'user_viewer': user_viewer, 
+                            'navbar': 'patient', 
+                            'data_tables_study_id': 'none'}
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         except Role.DoesNotExist:
             pass
@@ -187,13 +189,14 @@ def main(request, *args, **kwargs):
             data_tables_study_id = Setting.objects.get(key='data_tables_study_id').value
         except Setting.DoesNotExist:
             data_tables_study_id = 'none'
-        context_user = {'organization': organization,
-                        'httpdicom': request.META['HTTP_HOST'],
+        context_user = {'organization': organization,                        
                         'user_viewer': user_viewer,
                         'data_tables_study_id': data_tables_study_id}
         return render(request, template_name='html5dicom/main.html', context=context_user)
 
 
+
+@login_required(login_url='/html5dicom/login')
 def data_tables_studies(request, *args, **kwargs):
     authorized = True
     if not request.user.is_authenticated():
