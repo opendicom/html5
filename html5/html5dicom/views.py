@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse, JsonResponse
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -6,9 +6,12 @@ from django.contrib.auth import update_session_auth_hash, authenticate, login, l
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.sessions.models import Session
+from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
-from html5dicom.models import Setting, UserChangePassword, UserViewerSettings, Role
+from django.db.models import Q
+
+from html5dicom.models import Setting, UserChangePassword, UserViewerSettings, Role, Institution
 from html5dicom.forms import UserViewerSettingsForm
 import requests
 import urllib
@@ -60,7 +63,7 @@ def main(request, *args, **kwargs):
         if changepassword:
             return HttpResponseRedirect('/html5dicom/password')
         try:
-            role_patient = Role.objects.get(user=request.user, name='pac')
+            role_patient = Role.objects.get(user=request.user, name='Paciente')
             url_httpdicom_req = settings.HTTP_DICOM + '/custodians/titles/' + role_patient.institution.organization.short_name
             oid_org = requests.get(url_httpdicom_req)
             url_httpdicom_req += '/aets/' + role_patient.institution.short_name
@@ -71,7 +74,6 @@ def main(request, *args, **kwargs):
                 config_toolbar = 'full'
             organization = {}
             organization.update({
-                "patientID": request.user.username,
                 "name": role_patient.institution.organization.short_name,
                 "oid": oid_org.json()[0],
                 "config_toolbar": config_toolbar,
@@ -86,17 +88,19 @@ def main(request, *args, **kwargs):
                 user_viewer = UserViewerSettings.objects.get(user=request.user).viewer
             except UserViewerSettings.DoesNotExist:
                 user_viewer = ''
-            context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                            'user_viewer': user_viewer, 'navbar': 'patient'}
+            context_user = {'organization': organization,
+                            'user_viewer': user_viewer, 
+                            'navbar': 'patient', 
+                            'data_tables_study_id': 'none'}
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         except Role.DoesNotExist:
             pass
 
         organization = {}
-        if Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']).count() < 1:
+        if Role.objects.filter(user=request.user.id).exclude(name__in=['Rest', 'Paciente']).count() < 1:
             logout(request)
             raise PermissionDenied
-        for role in Role.objects.filter(user=request.user.id).exclude(name__in=['res', 'pac']):
+        for role in Role.objects.filter(user=request.user.id).exclude(name__in=['Rest', 'Paciente']):
             if role.service:
                 default_organization = ''
                 default_institution = ''
@@ -181,78 +185,243 @@ def main(request, *args, **kwargs):
             user_viewer = UserViewerSettings.objects.get(user=request.user).viewer
         except UserViewerSettings.DoesNotExist:
             user_viewer = ''
-        context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'], 'user_viewer': user_viewer}
+        try:
+            data_tables_study_id = Setting.objects.get(key='data_tables_study_id').value
+        except Setting.DoesNotExist:
+            data_tables_study_id = 'none'
+        context_user = {'organization': organization,                        
+                        'user_viewer': user_viewer,
+                        'data_tables_study_id': data_tables_study_id}
         return render(request, template_name='html5dicom/main.html', context=context_user)
 
 
+
 @login_required(login_url='/html5dicom/login')
-def weasis(request, *args, **kwargs):
-    jnlp_file = open(settings.STATIC_ROOT + 'html5dicom/weasis/weasis.jnlp', 'r')
-    jnlp_text = jnlp_file.read()
-    jnlp_file.close()
-    base_url = request.META['wsgi.url_scheme']+'://'+request.META['HTTP_HOST']
-    if request.GET['requestType'] == 'STUDY':
-        manifiest = requests.get(settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
-        jnlp_text = jnlp_text.replace('%@', manifiest.text)
-    elif request.GET['requestType'] == 'SERIES':
-        manifiest = requests.get(settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=IHE_BIR&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado')
-        jnlp_text = jnlp_text.replace('%@', manifiest.text)
-    jnlp_text = jnlp_text.replace('{IIDURL}', base_url +'/static/html5dicom')
-    return HttpResponse(jnlp_text, content_type="application/x-java-jnlp-file")
+def data_tables_studies(request, *args, **kwargs):
+    authorized = True
+    if not request.user.is_authenticated():
+        authorized = False
+    try:
+        institution = Institution.objects.get(short_name=request.GET['aet'])
+    except Institution.DoesNotExist:
+        authorized = False
+    if authorized and not Role.objects.filter(Q(service__institution=institution) | Q(institution=institution), user=request.user, name=request.GET['role']).exists():
+        authorized = False
+    if not authorized:
+        if request.is_ajax():
+            error = {
+                "draw": request.GET['draw'],
+                "data": [],
+                "recordsFiltered": 0,
+                "recordsTotal": 0,
+                "error": "No autorizado"
+            }
+            return JsonResponse(error)
+        else:
+            return HttpResponseRedirect('/html5dicom/login')
+    data_tables = {
+        "draw": request.GET['draw'],
+        "start": request.GET['start'],
+        "length": request.GET['length'],
+        "username": request.user.username,
+        "useroid": request.GET['useroid'],
+        "session": request.session._session_key,
+        "custodiantitle": request.GET['custodiantitle'],
+        "aet": request.GET['aet'],
+        "role": request.GET['role'],
+        "max": request.GET['max'],
+        "new": request.GET['new'],
+        "_": request.GET['_'],
+    }
+    if 'date_start' in request.GET:
+        if request.GET['date_start'] != '':
+            data_tables['date_start'] = request.GET['date_start']
+    if 'date_end' in request.GET:
+        if request.GET['date_end'] != '':
+            data_tables['date_end'] = request.GET['date_end']
+    if 'cache' in request.GET:
+        if request.GET['cache'] != '':
+            data_tables['cache'] = request.GET['cache']
+    if 'order[0][column]' in request.GET:
+        data_tables['order'] = request.GET['order[0][column]']
+    if 'order[0][dir]' in request.GET:
+        data_tables['dir'] = request.GET['order[0][dir]'].lower()
+    if request.GET['search[value]'] != '':
+        data_tables['AccessionNumber'] = request.GET['search[value]']
+    if request.GET['columns[3][search][value]'] != '':
+        data_tables['PatientID'] = request.GET['columns[3][search][value]']
+    if request.GET['columns[4][search][value]'] != '':
+        data_tables['PatientName'] = request.GET['columns[4][search][value]']
+    if request.GET['columns[6][search][value]'] != '':
+        data_tables['Modalities'] = request.GET['columns[6][search][value]']
+    if request.GET['columns[7][search][value]'] != '':
+        data_tables['StudyDescription'] = request.GET['columns[7][search][value]']
+    if request.GET['columns[15][search][value]'] != '':
+        data_tables['StudyID'] = request.GET['columns[15][search][value]']
+    response_data_tables = requests.get(
+        settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(data_tables, quote_via=urllib.parse.quote))
+    response = HttpResponse(response_data_tables.content,
+                            status=response_data_tables.status_code,
+                            content_type=response_data_tables.headers['Content-Type'])
+    return response
+
+
+def data_tables_series(request, *args, **kwargs):
+    if not request.user.is_authenticated():
+        if request.is_ajax():
+            error = {
+                "draw": request.GET['draw'],
+                "data": [],
+                "recordsFiltered": 0,
+                "recordsTotal": 0,
+                "error": "No autorizado"
+            }
+            return JsonResponse(error)
+        else:
+            return HttpResponseRedirect('/html5dicom/login')
+    response_data_tables = requests.get(
+        settings.HTTP_DICOM + '/datatables/series?' + urllib.parse.urlencode(request.GET, quote_via=urllib.parse.quote))
+    response = HttpResponse(response_data_tables.content,
+                            status=response_data_tables.status_code,
+                            content_type=response_data_tables.headers['Content-Type'])
+    return response
+
+
+def data_tables_patient(request, *args, **kwargs):
+    if not request.user.is_authenticated():
+        if request.is_ajax():
+            error = {
+                "draw": request.GET['draw'],
+                "data": [],
+                "recordsFiltered": 0,
+                "recordsTotal": 0,
+                "error": "No autorizado"
+            }
+            return JsonResponse(error)
+        else:
+            return HttpResponseRedirect('/html5dicom/login')
+    response_data_tables = requests.get(
+        settings.HTTP_DICOM + '/datatables/patient?' + urllib.parse.urlencode(request.GET,
+                                                                              quote_via=urllib.parse.quote))
+    response = HttpResponse(response_data_tables.content,
+                            status=response_data_tables.status_code,
+                            content_type=response_data_tables.headers['Content-Type'])
+    return response
+
+
+def study_token_weasis(request, *args, **kwargs):
+    if 'session' in request.GET:
+        try:
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
+            session.get_decoded()[SESSION_KEY]
+            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+            study_token = {
+                "session": request.GET['session'],
+                "institution": request.GET['institutionOID'],
+                "proxyURI": base_url + '/html5dicom/wado',
+                "accessType": 'weasis.xml',
+            }
+            # cache
+            if 'cache' in request.GET:
+                study_token['cache'] = request.GET['cache']
+            # StudyInstanceUID
+            if 'StudyInstanceUID' in request.GET:
+                study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
+            # SeriesInstanceUID
+            if 'SeriesInstanceUID' in request.GET:
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
+            response_study_token = requests.get(
+                settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+            response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
+            response['Content-Length'] = str(len(response_study_token.content))
+            return response
+        except (Session.DoesNotExist, KeyError):
+            raise PermissionDenied
+    else:
+        return HttpResponse('Error', status=400)
+
+
+def study_token_cornerstone(request, *args, **kwargs):
+    if 'session' in request.GET:
+        try:
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
+            session.get_decoded()[SESSION_KEY]
+            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+            study_token = {
+                "session": request.GET['session'],
+                "institution": request.GET['institutionOID'],
+                "proxyURI": base_url + '/html5dicom/wado',
+                "accessType": 'cornerstone.json',
+            }
+            # cache
+            if 'cache' in request.GET:
+                study_token['cache'] = request.GET['cache']
+            # StudyInstanceUID
+            if 'StudyInstanceUID' in request.GET:
+                study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
+            # SeriesInstanceUID
+            if 'SeriesInstanceUID' in request.GET:
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
+            response_study_token = requests.get(
+                settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token,
+                                                                              quote_via=urllib.parse.quote))
+            response = HttpResponse(response_study_token.content,
+                                    status=response_study_token.status_code,
+                                    content_type=response_study_token.headers['Content-Type'])
+            return response
+        except (Session.DoesNotExist, KeyError):
+            raise PermissionDenied
+    else:
+        return HttpResponse('Error', status=400)
+
+
+def study_token_zip(request, *args, **kwargs):
+    if 'session' in request.GET:
+        try:
+            session = Session.objects.get(session_key=request.GET['session'],
+                                          expire_date__gt=timezone.now())
+            session.get_decoded()[SESSION_KEY]
+            base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
+            study_token = {
+                "session": request.GET['session'],
+                "institution": request.GET['institutionOID'],
+                "proxyURI": base_url + '/html5dicom/wado',
+                "accessType": 'dicom.zip',
+            }
+            # cache
+            if 'cache' in request.GET:
+                study_token['cache'] = request.GET['cache']
+            # StudyInstanceUID
+            if 'StudyInstanceUID' in request.GET:
+                study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
+            # SeriesInstanceUID
+            if 'SeriesInstanceUID' in request.GET:
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
+            url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token,
+                                                                                    quote_via=urllib.parse.quote)
+            r = StreamingHttpResponse(stream_response(url_zip))
+            r['Content-Type'] = "application/zip"
+            r['Content-Disposition'] = "attachment; filename=dcm.zip"
+            return r
+        except (Session.DoesNotExist, KeyError):
+            raise PermissionDenied
+    else:
+        return HttpResponse('Error', status=400)
 
 
 def cornerstone(request, *args, **kwargs):
-    if not request.user.is_authenticated():
-        if request.is_ajax():
-            return HttpResponse(status=403, content="you are not logged in")
-        else:
-            return HttpResponseRedirect('/html5dicom/login')
-    base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
-    if request.GET['requestType'] == 'STUDY':
-        url_manifiest = settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=STUDY&studyUID=' + request.GET['study_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
-    elif request.GET['requestType'] == 'SERIES':
-        url_manifiest = settings.HTTP_DICOM + '/IHEInvokeImageDisplay?requestType=SERIES&studyUID=' + request.GET['study_uid'] + '&seriesUID=' + request.GET['series_uid'] + '&viewerType=cornerstone&diagnosticQuality=true&keyImagesOnly=false&custodianOID=' + request.GET['custodianOID'] + '&session=' + request.session.session_key + '&proxyURI=' + base_url + '/html5dicom/wado'
-    else:
-        url_manifiest = ''
-    manifiest = requests.get(url_manifiest)
-    return HttpResponse(manifiest.text, content_type=manifiest.headers.get('content-type'))
+    return render(request,
+                  template_name='html5dicom/redirect_cornerstone.html',
+                  context={'url_manifiest': request.build_absolute_uri(
+                      reverse('study_token_cornerstone') + '?' + urllib.parse.urlencode(request.GET))})
 
 
 def stream_response(url_zip):
     r = requests.get(url_zip, stream=True)
     for chunk in r.iter_content(512 * 1024):
         yield chunk
-
-
-def osirix(request, *args, **kwargs):
-    if 'session' in request.GET:
-        try:
-            session = Session.objects.get(session_key=request.GET['session'],
-                                          expire_date__gt=timezone.now())
-            session.get_decoded()[SESSION_KEY]
-            if request.GET['requestType'] == 'STUDY':
-                url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + \
-                          request.GET['study_uid']
-                # Valida accession number
-                #if request.GET['accession_no'] == '':
-                #    url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?StudyInstanceUID=' + request.GET['study_uid']
-                #else:
-                #    url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?AccessionNumber=' + request.GET['accession_no']
-                r = StreamingHttpResponse(stream_response(url_zip))
-                r['Content-Type'] = "application/zip"
-                r['Content-Disposition'] = "attachment; filename=dcm.zip"
-                return r
-            elif request.GET['requestType'] == 'SERIES':
-                url_zip = settings.HTTP_DICOM + '/pacs/' + request.GET['custodianOID'] + '/dcm.zip?SeriesInstanceUID=' + \
-                          request.GET['series_uid']
-                r = StreamingHttpResponse(stream_response(url_zip))
-                r['Content-Type'] = "application/zip"
-                r['Content-Disposition'] = "attachment; filename=dcm.zip"
-                return r
-        except (Session.DoesNotExist, KeyError):
-            raise PermissionDenied
-    else:
-        return HttpResponse('Error', status=400)
 
 
 def wado(request, *args, **kwargs):
@@ -262,7 +431,7 @@ def wado(request, *args, **kwargs):
                                           expire_date__gt=timezone.now())
             session.get_decoded()[SESSION_KEY]
             url_request = request.build_absolute_uri()
-            url_wado = settings.HTTP_DICOM + url_request[url_request.index("?"):]
+            url_wado = settings.OID_URL[request.GET['arcId']]['wadouri'] + url_request[url_request.index("?"):]
             r = requests.get(url_wado)
             return HttpResponse(r.content, content_type=r.headers.get('content-type'))
         except (Session.DoesNotExist, KeyError):

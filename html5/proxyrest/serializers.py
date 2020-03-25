@@ -40,6 +40,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
     token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessStudy.objects.all())])
     accessType = serializers.ChoiceField(choices=access_choice, write_only=True)
     StudyInstanceUID = serializers.CharField(allow_blank=True, write_only=True)
+    SeriesInstanceUID = serializers.CharField(allow_blank=True, write_only=True)
     AccessionNumber = serializers.CharField(allow_blank=True, write_only=True)
     StudyDate = serializers.CharField(allow_blank=True, write_only=True)
     PatientID = serializers.CharField(allow_blank=True, write_only=True)
@@ -58,6 +59,7 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
         token = TokenAccessStudy.objects.create(token=validated_data['token'],
                                                 accessType=validated_data['accessType'],
                                                 StudyInstanceUID=validated_data['StudyInstanceUID'],
+                                                SeriesInstanceUID=validated_data['SeriesInstanceUID'],
                                                 AccessionNumber=validated_data['AccessionNumber'],
                                                 StudyDate=validated_data['StudyDate'],
                                                 PatientID=validated_data['PatientID'],
@@ -74,10 +76,10 @@ class TokenAccessStudySerializer(serializers.ModelSerializer):
         return token
 
     class Meta:
-        model = TokenAccessPatient
-        fields = ('token', 'accessType', 'StudyInstanceUID', 'AccessionNumber', 'StudyDate', 'PatientID', 'issuer',
-                  'SeriesDescription', 'Modality', 'SOPClass', 'SeriesNumber', 'SOPClassOff', 'transferSyntax',
-                  'start_date', 'expiration_date', 'role_id')
+        model = TokenAccessStudy
+        fields = ('token', 'accessType', 'StudyInstanceUID', 'SeriesInstanceUID', 'AccessionNumber', 'StudyDate',
+                  'PatientID', 'issuer', 'SeriesDescription', 'Modality', 'SOPClass', 'SeriesNumber', 'SOPClassOff',
+                  'transferSyntax', 'start_date', 'expiration_date', 'role_id')
 
 
 class SessionRestSerializer(serializers.ModelSerializer):

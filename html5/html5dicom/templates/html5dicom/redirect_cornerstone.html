@@ -84,9 +84,9 @@
             //document.getElementById("studies").style.display = "none";
 
             $.getJSON( "{{ url_manifiest }}", function( data ) {
-                document.getElementById("loader").style.display = "none";
-                document.getElementById("studies").style.display = "block";
                 if (data[0]['patientList'][0]['studyList'].length > 1) {
+                    document.getElementById("loader").style.display = "none";
+                    document.getElementById("studies").style.display = "block";
                     json_cornerstone = data;
                     fill_data_patient();
                 }else{

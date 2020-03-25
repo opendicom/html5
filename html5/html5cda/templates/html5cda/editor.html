@@ -25,7 +25,7 @@
                                 alert(data.error)
                             }else{
                                 alert(data.message)
-                                window.opener.refreshTableStudy()
+                                parent.window.opener.refreshTableStudy()
                                 self.close()
                             }
                         }
@@ -54,7 +54,7 @@
                                     alert(data.error)
                                 }else{
                                     alert(data.message)
-                                    window.opener.refreshTableStudy()
+                                    parent.window.opener.refreshTableStudy()
                                     self.close()
                                 }
                             }
@@ -89,7 +89,7 @@
                                     alert(data.error)
                                 }else{
                                     alert(data.message)
-                                    window.opener.refreshTableStudy()
+                                    parent.window.opener.refreshTableStudy()
                                     self.close()
                                 }
                             }
@@ -128,7 +128,8 @@
                                 }else{
                                     alert(data.message);
                                     window.open('data:text/xml,' + decodeURIComponent(escape(window.atob( data.xml ))));
-                                    window.opener.refreshTableStudy();
+                                    parent.window.opener.refreshTableStudy();
+                                    self.close();
                                  }
                             },
                             complete: function(data) {
@@ -169,7 +170,7 @@
                                         alert(data.error)
                                     }else{
                                         alert(data.message)
-                                        window.opener.refreshTableStudy()
+                                        parent.window.opener.refreshTableStudy()
                                         self.close()
                                     }
                                 }
@@ -396,7 +397,7 @@
                                                                     alert(data.error)
                                                                 }else{
                                                                     alert(data.message)
-                                                                    window.opener.refreshTableStudy()
+                                                                    parent.window.opener.refreshTableStudy()
                                                                     self.close()
                                                                 }
                                                             }
@@ -425,7 +426,7 @@
                                                                         alert(data.error)
                                                                     }else{
                                                                         alert(data.message)
-                                                                        window.opener.refreshTableStudy()
+                                                                        parent.window.opener.refreshTableStudy()
                                                                         self.close()
                                                                     }
                                                                 }

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import requests
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,12 +21,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '%q^4!zb678!_5gb)0ksf$(g8qzo@6n6eti4ag0f76srej+i0c#'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 
 # Application definition
@@ -82,12 +83,12 @@ WSGI_APPLICATION = 'html5.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'html5',
-        'USER': 'html5',
-        'PASSWORD': 'html5',
-        'HOST': '',                 # Empty for localhost
-        'PORT': '',                 # Set to empty string for default.
+        'ENGINE': os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        'NAME': os.environ.get("SQL_DATABASE", os.path.join(BASE_DIR, "db.sqlite3")),
+        'USER': os.environ.get("SQL_USER", "user"),
+        'PASSWORD': os.environ.get("SQL_PASSWORD", "password"),
+        'HOST': os.environ.get("SQL_HOST", "localhost"),
+        'PORT': os.environ.get("SQL_PORT", "5432"),
     }
 }
 
@@ -129,7 +130,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/Users/Shared/html5/html5/html5dicom/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 SESSION_COOKIE_AGE = 1200
 SESSION_SAVE_EVERY_REQUEST = True
@@ -137,4 +138,16 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Access to httpdicom
 
-HTTP_DICOM = 'http://127.0.0.1:11111'
+HTTP_DICOM = os.environ.get('HTTP_DICOM')
+
+OID_URL = {}
+
+_OIDS = requests.get(HTTP_DICOM + '/custodians/oids').json()
+for oid in _OIDS:
+    custodians = requests.get(HTTP_DICOM + '/custodians/oids/' + oid + '/aeis').json()
+    for custodian in custodians:
+        OID_URL[custodian] = {}
+        url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/wadouri').text
+        OID_URL[custodian]['wadouri'] = url
+        url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/stow').text
+        OID_URL[custodian]['stow'] = url

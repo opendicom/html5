@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  web:
+    restart: unless-stopped
+    build:
+      context: ./html5
+      dockerfile: Dockerfile.prod
+    command: gunicorn html5.wsgi:application --bind 0.0.0.0:8000 --limit-request-line 0
+    volumes:
+      - static_volume:/home/html5/web/static
+    expose:
+      - 8000
+    env_file:
+      - ./.env.prod
+    depends_on:
+      - db
+  db:
+    image: mariadb:10.1.14
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+      - "4567:4567"
+      - "4568:4568"
+      - "4444:4444"
+    env_file:
+      - ./.env.prod.db
+    volumes:
+      - mariadb_data:/var/lib/mysql
+  nginx:
+    build: ./nginx
+    restart: unless-stopped
+    volumes:
+      - static_volume:/home/html5/web/static
+    ports:
+      - 80:80
+    depends_on:
+      - web
+
+volumes:
+  mariadb_data:
+  static_volume:

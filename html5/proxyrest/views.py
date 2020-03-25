@@ -5,13 +5,21 @@ from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes
 import requests
 from proxyrest.models import SessionRest, TokenAccessPatient, TokenAccessStudy
 from html5dicom.models import Institution, Role, Setting, UserViewerSettings
 from proxyrest.serializers import TokenAccessPatientSerializer, SessionRestSerializer, TokenAccessStudySerializer
 from django.contrib.sessions.backends.db import SessionStore
 from django.conf import settings
+from rest_framework.authentication import SessionAuthentication
+import uuid
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return
 
 
 @api_view(['POST'])
@@ -25,7 +33,7 @@ def rest_login(request, *args, **kwargs):
         user = authenticate(username=request.data.get('user'), password=request.data.get('password'))
         if user:
             try:
-                role = Role.objects.get(user=user, institution=institution, name='res')
+                role = Role.objects.get(user=user, institution=institution, name='Rest')
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(kwargs.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
@@ -161,35 +169,40 @@ def rest_wado(request, *args, **kwargs):
 def weasis_manifiest(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
-        if validate_token_expired(token_access):
-            login(request, token_access.role.user)
-            study_token = generate_study_token(token_access, request)
-            response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
-            response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
-            response['Content-Length'] = str(len(response_study_token.content))
-            return response
+        if token_access.accessType == 'weasis.xml':
+            if validate_token_expired(token_access):
+                login(request, token_access.role.user)
+                study_token = generate_study_token(token_access, request)
+                response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+                response = HttpResponse(response_study_token.content, content_type='application/x-gzip')
+                response['Content-Length'] = str(len(response_study_token.content))
+                return response
+            else:
+                return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+@api_view(['GET'])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def cornerstone_manifiest(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
-        if validate_token_expired(token_access):
-            login(request, token_access.role.user)
-            study_token = generate_study_token(token_access, request)
-            headers = {'Content-type': 'application/json'}
-            response_study_token = requests.post(settings.HTTP_DICOM + '/studyToken',
-                                                 json=study_token,
-                                                 headers=headers)
-            response = HttpResponse(response_study_token.content,
-                                    status=response_study_token.status_code,
-                                    content_type=response_study_token.headers['Content-Type'])
-            return response
+        if token_access.accessType == 'cornerstone.json':
+            if validate_token_expired(token_access):
+                login(request, token_access.role.user)
+                study_token = generate_study_token(token_access, request)
+                response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+                response = HttpResponse(response_study_token.content,
+                                        status=response_study_token.status_code,
+                                        content_type=response_study_token.headers['Content-Type'])
+                return response
+            else:
+                return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -203,16 +216,19 @@ def stream_response(url_zip):
 def dicom_zip(request, *args, **kwargs):
     try:
         token_access = TokenAccessStudy.objects.get(token=kwargs.get('token'))
-        if validate_token_expired(token_access):
-            login(request, token_access.role.user)
-            study_token = generate_study_token(token_access, request)
-            url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
-            r = StreamingHttpResponse(stream_response(url_zip))
-            r['Content-Type'] = "application/zip"
-            r['Content-Disposition'] = "attachment; filename=dicom.zip"
-            return r
+        if token_access.accessType in 'dicom.zip osirix.zip':
+            if validate_token_expired(token_access):
+                login(request, token_access.role.user)
+                study_token = generate_study_token(token_access, request)
+                url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
+                r = StreamingHttpResponse(stream_response(url_zip))
+                r['Content-Type'] = "application/zip"
+                r['Content-Disposition'] = "attachment; filename=dicom.zip"
+                return r
+            else:
+                return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'error': 'invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenAccessStudy.DoesNotExist:
         return JsonResponse({'error': 'invalid credentials, session not exist'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -291,8 +307,9 @@ def study_web(request, *args, **kwargs):
 def generate_study_token(token_access, request):
     base_url = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
     study_token = {
+        "token": token_access.token,
         "session": request.session.session_key,
-        "custodianOID": token_access.role.institution.oid,
+        "institution": token_access.role.institution.oid,
         "proxyURI": base_url + '/html5dicom/wado',
         "accessType": 'dicom.zip' if token_access.accessType == 'osirix.zip' else token_access.accessType,
     }
@@ -333,6 +350,7 @@ def generate_study_token(token_access, request):
 
 
 @api_view(['POST'])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def token_access_patient(request, *args, **kwargs):
     if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'PatientID' in request.data:
         try:
@@ -342,17 +360,16 @@ def token_access_patient(request, *args, **kwargs):
         user = authenticate(username=request.data.get('user'), password=request.data.get('password'))
         if user:
             try:
-                role = Role.objects.get(user=user, institution=institution, name='res')
+                role = Role.objects.get(user=user, institution=institution, name='Rest')
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
-            login(request, user)
             try:
                 allowed_age = int(Setting.objects.get(key='allowed_age_token_patient').value)
             except Setting.DoesNotExist:
                 allowed_age = 120
             serializer = TokenAccessPatientSerializer(data={
-                'token': request.session._session_key,
+                'token': str(uuid.uuid4()).replace('-', ''),
                 'PatientID': request.data.get('PatientID'),
                 'IssuerOfPatientID': request.data.get('IssuerOfPatientID', ''),
                 'IssuerOfPatientIDQualifiers': request.data.get('IssuerOfPatientIDQualifiers', ''),
@@ -376,6 +393,7 @@ def token_access_patient(request, *args, **kwargs):
 
 
 @api_view(['POST'])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def token_access_study(request, *args, **kwargs):
     if 'institution' in request.data and 'user' in request.data and 'password' in request.data and 'accessType' in request.data:
         try:
@@ -385,19 +403,19 @@ def token_access_study(request, *args, **kwargs):
         user = authenticate(username=request.data.get('user'), password=request.data.get('password'))
         if user:
             try:
-                role = Role.objects.get(user=user, institution=institution, name='res')
+                role = Role.objects.get(user=user, institution=institution, name='Rest')
             except Role.DoesNotExist:
                 return Response({'error': 'not allowed to work with institution {0}'.format(request.data.get('institution'))},
                                 status=status.HTTP_401_UNAUTHORIZED)
-            login(request, user)
             try:
                 allowed_age = int(Setting.objects.get(key='allowed_age_token_study').value)
             except Setting.DoesNotExist:
                 allowed_age = 120
             serializer = TokenAccessStudySerializer(data={
-                'token': request.session._session_key,
+                'token': str(uuid.uuid4()).replace('-', ''),
                 'accessType': request.data.get('accessType'),
                 'StudyInstanceUID': request.data.get('StudyInstanceUID', ''),
+                'SeriesInstanceUID': request.data.get('SeriesInstanceUID', ''),
                 'AccessionNumber': request.data.get('AccessionNumber', ''),
                 'StudyDate': request.data.get('StudyDate', ''),
                 'PatientID': request.data.get('PatientID', ''),
