@@ -16,4 +16,5 @@ urlpatterns = [
     url(r'^study_token_cornerstone$', views.study_token_cornerstone, name='study_token_cornerstone'),
     url(r'^cornerstone', views.cornerstone, name='cornerstone'),
     url(r'^study_token_zip$', views.study_token_zip, name='study_token_zip'),
+    url(r'^show_cda$', views.show_cda, name='show_cda'),    
 ]

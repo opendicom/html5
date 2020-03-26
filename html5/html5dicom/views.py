@@ -438,6 +438,15 @@ def stream_response(url_zip):
         yield chunk
 
 
+@login_required(login_url='/html5dicom/login')
+def show_cda(request, *args, **kwargs):
+    url_httpdicom = settings.HTTP_DICOM + '/'+ request.GET['doc_type'] +'/DSCD?institution='+ request.GET['institution'] +'&EKey='+ request.GET['EKey'] +'&StudyInstanceUID='+ request.GET['StudyInstanceUID']
+    response_httpdicom = requests.get(url_httpdicom)
+    response = HttpResponse(response_httpdicom.content,
+                            status=response_httpdicom.status_code,
+                            content_type=response_httpdicom.headers['Content-Type'])
+    return response
+
 def wado(request, *args, **kwargs):
     if 'session' in request.GET:
         try:
