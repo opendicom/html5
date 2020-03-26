@@ -6,15 +6,15 @@ from proxyrest.models import TokenAccessPatient, TokenAccessStudy, SessionRest
 class TokenAccessPatientSerializer(serializers.ModelSerializer):
     viewer_choice = ['cornerstone', 'weasis', 'zip', 'osirix']
     token = serializers.CharField(validators=[UniqueValidator(queryset=TokenAccessPatient.objects.all())])
-    PatientID = serializers.CharField()
-    IssuerOfPatientID = serializers.CharField(required=False, default='', allow_blank=True)
-    IssuerOfPatientIDQualifiers = serializers.JSONField(required=False, default='')
-    StudyDate = serializers.CharField(required=False, default='', allow_blank=True)
-    viewerType = serializers.ChoiceField(choices=viewer_choice, allow_blank=True)
-    seriesSelection = serializers.JSONField(required=False, default='')
+    PatientID = serializers.CharField(write_only=True)
+    IssuerOfPatientID = serializers.CharField(required=False, default='', allow_blank=True, write_only=True)
+    IssuerOfPatientIDQualifiers = serializers.JSONField(required=False, default='', write_only=True)
+    StudyDate = serializers.CharField(required=False, default='', allow_blank=True, write_only=True)
+    viewerType = serializers.ChoiceField(choices=viewer_choice, allow_blank=True, write_only=True)
+    seriesSelection = serializers.JSONField(required=False, default='', write_only=True)
     start_date = serializers.DateTimeField
     expiration_date = serializers.DateTimeField
-    role_id = serializers.IntegerField()
+    role_id = serializers.IntegerField(write_only=True)
 
     def create(self, validated_data):
         token = TokenAccessPatient.objects.create(token=validated_data['token'],

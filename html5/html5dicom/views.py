@@ -13,6 +13,7 @@ from django.db.models import Q
 
 from html5dicom.models import Setting, UserChangePassword, UserViewerSettings, Role, Institution
 from html5dicom.forms import UserViewerSettingsForm
+from proxyrest.models import TokenAccessPatient
 import requests
 import urllib
 
@@ -91,7 +92,10 @@ def main(request, *args, **kwargs):
             context_user = {'organization': organization,
                             'user_viewer': user_viewer, 
                             'navbar': 'patient', 
-                            'data_tables_study_id': 'none'}
+                            'data_tables_study_id': 'none',
+                            'token': '',
+                            'role': 'Paciente'
+                            }
             return render(request, template_name='html5dicom/patient_main.html', context=context_user)
         except Role.DoesNotExist:
             pass
@@ -195,10 +199,9 @@ def main(request, *args, **kwargs):
         return render(request, template_name='html5dicom/main.html', context=context_user)
 
 
-
-@login_required(login_url='/html5dicom/login')
 def data_tables_studies(request, *args, **kwargs):
     authorized = True
+    token = False
     if not request.user.is_authenticated():
         authorized = False
     try:
@@ -207,6 +210,13 @@ def data_tables_studies(request, *args, **kwargs):
         authorized = False
     if authorized and not Role.objects.filter(Q(service__institution=institution) | Q(institution=institution), user=request.user, name=request.GET['role']).exists():
         authorized = False
+    if 'token' in request.GET:
+        if request.GET['token'] != '':
+            try:
+                token_access = TokenAccessPatient.objects.get(token=request.GET['token'])
+                token = True
+            except TokenAccessPatient.DoesNotExist:
+                authorized = False
     if not authorized:
         if request.is_ajax():
             error = {
@@ -258,6 +268,10 @@ def data_tables_studies(request, *args, **kwargs):
         data_tables['StudyDescription'] = request.GET['columns[7][search][value]']
     if request.GET['columns[15][search][value]'] != '':
         data_tables['StudyID'] = request.GET['columns[15][search][value]']
+    
+    if token:        
+        data_tables['PatientID'] = token_access.PatientID        
+        data_tables['seriesSelection'] = token_access.seriesSelection                
     response_data_tables = requests.get(
         settings.HTTP_DICOM + '/datatables/studies?' + urllib.parse.urlencode(data_tables, quote_via=urllib.parse.quote))
     response = HttpResponse(response_data_tables.content,

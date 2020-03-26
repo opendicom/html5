@@ -30,12 +30,10 @@
         var organization = {{ organization | safe }}
         var org = organization.name;
         var inst = organization.institution.name;
-        var oid = organization.institution.oid;
-        var seriesSelection = organization.seriesSelection;
-        var StudyInstanceUID = organization.StudyInstanceUID;
+        var oid = organization.institution.oid;        
         var service = 'Todos';
         var max_rows = 100;
-        addTableStudy(org, inst, oid, 'Paciente', service, max_rows, organization.config_toolbar, seriesSelection, StudyInstanceUID);
+        addTableStudy(org, inst, oid, service, max_rows, organization.config_toolbar);
 
         $.datepicker.regional['es'] = {
             closeText: 'Cerrar',

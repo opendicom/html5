@@ -259,10 +259,7 @@ def study_web(request, *args, **kwargs):
                         user_viewer = ''
                 login(request, token_access.role.user)
                 organization = {}
-                organization.update({
-                    "patientID": token_access.PatientID,
-                    "seriesSelection": token_access.seriesSelection,
-                    "StudyInstanceUID": "",
+                organization.update({                    
                     "name": token_access.role.institution.organization.short_name,
                     "oid": token_access.role.institution.organization.oid,
                     "config_toolbar": config_toolbar,
@@ -272,8 +269,12 @@ def study_web(request, *args, **kwargs):
                         'oid': token_access.role.institution.oid
                     }
                 })
-                context_user = {'organization': organization, 'httpdicom': request.META['HTTP_HOST'],
-                                'user_viewer': user_viewer, 'navbar': 'rest'}
+                context_user = {'organization': organization,
+                                'user_viewer': user_viewer, 
+                                'navbar': 'rest',
+                                'data_tables_study_id': 'none',
+                                'token': token_access.token,
+                                'role': 'Rest'}
                 return render(request, template_name='html5dicom/patient_main.html', context=context_user)
             elif type_token == 'study' and token_access.accessType != '':
                 if token_access.accessType == 'weasis.xml':
