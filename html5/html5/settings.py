@@ -150,4 +150,6 @@ for oid in _OIDS:
         url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/wadouri').text
         OID_URL[custodian]['wadouri'] = url
         url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/stow').text
-        OID_URL[custodian]['stow'] = url
+        OID_URL[custodian]['stow'] = url        
+        url = requests.get(HTTP_DICOM + '/pacs/' + custodian + '/properties/IOCM_REGULAR_USE').text
+        OID_URL[custodian]['IOCM_REGULAR_USE'] = url

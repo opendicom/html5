@@ -1119,6 +1119,9 @@ def authenticate_report(submit, user):
         xml_dcm, xml_cda)
     requests.post(url, headers=headers, data=data.encode('utf-8'))
     execute_integration(values_submit['AccessionNumber'][0], values_submit['PatientID'][0], values_submit['StudyIUID'][0], user, xml_cda)
+    # IOCM
+    url = settings.OID_URL[institution.oid]['IOCM_REGULAR_USE'] + 'studies?StudyInstanceUID=' + values_submit['StudyIUID'][0]
+    requests.get(url)
     # Active user patient
     User.objects.filter(username=values_submit['PatientID'][0]).update(is_active=True)
     return xml_cda
