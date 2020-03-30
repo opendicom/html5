@@ -218,12 +218,12 @@
                     "render": function ( data, type, full, meta ) {
                         var options_download = '';
                         if (config_toolbar == 'full'){
-                            options_download += '<a href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'&SeriesInstanceUID='+ data +'\'"><span class="glyphicon glyphicon-film"></span></a>';
+                            options_download += '<a class="btn btn-primary btn-xs" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'&SeriesInstanceUID='+ data +'\'"><span class="glyphicon glyphicon-eye-open"></span></a>';                                                
                             var url_weasis = "weasis://" + encodeURIComponent('$dicom:get -w "{{request.scheme}}://{{request.get_host}}{% url 'study_token_weasis' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'&SeriesInstanceUID='+ data +'"')
-                            options_download += '<a href="' + url_weasis + '"><span class="glyphicon glyphicon-film"></span></a>';
+                            options_download += '<a class="btn btn-danger btn-xs" href="' + url_weasis + '"><span class="glyphicon glyphicon-eye-open"></span></a>';                   
                         }
-                        options_download += '<a href="{% url 'cornerstone' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'&SeriesInstanceUID='+ data +'" target="_blank"><span class="glyphicon glyphicon-film"></span></a>';
-                        options_download += '<a href="{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'&SeriesInstanceUID='+ data +'"><span class="glyphicon glyphicon-film"></span></a>';
+                        options_download += '<a class="btn btn-default btn-xs" href="{% url 'cornerstone' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'&SeriesInstanceUID='+ data +'" target="_blank"><span class="glyphicon glyphicon-eye-open"></span></a>';
+                        options_download += '<a class="btn btn-warning btn-xs" href="{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'&SeriesInstanceUID='+ data +'"><span class="glyphicon glyphicon-cloud-download"></span></a>';
                         return options_download;
                     }
                 },
@@ -273,12 +273,12 @@
             initComplete: function(){
                 var options_toolbar = '';
                 if (config_toolbar == 'full'){
-                    options_toolbar += '<a href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'\'"><span class="glyphicon glyphicon-film"></span> OsiriX</a>';
+                    options_toolbar += '<a class="btn btn-primary" href="osirix://?methodName=DownloadURL&Display=YES&URL=\'http://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'\'"><span class="glyphicon glyphicon-eye-open"></span> OsiriX</a>';
                     var url_weasis = "weasis://" + encodeURIComponent('$dicom:get -w "{{request.scheme}}://{{request.get_host}}{% url 'study_token_weasis' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'"')
-                    options_toolbar += '<a href="'+ url_weasis +'"><span class="glyphicon glyphicon-film"></span> weasis</a>';
+                    options_toolbar += '<a class="btn btn-danger" href="'+ url_weasis +'"><span class="glyphicon glyphicon-eye-open"></span> weasis</a>';
                 }
-                options_toolbar += '<a href="{% url 'cornerstone' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'" target="_blank"><span class="glyphicon glyphicon-film"></span> Ver estudio</a>';
-                options_toolbar += '<a href="{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'"><span class="glyphicon glyphicon-film"></span> Descargar</a>';
+                options_toolbar += '<a class="btn btn-default" href="{% url 'cornerstone' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'" target="_blank"><span class="glyphicon glyphicon-eye-open"></span> Ver estudio</a>';
+                options_toolbar += '<a class="btn btn-warning" href="{% url 'study_token_zip' %}?cache='+ cache +'&session={{ request.session.session_key}}&institutionOID='+ institutionOID +'&StudyInstanceUID='+ study_uid +'"><span class="glyphicon glyphicon-cloud-download"></span> Descargar</a>';
                 $("div.toolbarseries").append(options_toolbar);
             }
         });
