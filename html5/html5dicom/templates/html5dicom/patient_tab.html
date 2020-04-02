@@ -147,11 +147,13 @@
         });
         table.columns().eq( 0 ).each( function ( colIdx ) {
             $('input', table.column( colIdx ).header() ).on( 'keyup change', function () {
-                table
-                    .column( colIdx )
-                    .search( this.value )
-                    .draw();
-                } );
+                if(this.value.length >= 5){
+                    table
+                        .column( colIdx )
+                        .search( this.value )
+                        .draw();
+                }
+            } );
             $('select', table.column( colIdx ).header() ).on( 'keyup change', function () {
                 table
                     .column( colIdx )
@@ -284,10 +286,12 @@
         });
         table_series.columns().eq( 0 ).each( function ( colIdx ) {
             $('input', table_series.column( colIdx ).header() ).on( 'keyup change', function () {
-                table_series
-                    .column( colIdx )
-                    .search( this.value )
-                    .draw();
+                if(this.value.length >= 5){
+                    table_series
+                        .column( colIdx )
+                        .search( this.value )
+                        .draw();
+                }                
                 } );
             $('input', table_series.column(colIdx).header()).on('click', function(e) {
                 e.stopPropagation();
@@ -398,10 +402,12 @@
         });
         table_patient.columns().eq( 0 ).each( function ( colIdx ) {
             $('input', table_patient.column( colIdx ).header() ).on( 'keyup change', function () {
-                table_patient
-                    .column( colIdx )
-                    .search( this.value )
-                    .draw();
+                if(this.value.length >= 5){
+                    table_patient
+                        .column( colIdx )
+                        .search( this.value )
+                        .draw();
+                }
             } );
 
             $('input', table_patient.column(colIdx).header()).on('click', function(e) {
