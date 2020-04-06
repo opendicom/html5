@@ -12,7 +12,6 @@
     }
 </style>
 <script>
-
     refreshTableStudy = function(){
 
         var table = $('#table_study').DataTable()
@@ -20,7 +19,7 @@
         $('#new').val('true');
         table.ajax.reload();
         $('#new').val('false');
-    }
+    }    
 
     addTableStudy = function (org, inst, oid, role, service, max_rows){
         $("#table-container").empty();
@@ -225,6 +224,17 @@
                 }
                 $('#date_start, #date_end').change( function() {
                     table.draw();
+                });                
+                $("#table_study_filter input").unbind().keyup(function(e) {
+                    if(this.value.length >= 5 || e.keyCode == 13) {
+                        var table = $('#table_study').DataTable();
+                        table.search(this.value).draw();
+                    }
+                    if(this.value == "") {
+                        var table = $('#table_study').DataTable();
+                        table.search("").draw();
+                    }
+                    return;
                 });
             },
             "fnServerParams": function ( aoData, fnCallback ) {
@@ -269,7 +279,7 @@
             $('select', table.column(colIdx).header()).on('click', function(e) {
                 e.stopPropagation();
             });
-        });
+        });               
         $('#dialog-series').dialog({
             autoOpen: false,
             dialogClass: 'TitleClassSeries',
@@ -301,7 +311,7 @@
                 var table_patient = $('#table_patient').DataTable();
                 table_patient.destroy();
             }
-        });
+        });        
     }
     showTableSeries = function(url, pat_id, name_id, study_date, modalities, study_description, accession_number, study_uid, oid, org, inst, institutionOID, cache){
         $('#dialog-series').dialog('option', 'title', '(' + pat_id +') '+ name_id +' / (' + accession_number + ') '+ study_description);

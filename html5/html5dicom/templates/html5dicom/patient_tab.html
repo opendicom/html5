@@ -134,7 +134,17 @@
                     var table = $('#table_study').DataTable();
                     table.draw();
                 });
-
+                $("#table_study_filter input").unbind().keyup(function(e) {
+                    if(this.value.length >= 5 || e.keyCode == 13) {
+                        var table = $('#table_study').DataTable();
+                        table.search(this.value).draw();
+                    }
+                    if(this.value == "") {
+                        var table = $('#table_study').DataTable();
+                        table.search("").draw();
+                    }
+                    return;
+                });
             },
             "fnServerParams": function ( aoData, fnCallback ) {                
                 if($('#date_start').val() === undefined){
