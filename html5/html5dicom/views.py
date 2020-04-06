@@ -417,7 +417,7 @@ def study_token_zip(request, *args, **kwargs):
             response = HttpResponse(response_study_token.content,
                                     status=response_study_token.status_code,
                                     content_type="application/zip")
-            response = ['Content-Disposition'] = "attachment; filename=dcm.zip"
+            response['Content-Disposition'] = "attachment; filename=dcm.zip"
             return response
         except (Session.DoesNotExist, KeyError):
             raise PermissionDenied
