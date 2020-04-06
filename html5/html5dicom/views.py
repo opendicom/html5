@@ -412,13 +412,13 @@ def study_token_zip(request, *args, **kwargs):
                 study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
             # SeriesInstanceUID
             if 'SeriesInstanceUID' in request.GET:
-                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
-            url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token,
-                                                                                    quote_via=urllib.parse.quote)
-            r = StreamingHttpResponse(stream_response(url_zip))
-            r['Content-Type'] = "application/zip"
-            r['Content-Disposition'] = "attachment; filename=dcm.zip"
-            return r
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']            
+            response_study_token = requests.get(settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+            response = HttpResponse(response_study_token.content,
+                                    status=response_study_token.status_code,
+                                    content_type="application/zip")
+            response = ['Content-Disposition'] = "attachment; filename=dcm.zip"
+            return response
         except (Session.DoesNotExist, KeyError):
             raise PermissionDenied
     else:
@@ -430,12 +430,6 @@ def cornerstone(request, *args, **kwargs):
                   template_name='html5dicom/redirect_cornerstone.html',
                   context={'url_manifiest': request.build_absolute_uri(
                       reverse('study_token_cornerstone') + '?' + urllib.parse.urlencode(request.GET))})
-
-
-def stream_response(url_zip):
-    r = requests.get(url_zip, stream=True)
-    for chunk in r.iter_content(512 * 1024):
-        yield chunk
 
 
 @login_required(login_url='/html5dicom/login')
