@@ -13,19 +13,16 @@ services:
     depends_on:
       - db
   db:
-    image: mariadb:10.1.14
+    image: mysql:5.7
     restart: unless-stopped
     ports:
-      - "3306:3306"
-      - "4567:4567"
-      - "4568:4568"
-      - "4444:4444"
+      - "3306:3306"      
     environment:
       - MYSQL_DATABASE=html5
       - MYSQL_USER=html5
       - MYSQL_PASSWORD=html5
       - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - mysqldb_data:/var/lib/mysql
 volumes:
-  mariadb_data:
+  mysqldb_data:
