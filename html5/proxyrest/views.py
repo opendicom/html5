@@ -219,12 +219,13 @@ def dicom_zip(request, *args, **kwargs):
         if token_access.accessType in 'dicom.zip osirix.zip':
             if validate_token_expired(token_access):
                 login(request, token_access.role.user)
-                study_token = generate_study_token(token_access, request)                                
-                url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
-                r = StreamingHttpResponse(stream_response(url_zip))
-                r['Content-Type'] = "application/zip"
-                r['Content-Disposition'] = "attachment; filename=dcm.zip"
-                return r
+                study_token = generate_study_token(token_access, request)
+                return HttpResponseRedirect(request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST'] + '/dicom.zip?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+                # url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
+                # r = StreamingHttpResponse(stream_response(url_zip))
+                # r['Content-Type'] = "application/zip"
+                # r['Content-Disposition'] = "attachment; filename=dcm.zip"
+                # return r
             else:
                 return JsonResponse({'error': 'session expired'}, status=status.HTTP_401_UNAUTHORIZED)
         else:

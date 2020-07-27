@@ -418,13 +418,14 @@ def study_token_zip(request, *args, **kwargs):
                 study_token['StudyInstanceUID'] = request.GET['StudyInstanceUID']
             # SeriesInstanceUID
             if 'SeriesInstanceUID' in request.GET:
-                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']                        
-            url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token,
-                                                                                    quote_via=urllib.parse.quote)
-            r = StreamingHttpResponse(stream_response(url_zip))
-            r['Content-Type'] = "application/zip"
-            r['Content-Disposition'] = "attachment; filename=dcm.zip"
-            return r
+                study_token['SeriesInstanceUID'] = request.GET['SeriesInstanceUID']
+
+            return HttpResponseRedirect(request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST'] + '/dicom.zip?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote))
+            # url_zip = settings.HTTP_DICOM + '/studyToken?' + urllib.parse.urlencode(study_token, quote_via=urllib.parse.quote)
+            # r = StreamingHttpResponse(stream_response(url_zip))
+            # r['Content-Type'] = "application/zip"
+            # r['Content-Disposition'] = "attachment; filename=dcm.zip"
+            # return r
         except (Session.DoesNotExist, KeyError):
             raise PermissionDenied
     else:
