@@ -431,11 +431,53 @@
                     "targets": 2,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        if(data != '*' && $('#rol_select').val() == 'Radiologo'){
-                            return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
-                        }else{
-                            return '';
+                        var data_cell = '';
+                        if($('#rol_select').val() == 'Radiologo'){
+                            $.ajax({
+                                url: "{% url 'get_save_template' %}?study_uid=" + full[16] ,
+                                type: "GET",
+                                async: false,
+                                dataType: "json",
+                                success: function(data, textStatus, jqXHR){
+                                    if(!data.error){
+                                        data_cell = '<a href="#" onclick="window.open(\''+ data.url_editor +'&cache=' + full[22] +'&institutionOID=' + full[21] +'\')"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
+                                        if (data.url_autentication != ''){
+                                            data_cell += '<a href=#><spam class="glyphicon glyphicon glyphicon-ok-sign" title="Autenticar"></spam></a>&nbsp;';
+                                        }
+                                    }else{
+                                        data_cell += 'PatientID=' + full[23]
+                                        data_cell += '&PatientIDIssuer=' + full[10]
+                                        data_cell += '&PatientName=' + full[4]
+                                        data_cell += '&PatientSex=' + full[12]
+                                        data_cell += '&PatientBirthDate=' + full[11]
+                                        data_cell += '&AccessionNumber=' + full[13]
+                                        data_cell += '&accessionNumberOID=' + full[14]
+                                        data_cell += '&StudyDate=' + full[5]
+                                        data_cell += '&StudyDescription=' + full[7]
+                                        data_cell += '&Modality=' + full[6].replace('\\OT','').replace('\\DOC','').replace('OT\\','').replace('DOC\\','')
+                                        data_cell += '&StudyIUID=' + full[16]
+                                        data_cell += '&custodianOID=' + oid
+                                        data_cell += '&cache=' + full[22]
+                                        data_cell += '&institutionOID=' + full[21]
+                                        data_cell = '<a href="#" onclick="window.open(\'{% url 'editor' %}?'+ encodeURI(data_cell) +'\')"><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a> ';
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown){
+                                    console.log('Error ' + jqXHR);
+                                }
+                            });
                         }
+                        {% if user_viewer == 'cornerstone' %}
+                            data_cell += '<a href="{% url 'cornerstone' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% elif user_viewer == 'zip' %}
+                            data_cell += '<a href="{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% elif user_viewer == 'osirix' %}
+                            data_cell += '<a href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'\'"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% elif user_viewer == 'weasis' %}
+                            var url_weasis = "weasis://" + encodeURIComponent('$dicom:get -w "{{request.scheme}}://{{request.get_host}}{% url 'study_token_weasis' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'"')
+                            data_cell += '<a href="'+ url_weasis +'"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% endif %}
+                        return  data_cell;
                     }
                 },
                 {

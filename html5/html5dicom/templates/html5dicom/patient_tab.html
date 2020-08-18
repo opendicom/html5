@@ -339,11 +339,18 @@
                     "targets": 2,
                     "orderable": false,
                     "render": function ( data, type, full, meta ) {
-                        if(data != '*' && $('#rol_select').val() == 'Radiologo'){
-                            return '<a href='+ data +'><spam class="glyphicon glyphicon glyphicon-edit" title="Editor"></spam></a>';
-                        }else{
-                            return '';
-                        }
+                        data_cell = ''
+                        {% if user_viewer == 'cornerstone' %}
+                            data_cell = '<a href="{% url 'cornerstone' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'" target="_blank"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% elif user_viewer == 'zip' %}
+                            data_cell = '<a href="{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% elif user_viewer == 'osirix' %}
+                            data_cell = '<a href="osirix://?methodName=DownloadURL&Display=YES&URL=\'{{request.scheme}}://{{request.get_host}}{% url 'study_token_zip' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'\'"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% elif user_viewer == 'weasis' %}
+                            var url_weasis = "weasis://" + encodeURIComponent('$dicom:get -w "{{request.scheme}}://{{request.get_host}}{% url 'study_token_weasis' %}?cache='+ full[22] +'&session={{ request.session.session_key}}&institutionOID='+ full[21] +'&StudyInstanceUID='+ full[16] +'"')
+                            data_cell = '<a href="'+ url_weasis +'"><span class="glyphicon glyphicon-film"></span></a>';
+                        {% endif %}
+                        return  data_cell;
                     }
                 },
                 {
